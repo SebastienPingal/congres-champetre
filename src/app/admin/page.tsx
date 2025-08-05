@@ -1,6 +1,6 @@
 "use client"
 
-import type {} from "next-auth"
+import type { User } from "next-auth"
 import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
@@ -56,7 +56,7 @@ export default function AdminPage() {
       router.push("/auth/signin")
       return
     }
-    if (!session.user || session.user.role !== "ADMIN") {
+    if (!session.user || (session.user as User).role !== "ADMIN") {
       router.push("/dashboard")
       return
     }
@@ -105,7 +105,7 @@ export default function AdminPage() {
     )
   }
 
-  if (!session || !session.user || session.user.role !== "ADMIN") {
+  if (!session || !session.user || (session.user as User).role !== "ADMIN") {
     return null
   }
 
