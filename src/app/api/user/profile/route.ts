@@ -1,13 +1,12 @@
 import { NextRequest, NextResponse } from "next/server"
-import { getServerSession } from "next-auth"
-import { authOptions } from "@/lib/auth"
+import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 
 // GET - Récupérer le profil utilisateur
 export async function GET() {
   try {
-    const session = await getServerSession(authOptions)
-    
+    const session = await auth()
+
     if (!session?.user) {
       return NextResponse.json(
         { error: "🔒 Non authentifié" },
@@ -52,8 +51,8 @@ export async function GET() {
 // PATCH - Mettre à jour le statut "veut faire une conférence"
 export async function PATCH(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
-    
+    const session = await auth()
+
     if (!session?.user) {
       return NextResponse.json(
         { error: "🔒 Non authentifié" },
@@ -95,11 +94,11 @@ export async function PATCH(request: NextRequest) {
     })
 
     return NextResponse.json(
-      { 
-        message: wantsToSpeak 
-          ? "✅ Vous êtes maintenant inscrit comme conférencier" 
+      {
+        message: wantsToSpeak
+          ? "✅ Vous êtes maintenant inscrit comme conférencier"
           : "✅ Vous n'êtes plus inscrit comme conférencier",
-        user 
+        user
       }
     )
   } catch (error) {

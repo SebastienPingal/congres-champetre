@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { getServerSession } from "next-auth"
-import { authOptions } from "@/lib/auth"
+import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 
 // GET - Récupérer tous les créneaux
@@ -38,8 +37,8 @@ export async function GET() {
 // POST - Créer un nouveau créneau (admin uniquement)
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
-    
+    const session = await auth()
+
     if (!session?.user) {
       return NextResponse.json(
         { error: "🔒 Non authentifié" },
@@ -85,9 +84,9 @@ export async function POST(request: NextRequest) {
     })
 
     return NextResponse.json(
-      { 
+      {
         message: "✅ Créneau créé avec succès",
-        timeSlot 
+        timeSlot
       },
       { status: 201 }
     )

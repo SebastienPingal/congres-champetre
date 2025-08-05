@@ -169,7 +169,7 @@ export default function Dashboard() {
                             </div>
                           ) : (
                             <Badge variant="secondary" className="mt-2">
-                              En attente d'attribution de créneau
+                              En attente d&apos;attribution de créneau
                             </Badge>
                           )}
                         </div>

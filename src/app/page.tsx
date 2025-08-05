@@ -13,10 +13,10 @@ export default function Home() {
 
   useEffect(() => {
     if (status === "loading") return
-    
+
     if (session) {
       // Rediriger selon le rôle
-      if (session.user.role === "ADMIN") {
+      if (session.user?.role === "ADMIN") {
         router.push("/admin")
       } else {
         router.push("/dashboard")
@@ -73,7 +73,7 @@ export default function Home() {
                   <span>•</span> Choisissez votre créneau préféré
                 </li>
                 <li className="flex items-center gap-2">
-                  <span>•</span> Suivez l'organisation du weekend
+                  <span>•</span> Suivez l&apos;organisation du weekend
                 </li>
               </ul>
             </CardContent>
@@ -116,11 +116,11 @@ export default function Home() {
             </Link>
             <Link href="/auth/signup">
               <Button size="lg" variant="outline" className="text-lg px-8">
-                S'inscrire
+                S&apos;inscrire
               </Button>
             </Link>
           </div>
-          
+
           <p className="text-sm text-gray-500 mt-6">
             Un weekend inoubliable vous attend dans la campagne
           </p>

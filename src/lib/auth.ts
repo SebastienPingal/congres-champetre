@@ -1,39 +1,27 @@
-import { NextAuthOptions } from "next-auth"
-import GoogleProvider from "next-auth/providers/google"
-import DiscordProvider from "next-auth/providers/discord"
-import GitHubProvider from "next-auth/providers/github"
-import { PrismaAdapter } from "@next-auth/prisma-adapter"
+import NextAuth, { Session, User } from "next-auth"
+import { PrismaAdapter } from "@auth/prisma-adapter"
 import { prisma } from "@/lib/prisma"
+import { JWT } from "next-auth/jwt";
+import Google from "next-auth/providers/google"
+import GitHub from "next-auth/providers/github"
+import Discord from "next-auth/providers/discord"
 
-export const authOptions: NextAuthOptions = {
+export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
-  providers: [
-    GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-    }),
-    DiscordProvider({
-      clientId: process.env.DISCORD_CLIENT_ID!,
-      clientSecret: process.env.DISCORD_CLIENT_SECRET!,
-    }),
-    GitHubProvider({
-      clientId: process.env.GITHUB_CLIENT_ID!,
-      clientSecret: process.env.GITHUB_CLIENT_SECRET!,
-    }),
-  ],
+  providers: [Google, GitHub, Discord],
   session: {
     strategy: "jwt"
   },
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user }: { token: JWT; user?: User }) {
       if (user) {
         token.role = user.role
       }
       return token
     },
-    async session({ session, token }) {
-      if (token) {
-        session.user.id = token.sub!
+    async session({ session, token }: { session: Session; token: JWT }) {
+      if (token && token.sub) {
+        session.user.id = token.sub
         session.user.role = token.role as string
       }
       return session
@@ -42,4 +30,4 @@ export const authOptions: NextAuthOptions = {
   pages: {
     signIn: "/auth/signin"
   }
-}
+})
