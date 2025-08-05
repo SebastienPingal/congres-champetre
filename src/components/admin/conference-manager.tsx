@@ -4,8 +4,9 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
+import { formatDateTimeRange } from "@/lib/helper"
 
 interface Conference {
   id: string
@@ -88,28 +89,18 @@ export function ConferenceManager({ conferences, timeSlots, onConferenceUpdated 
       } else {
         setError(result.error || "❌ Une erreur est survenue")
       }
-    } catch (error) {
-      setError("❌ Une erreur est survenue lors de l'assignation")
+    } catch {
+      setError("❌ Une erreur est survenue lors de l&apos;assignation")
     } finally {
       setIsLoading(false)
     }
-  }
-
-  const formatDateTime = (dateString: string) => {
-    return new Date(dateString).toLocaleString("fr-FR", {
-      weekday: "short",
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit"
-    })
   }
 
   const getAvailableSlots = () => {
     return timeSlots.filter(slot => {
       // Slot disponible ET (soit vide, soit occupé par la conférence actuelle)
       return slot.isAvailable && (
-        slot.conferences.length === 0 || 
+        slot.conferences.length === 0 ||
         (selectedConference && slot.conferences.some(c => c.id === selectedConference.id))
       )
     })
@@ -125,7 +116,7 @@ export function ConferenceManager({ conferences, timeSlots, onConferenceUpdated 
           Assignez des créneaux aux conférences proposées
         </CardDescription>
       </CardHeader>
-      
+
       <CardContent>
         {conferences.length === 0 ? (
           <div className="text-center py-8 text-gray-500">
@@ -148,14 +139,14 @@ export function ConferenceManager({ conferences, timeSlots, onConferenceUpdated 
                         {conference.description}
                       </p>
                     )}
-                    
+
                     {conference.timeSlot ? (
                       <div className="flex items-center gap-2">
                         <Badge variant="outline">
                           {conference.timeSlot.title}
                         </Badge>
                         <span className="text-xs text-gray-500">
-                          {formatDateTime(conference.timeSlot.startTime)} - {formatDateTime(conference.timeSlot.endTime)}
+                          {formatDateTimeRange(conference.timeSlot.startTime, conference.timeSlot.endTime)}
                         </span>
                       </div>
                     ) : (
@@ -164,7 +155,7 @@ export function ConferenceManager({ conferences, timeSlots, onConferenceUpdated 
                       </Badge>
                     )}
                   </div>
-                  
+
                   <Button
                     variant="outline"
                     size="sm"
@@ -183,14 +174,14 @@ export function ConferenceManager({ conferences, timeSlots, onConferenceUpdated 
             <DialogHeader>
               <DialogTitle>Assigner un créneau</DialogTitle>
               <DialogDescription>
-                Choisissez un créneau pour la conférence "{selectedConference?.title}"
+                Choisissez un créneau pour la conférence &quot;{selectedConference?.title}&quot;
               </DialogDescription>
             </DialogHeader>
-            
+
             <div className="space-y-4">
               <div className="space-y-3">
                 <Label>Créneaux disponibles</Label>
-                
+
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
                     <input
@@ -203,10 +194,10 @@ export function ConferenceManager({ conferences, timeSlots, onConferenceUpdated 
                       disabled={isLoading}
                     />
                     <label htmlFor="no-slot" className="text-sm">
-                      Retirer l'assignation
+                      Retirer l&apos;assignation
                     </label>
                   </div>
-                  
+
                   {getAvailableSlots().map((slot) => (
                     <div key={slot.id} className="flex items-center gap-2">
                       <input
@@ -221,7 +212,7 @@ export function ConferenceManager({ conferences, timeSlots, onConferenceUpdated 
                       <label htmlFor={slot.id} className="text-sm flex items-center gap-2 flex-1">
                         <Badge variant="outline">{slot.title}</Badge>
                         <span className="text-xs text-gray-500">
-                          {formatDateTime(slot.startTime)} - {formatDateTime(slot.endTime)}
+                          {formatDateTimeRange(slot.startTime, slot.endTime)}
                         </span>
                         {slot.conferences.some(c => c.id === selectedConference?.id) && (
                           <Badge variant="secondary" className="text-xs">
@@ -244,8 +235,8 @@ export function ConferenceManager({ conferences, timeSlots, onConferenceUpdated 
                 <Button onClick={handleAssignTimeSlot} disabled={isLoading} className="flex-1">
                   {isLoading ? "Assignation..." : "Confirmer"}
                 </Button>
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   onClick={() => setIsDialogOpen(false)}
                   disabled={isLoading}
                 >

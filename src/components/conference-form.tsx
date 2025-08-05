@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { formatDateTimeRange } from "@/lib/helper"
 
 interface TimeSlot {
   id: string
@@ -93,7 +94,7 @@ export function ConferenceForm({ onConferenceCreated }: ConferenceFormProps) {
     }
   }
 
-  const availableSlots = timeSlots.filter(slot => 
+  const availableSlots = timeSlots.filter(slot =>
     slot.isAvailable && slot.conferences.length === 0
   )
 
@@ -164,8 +165,7 @@ export function ConferenceForm({ onConferenceCreated }: ConferenceFormProps) {
                     <label htmlFor={slot.id} className="text-sm flex items-center gap-2">
                       <Badge variant="outline">{slot.title}</Badge>
                       <span className="text-xs text-gray-500">
-                        {new Date(slot.startTime).toLocaleString("fr-FR")} - {" "}
-                        {new Date(slot.endTime).toLocaleString("fr-FR")}
+                        {formatDateTimeRange(slot.startTime, slot.endTime)}
                       </span>
                     </label>
                   </div>
