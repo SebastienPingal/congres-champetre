@@ -1,7 +1,6 @@
 "use client"
 
 import { useSession } from "next-auth/react"
-import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 import { Navbar } from "@/components/navbar"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -30,20 +29,15 @@ interface User {
 }
 
 export default function Dashboard() {
-  const { data: session, status } = useSession()
-  const router = useRouter()
+  const { data: session } = useSession()
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isUpdating, setIsUpdating] = useState(false)
 
   useEffect(() => {
-    if (status === "loading") return
-    if (!session) {
-      router.push("/auth/signin")
-      return
-    }
+    // 🛡️ Middleware ensures we're authenticated, so we can directly fetch user data
     fetchUserProfile()
-  }, [session, status, router])
+  }, [])
 
   const fetchUserProfile = async () => {
     try {
@@ -85,7 +79,7 @@ export default function Dashboard() {
     fetchUserProfile()
   }
 
-  if (status === "loading" || isLoading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -96,8 +90,15 @@ export default function Dashboard() {
     )
   }
 
-  if (!session || !user) {
-    return null
+  if (!user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-4xl mb-4">❌</div>
+          <p>Erreur lors du chargement du profil</p>
+        </div>
+      </div>
+    )
   }
 
   return (

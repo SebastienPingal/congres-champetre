@@ -1,8 +1,5 @@
 "use client"
 
-import type { User } from "next-auth"
-import { useSession } from "next-auth/react"
-import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 import { Navbar } from "@/components/navbar"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -44,24 +41,14 @@ interface Conference {
 }
 
 export default function AdminPage() {
-  const { data: session, status } = useSession()
-  const router = useRouter()
   const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([])
   const [conferences, setConferences] = useState<Conference[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    if (status === "loading") return
-    if (!session) {
-      router.push("/auth/signin")
-      return
-    }
-    if (!session.user || (session.user as User).role !== "ADMIN") {
-      router.push("/dashboard")
-      return
-    }
+    // 🛡️ Middleware ensures we're authenticated and have admin role
     fetchData()
-  }, [session, status, router])
+  }, [])
 
   const fetchData = async () => {
     try {
@@ -94,7 +81,7 @@ export default function AdminPage() {
     fetchData()
   }
 
-  if (status === "loading" || isLoading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -105,15 +92,8 @@ export default function AdminPage() {
     )
   }
 
-  if (!session || !session.user || (session.user as User).role !== "ADMIN") {
-    return null
-  }
-
-  const assignedConferences = conferences.filter(c => c.timeSlot)
-  const unassignedConferences = conferences.filter(c => !c.timeSlot)
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-red-50 to-orange-50">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
       <Navbar />
 
       <div className="container mx-auto px-4 py-8">
@@ -126,93 +106,88 @@ export default function AdminPage() {
           </p>
         </div>
 
-        {/* Statistiques rapides */}
-        <div className="grid gap-4 md:grid-cols-4 mb-8">
+        <div className="grid gap-6 lg:grid-cols-2">
+          {/* Gestion des créneaux */}
           <Card>
-            <CardContent className="pt-6">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-blue-600">{timeSlots.length}</div>
-                <p className="text-sm text-gray-600">Créneaux</p>
-              </div>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                Gestion des créneaux
+              </CardTitle>
+              <CardDescription>
+                Créez et gérez les créneaux horaires disponibles
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <TimeSlotManager
+                timeSlots={timeSlots}
+                onTimeSlotCreated={handleTimeSlotCreated}
+              />
             </CardContent>
           </Card>
 
+          {/* Gestion des conférences */}
           <Card>
-            <CardContent className="pt-6">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-green-600">{conferences.length}</div>
-                <p className="text-sm text-gray-600">Conférences</p>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="pt-6">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-orange-600">{assignedConferences.length}</div>
-                <p className="text-sm text-gray-600">Assignées</p>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="pt-6">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-red-600">{unassignedConferences.length}</div>
-                <p className="text-sm text-gray-600">En attente</p>
-              </div>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                Gestion des conférences
+              </CardTitle>
+              <CardDescription>
+                Assignez les conférences aux créneaux disponibles
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ConferenceManager
+                conferences={conferences}
+                timeSlots={timeSlots}
+                onConferenceUpdated={handleConferenceUpdated}
+              />
             </CardContent>
           </Card>
         </div>
 
-        <div className="grid gap-8 lg:grid-cols-2">
-          {/* Gestion des créneaux */}
-          <div className="space-y-6">
-            <TimeSlotManager
-              timeSlots={timeSlots}
-              onTimeSlotCreated={handleTimeSlotCreated}
-            />
+        {/* Statistiques rapides */}
+        <div className="grid gap-4 md:grid-cols-3 mt-8">
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center gap-3">
+                <div className="text-2xl">•</div>
+                <div>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {timeSlots.length}
+                  </p>
+                  <p className="text-sm text-gray-600">Créneaux créés</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
-            {/* Conférences en attente d'attribution */}
-            {unassignedConferences.length > 0 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    Conférences en attente
-                  </CardTitle>
-                  <CardDescription>
-                    Conférences sans créneau assigné
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    {unassignedConferences.map((conference) => (
-                      <div key={conference.id} className="p-3 bg-yellow-50 rounded-lg border-l-4 border-yellow-400">
-                        <h4 className="font-medium">{conference.title}</h4>
-                        <p className="text-sm text-gray-600">
-                          {conference.speaker.name}
-                        </p>
-                        {conference.description && (
-                          <p className="text-sm text-gray-500 mt-1">
-                            {conference.description}
-                          </p>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-          </div>
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center gap-3">
+                <div className="text-2xl">•</div>
+                <div>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {conferences.length}
+                  </p>
+                  <p className="text-sm text-gray-600">Conférences proposées</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
-          {/* Gestion des conférences */}
-          <div>
-            <ConferenceManager
-              conferences={conferences}
-              timeSlots={timeSlots}
-              onConferenceUpdated={handleConferenceUpdated}
-            />
-          </div>
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center gap-3">
+                <div className="text-2xl">•</div>
+                <div>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {conferences.filter(c => c.timeSlot).length}
+                  </p>
+                  <p className="text-sm text-gray-600">Conférences planifiées</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>

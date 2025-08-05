@@ -1,45 +1,11 @@
 "use client"
 
-import { useSession } from "next-auth/react"
-import { useRouter } from "next/navigation"
-import { useEffect } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import type { User } from "next-auth"
 
 export default function Home() {
-  const { data: session, status } = useSession()
-  const router = useRouter()
-
-  useEffect(() => {
-    if (status === "loading") return
-
-    if (session) {
-      // Rediriger selon le rôle
-      if ((session.user as User).role === "ADMIN") {
-        router.push("/admin")
-      } else {
-        router.push("/dashboard")
-      }
-    }
-  }, [session, status, router])
-
-  if (status === "loading") {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-4xl mb-4">⏳</div>
-          <p>Chargement...</p>
-        </div>
-      </div>
-    )
-  }
-
-  if (session) {
-    return null // Redirection en cours
-  }
-
+  // 🏠 This page will only be shown to unauthenticated users thanks to middleware
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 flex items-center justify-center">
       <div className="container mx-auto px-4 max-w-4xl">

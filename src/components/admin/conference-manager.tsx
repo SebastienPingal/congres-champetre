@@ -120,7 +120,7 @@ export function ConferenceManager({ conferences, timeSlots, onConferenceUpdated 
       <CardContent>
         {conferences.length === 0 ? (
           <div className="text-center py-8 text-gray-500">
-            <div className="text-4xl mb-4">🎭</div>
+            <div className="text-4xl mb-4">•</div>
             <p>Aucune conférence proposée pour le moment</p>
             <p className="text-sm">Les participants peuvent proposer des conférences depuis leur dashboard</p>
           </div>
