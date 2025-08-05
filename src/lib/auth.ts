@@ -1,10 +1,35 @@
-import NextAuth, { Session, User } from "next-auth"
+import NextAuth from "next-auth"
+import type { DefaultSession, Session, User } from "next-auth"
 import { PrismaAdapter } from "@auth/prisma-adapter"
 import { prisma } from "@/lib/prisma"
 import { JWT } from "next-auth/jwt";
 import Google from "next-auth/providers/google"
 import GitHub from "next-auth/providers/github"
 import Discord from "next-auth/providers/discord"
+
+declare module "next-auth" {
+  interface Session {
+    user: {
+      id: string
+      email: string
+      name?: string | null
+      role: string
+    } & DefaultSession["user"]
+  }
+
+  interface User {
+    name?: string | null
+    role: string
+  }
+}
+
+declare module "next-auth/jwt" {
+  interface JWT {
+    role: string
+    name?: string | null
+    sub?: string
+  }
+}
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
