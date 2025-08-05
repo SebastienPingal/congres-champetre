@@ -1,12 +1,16 @@
 "use client"
 
 import { useState } from "react"
+import { format } from "date-fns"
+import { fr } from "date-fns/locale"
+import { CalendarIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { DateTimePicker } from "@/components/ui/date-time-picker"
 
 interface TimeSlot {
   id: string
@@ -33,8 +37,8 @@ interface TimeSlotManagerProps {
 export function TimeSlotManager({ timeSlots, onTimeSlotCreated }: TimeSlotManagerProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [title, setTitle] = useState("")
-  const [startTime, setStartTime] = useState("")
-  const [endTime, setEndTime] = useState("")
+  const [startDateTime, setStartDateTime] = useState<Date>()
+  const [endDateTime, setEndDateTime] = useState<Date>()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
 
@@ -43,13 +47,13 @@ export function TimeSlotManager({ timeSlots, onTimeSlotCreated }: TimeSlotManage
     setIsLoading(true)
     setError("")
 
-    if (!title.trim() || !startTime || !endTime) {
+    if (!title.trim() || !startDateTime || !endDateTime) {
       setError("Tous les champs sont requis")
       setIsLoading(false)
       return
     }
 
-    if (new Date(endTime) <= new Date(startTime)) {
+    if (endDateTime <= startDateTime) {
       setError("L'heure de fin doit être après l'heure de début")
       setIsLoading(false)
       return
@@ -63,8 +67,8 @@ export function TimeSlotManager({ timeSlots, onTimeSlotCreated }: TimeSlotManage
         },
         body: JSON.stringify({
           title: title.trim(),
-          startTime,
-          endTime,
+          startTime: startDateTime.toISOString(),
+          endTime: endDateTime.toISOString(),
         }),
       })
 
@@ -72,15 +76,15 @@ export function TimeSlotManager({ timeSlots, onTimeSlotCreated }: TimeSlotManage
 
       if (response.ok) {
         setTitle("")
-        setStartTime("")
-        setEndTime("")
+        setStartDateTime(undefined)
+        setEndDateTime(undefined)
         setIsDialogOpen(false)
         onTimeSlotCreated()
       } else {
-        setError(result.error || "❌ Une erreur est survenue")
+        setError(result.error || "Une erreur est survenue")
       }
     } catch (error) {
-      setError("❌ Une erreur est survenue lors de la création")
+      setError("Une erreur est survenue lors de la création")
     } finally {
       setIsLoading(false)
     }
@@ -93,7 +97,8 @@ export function TimeSlotManager({ timeSlots, onTimeSlotCreated }: TimeSlotManage
       month: "long",
       day: "numeric",
       hour: "2-digit",
-      minute: "2-digit"
+      minute: "2-digit",
+      hour12: false
     })
   }
 
@@ -138,26 +143,22 @@ export function TimeSlotManager({ timeSlots, onTimeSlotCreated }: TimeSlotManage
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="startTime">Heure de début</Label>
-                <Input
-                  id="startTime"
-                  type="datetime-local"
-                  value={startTime}
-                  onChange={(e) => setStartTime(e.target.value)}
-                  required
+                <Label>Date et heure de début</Label>
+                <DateTimePicker
+                  date={startDateTime}
+                  setDate={setStartDateTime}
                   disabled={isLoading}
+                  placeholder="Choisir la date et l'heure de début"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="endTime">Heure de fin</Label>
-                <Input
-                  id="endTime"
-                  type="datetime-local"
-                  value={endTime}
-                  onChange={(e) => setEndTime(e.target.value)}
-                  required
+                <Label>Date et heure de fin</Label>
+                <DateTimePicker
+                  date={endDateTime}
+                  setDate={setEndDateTime}
                   disabled={isLoading}
+                  placeholder="Choisir la date et l'heure de fin"
                 />
               </div>
 
@@ -188,7 +189,6 @@ export function TimeSlotManager({ timeSlots, onTimeSlotCreated }: TimeSlotManage
       <CardContent>
         {timeSlots.length === 0 ? (
           <div className="text-center py-8 text-gray-500">
-            <div className="text-4xl mb-4">📅</div>
             <p>Aucun créneau créé pour le moment</p>
             <p className="text-sm">Commencez par créer votre premier créneau</p>
           </div>
