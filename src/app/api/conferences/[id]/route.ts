@@ -2,14 +2,14 @@ import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { Prisma } from "@prisma/client"
-import { Session } from "next-auth"
 
 // PATCH - Mettre à jour une conférence (assignation de créneau)
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const session = await auth()
 
     if (!session?.user) {
@@ -23,7 +23,7 @@ export async function PATCH(
 
     // Récupérer la conférence existante
     const existingConference = await prisma.conference.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: { speaker: true }
     })
 
@@ -64,7 +64,7 @@ export async function PATCH(
           )
         }
 
-        if (!timeSlot.isAvailable || (timeSlot.conferences.length > 0 && timeSlot.conferences[0].id !== params.id)) {
+        if (!timeSlot.isAvailable || (timeSlot.conferences.length > 0 && timeSlot.conferences[0].id !== id)) {
           return NextResponse.json(
             { error: "⚠️ Ce créneau n'est plus disponible" },
             { status: 400 }
@@ -80,7 +80,7 @@ export async function PATCH(
     }
 
     const conference = await prisma.conference.update({
-      where: { id: params.id },
+      where: { id },
       data: updateData,
       include: {
         speaker: {
@@ -111,10 +111,11 @@ export async function PATCH(
 
 // DELETE - Supprimer une conférence
 export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { id: string } }
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const session = await auth()
 
     if (!session?.user) {
@@ -126,7 +127,7 @@ export async function DELETE(
 
     // Récupérer la conférence existante
     const existingConference = await prisma.conference.findUnique({
-      where: { id: params.id }
+      where: { id }
     })
 
     if (!existingConference) {
@@ -145,7 +146,7 @@ export async function DELETE(
     }
 
     await prisma.conference.delete({
-      where: { id: params.id }
+      where: { id }
     })
 
     // Mettre à jour le statut wantsToSpeak de l'utilisateur

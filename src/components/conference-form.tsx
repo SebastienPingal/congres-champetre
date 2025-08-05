@@ -87,7 +87,7 @@ export function ConferenceForm({ onConferenceCreated }: ConferenceFormProps) {
       } else {
         setError(result.error || "❌ Une erreur est survenue")
       }
-    } catch (error) {
+    } catch {
       setError("❌ Une erreur est survenue lors de la création")
     } finally {
       setIsLoading(false)
