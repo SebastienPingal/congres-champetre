@@ -1,7 +1,7 @@
 import { withAuth } from "next-auth/middleware"
 
 export default withAuth(
-  function middleware(req) {
+  function middleware() {
     // Le middleware ne fait rien de spécial ici
     // La logique de redirection est gérée dans les pages
   },

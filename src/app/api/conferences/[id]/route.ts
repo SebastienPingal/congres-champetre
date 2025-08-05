@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server"
-import { getServerSession } from "next-auth"
+import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { Prisma } from "@prisma/client"
+import { Session } from "next-auth"
 
 // PATCH - Mettre à jour une conférence (assignation de créneau)
 export async function PATCH(
@@ -9,8 +11,8 @@ export async function PATCH(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions)
-    
+    const session = await getServerSession(authOptions) as Session
+
     if (!session?.user) {
       return NextResponse.json(
         { error: "🔒 Non authentifié" },
@@ -19,7 +21,7 @@ export async function PATCH(
     }
 
     const { timeSlotId, title, description } = await request.json()
-    
+
     // Récupérer la conférence existante
     const existingConference = await prisma.conference.findUnique({
       where: { id: params.id },
@@ -41,7 +43,7 @@ export async function PATCH(
       )
     }
 
-    let updateData: any = {}
+    const updateData: Prisma.ConferenceUpdateInput = {}
 
     // Si on change le titre ou la description
     if (title !== undefined) updateData.title = title
@@ -70,8 +72,12 @@ export async function PATCH(
           )
         }
       }
-      
-      updateData.timeSlotId = timeSlotId
+
+      updateData.timeSlot = {
+        connect: {
+          id: timeSlotId
+        }
+      }
     }
 
     const conference = await prisma.conference.update({
@@ -90,9 +96,9 @@ export async function PATCH(
     })
 
     return NextResponse.json(
-      { 
+      {
         message: "✅ Conférence mise à jour avec succès",
-        conference 
+        conference
       }
     )
   } catch (error) {
@@ -110,8 +116,8 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions)
-    
+    const session = await getServerSession(authOptions) as Session
+
     if (!session?.user) {
       return NextResponse.json(
         { error: "🔒 Non authentifié" },

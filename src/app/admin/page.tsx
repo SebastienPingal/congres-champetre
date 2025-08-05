@@ -5,8 +5,6 @@ import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 import { Navbar } from "@/components/navbar"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Separator } from "@/components/ui/separator"
 import { TimeSlotManager } from "@/components/admin/timeslot-manager"
 import { ConferenceManager } from "@/components/admin/conference-manager"
 

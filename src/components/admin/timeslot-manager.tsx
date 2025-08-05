@@ -1,9 +1,6 @@
 "use client"
 
 import { useState } from "react"
-import { format } from "date-fns"
-import { fr } from "date-fns/locale"
-import { CalendarIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -83,8 +80,8 @@ export function TimeSlotManager({ timeSlots, onTimeSlotCreated }: TimeSlotManage
       } else {
         setError(result.error || "Une erreur est survenue")
       }
-    } catch (error) {
-      setError("Une erreur est survenue lors de la création")
+    } catch {
+      setError("❌ Une erreur est survenue lors de la création")
     } finally {
       setIsLoading(false)
     }
