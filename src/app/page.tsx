@@ -6,6 +6,7 @@ import { useEffect } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import type { User } from "next-auth"
 
 export default function Home() {
   const { data: session, status } = useSession()
@@ -16,7 +17,7 @@ export default function Home() {
 
     if (session) {
       // Rediriger selon le rôle
-      if (session.user?.role === "ADMIN") {
+      if ((session.user as User).role === "ADMIN") {
         router.push("/admin")
       } else {
         router.push("/dashboard")
