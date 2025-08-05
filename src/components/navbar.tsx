@@ -4,6 +4,7 @@ import { useSession, signOut } from "next-auth/react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
+import type { User } from "next-auth"
 
 export function Navbar() {
   const { data: session } = useSession()
@@ -21,20 +22,20 @@ export function Navbar() {
             <Link href="/dashboard" className="text-sm hover:text-green-600 transition-colors">
               Accueil
             </Link>
-            {session.user.role === "ADMIN" && (
+            {(session.user as User).role === "ADMIN" && (
               <Link href="/admin" className="text-sm hover:text-green-600 transition-colors">
                 Administration
               </Link>
             )}
           </div>
         </div>
-        
+
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
             <span className="text-sm text-gray-600">
-              {session.user.name}
+              {(session.user as User).name}
             </span>
-            {session.user.role === "ADMIN" && (
+            {(session.user as User).role === "ADMIN" && (
               <Badge variant="destructive" className="text-xs">
                 Admin
               </Badge>
