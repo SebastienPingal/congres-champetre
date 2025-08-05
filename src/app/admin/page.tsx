@@ -55,7 +55,7 @@ export default function AdminPage() {
       router.push("/auth/signin")
       return
     }
-    if (session.user.role !== "ADMIN") {
+    if (!session.user || session.user.role !== "ADMIN") {
       router.push("/dashboard")
       return
     }
@@ -104,7 +104,7 @@ export default function AdminPage() {
     )
   }
 
-  if (!session || session.user.role !== "ADMIN") {
+  if (!session || !session.user || session.user.role !== "ADMIN") {
     return null
   }
 
@@ -114,7 +114,7 @@ export default function AdminPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-red-50 to-orange-50">
       <Navbar />
-      
+
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
@@ -135,7 +135,7 @@ export default function AdminPage() {
               </div>
             </CardContent>
           </Card>
-          
+
           <Card>
             <CardContent className="pt-6">
               <div className="text-center">
@@ -144,7 +144,7 @@ export default function AdminPage() {
               </div>
             </CardContent>
           </Card>
-          
+
           <Card>
             <CardContent className="pt-6">
               <div className="text-center">
@@ -153,7 +153,7 @@ export default function AdminPage() {
               </div>
             </CardContent>
           </Card>
-          
+
           <Card>
             <CardContent className="pt-6">
               <div className="text-center">
@@ -167,11 +167,11 @@ export default function AdminPage() {
         <div className="grid gap-8 lg:grid-cols-2">
           {/* Gestion des créneaux */}
           <div className="space-y-6">
-            <TimeSlotManager 
+            <TimeSlotManager
               timeSlots={timeSlots}
               onTimeSlotCreated={handleTimeSlotCreated}
             />
-            
+
             {/* Conférences en attente d'attribution */}
             {unassignedConferences.length > 0 && (
               <Card>
@@ -206,7 +206,7 @@ export default function AdminPage() {
 
           {/* Gestion des conférences */}
           <div>
-            <ConferenceManager 
+            <ConferenceManager
               conferences={conferences}
               timeSlots={timeSlots}
               onConferenceUpdated={handleConferenceUpdated}
