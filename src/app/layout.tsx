@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Congrès Champêtre",
-  description: "Organisez votre weekend de conférences dans un cadre champêtre",
+  description: "Le site officiel du Congrès Champêtre",
 };
 
 export default function RootLayout({
