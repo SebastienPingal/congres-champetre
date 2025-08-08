@@ -7,8 +7,8 @@ import { Badge } from "@/components/ui/badge"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
-import { Separator } from "@/components/ui/separator"
 import { ConferenceForm } from "@/components/conference-form"
+import { CalendarDays, MapPin, Users } from "lucide-react"
 
 interface User {
   id: string
@@ -181,6 +181,52 @@ export default function Dashboard() {
         </div>
 
         <div className="grid gap-6 md:grid-cols-2">
+
+          {/* Informations générales */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                Informations du weekend
+              </CardTitle>
+              <CardDescription>
+                Détails pratiques et planning
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-3 md:grid-cols-2">
+                <div className="flex items-start gap-3 rounded-lg ring-1 ring-green-200 bg-green-50/60 p-3">
+                  <div className="rounded-md bg-green-100 p-2 text-green-700">
+                    <MapPin className="h-5 w-5" aria-hidden="true" />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <p className="font-medium">Lieu</p>
+                    <p className="text-sm text-gray-700">4 allée des tertres, 77250 Moret-Loing-et-Orvanne</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3 rounded-lg ring-1 ring-blue-200 bg-blue-50/60 p-3">
+                  <div className="rounded-md bg-blue-100 p-2 text-blue-700">
+                    <CalendarDays className="h-5 w-5" aria-hidden="true" />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <p className="font-medium">Dates</p>
+                    <p className="text-sm text-gray-700">Weekend du 30 et 31 août 2025</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3 rounded-lg ring-1 ring-amber-200 bg-amber-50/60 p-3 md:col-span-2">
+                  <div className="rounded-md bg-amber-100 p-2 text-amber-700">
+                    <Users className="h-5 w-5" aria-hidden="true" />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <p className="font-medium">Participants</p>
+                    <p className="text-sm text-gray-700">Liste en cours de constitution</p>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
           {/* RSVP / Présence */}
           <Card>
             <CardHeader>
@@ -320,48 +366,6 @@ export default function Dashboard() {
               </CardContent>
             </Card>
           )}
-          {/* Informations générales */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                Informations du weekend
-              </CardTitle>
-              <CardDescription>
-                Détails pratiques et planning
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <span className="text-2xl">•</span>
-                  <div>
-                    <p className="font-medium">Lieu</p>
-                    <p className="text-sm text-gray-600">À définir</p>
-                  </div>
-                </div>
-
-                <Separator />
-
-                <div className="flex items-center gap-2">
-                  <span className="text-2xl">•</span>
-                  <div>
-                    <p className="font-medium">Dates</p>
-                    <p className="text-sm text-gray-600">Weekend à venir</p>
-                  </div>
-                </div>
-
-                <Separator />
-
-                <div className="flex items-center gap-2">
-                  <span className="text-2xl">•</span>
-                  <div>
-                    <p className="font-medium">Participants</p>
-                    <p className="text-sm text-gray-600">Liste en cours de constitution</p>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
         </div>
       </div>
     </div>
