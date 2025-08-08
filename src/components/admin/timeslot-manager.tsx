@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { DateTimePicker } from "@/components/ui/date-time-picker"
+import { Checkbox } from "@/components/ui/checkbox"
 
 interface TimeSlot {
   id: string
@@ -38,6 +39,15 @@ export function TimeSlotManager({ timeSlots, onTimeSlotCreated }: TimeSlotManage
   const [endDateTime, setEndDateTime] = useState<Date>()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
+
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+  const [editingSlot, setEditingSlot] = useState<TimeSlot | null>(null)
+  const [editTitle, setEditTitle] = useState("")
+  const [editStartDateTime, setEditStartDateTime] = useState<Date>()
+  const [editEndDateTime, setEditEndDateTime] = useState<Date>()
+  const [editIsAvailable, setEditIsAvailable] = useState<boolean>(true)
+  const [editIsLoading, setEditIsLoading] = useState(false)
+  const [editError, setEditError] = useState("")
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -97,6 +107,86 @@ export function TimeSlotManager({ timeSlots, onTimeSlotCreated }: TimeSlotManage
       minute: "2-digit",
       hour12: false
     })
+  }
+
+  const openEditDialog = (slot: TimeSlot) => {
+    setEditingSlot(slot)
+    setEditTitle(slot.title)
+    setEditStartDateTime(new Date(slot.startTime))
+    setEditEndDateTime(new Date(slot.endTime))
+    setEditIsAvailable(slot.isAvailable)
+    setEditError("")
+    setIsEditDialogOpen(true)
+  }
+
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!editingSlot) return
+
+    setEditIsLoading(true)
+    setEditError("")
+
+    if (!editTitle.trim() || !editStartDateTime || !editEndDateTime) {
+      setEditError("Tous les champs sont requis")
+      setEditIsLoading(false)
+      return
+    }
+
+    if (editEndDateTime <= editStartDateTime) {
+      setEditError("L'heure de fin doit être après l'heure de début")
+      setEditIsLoading(false)
+      return
+    }
+
+    try {
+      const response = await fetch(`/api/timeslots/${editingSlot.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: editTitle.trim(),
+          startTime: editStartDateTime.toISOString(),
+          endTime: editEndDateTime.toISOString(),
+          isAvailable: editIsAvailable,
+        })
+      })
+
+      const result = await response.json()
+
+      if (response.ok) {
+        setIsEditDialogOpen(false)
+        setEditingSlot(null)
+        onTimeSlotCreated()
+      } else {
+        setEditError(result.error || "Une erreur est survenue")
+      }
+    } catch {
+      setEditError("❌ Une erreur est survenue lors de la mise à jour")
+    } finally {
+      setEditIsLoading(false)
+    }
+  }
+
+  const handleDelete = async () => {
+    if (!editingSlot) return
+    setEditIsLoading(true)
+    setEditError("")
+
+    try {
+      const response = await fetch(`/api/timeslots/${editingSlot.id}`, { method: "DELETE" })
+      const result = await response.json().catch(() => ({}))
+
+      if (response.ok) {
+        setIsEditDialogOpen(false)
+        setEditingSlot(null)
+        onTimeSlotCreated()
+      } else {
+        setEditError(result.error || "❌ Impossible de supprimer ce créneau")
+      }
+    } catch {
+      setEditError("❌ Une erreur est survenue lors de la suppression")
+    } finally {
+      setEditIsLoading(false)
+    }
   }
 
   return (
@@ -193,22 +283,19 @@ export function TimeSlotManager({ timeSlots, onTimeSlotCreated }: TimeSlotManage
           <div className="space-y-4">
             {timeSlots.map((slot) => (
               <div key={slot.id} className="p-4 border rounded-lg">
-                <div className="flex items-start justify-between mb-3">
-                  <div>
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex flex-col gap-1">
                     <h4 className="font-medium">{slot.title}</h4>
-                    <p className="text-sm text-gray-600">
-                      {formatDateTime(slot.startTime)}
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      Durée: {Math.round((new Date(slot.endTime).getTime() - new Date(slot.startTime).getTime()) / (1000 * 60))} minutes
-                    </p>
+                    <p className="text-sm text-gray-600">{formatDateTime(slot.startTime)}</p>
+                    <p className="text-sm text-gray-600">Durée: {Math.round((new Date(slot.endTime).getTime() - new Date(slot.startTime).getTime()) / (1000 * 60))} minutes</p>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex items-center gap-2">
                     {slot.isAvailable ? (
                       <Badge variant="secondary">Disponible</Badge>
                     ) : (
                       <Badge variant="destructive">Indisponible</Badge>
                     )}
+                    <Button variant="outline" onClick={() => openEditDialog(slot)}>Éditer</Button>
                   </div>
                 </div>
                 
@@ -228,6 +315,70 @@ export function TimeSlotManager({ timeSlots, onTimeSlotCreated }: TimeSlotManage
           </div>
         )}
       </CardContent>
+
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Modifier le créneau</DialogTitle>
+            <DialogDescription>Ajustez les informations du créneau</DialogDescription>
+          </DialogHeader>
+
+          <form onSubmit={handleEditSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-title">Titre du créneau</Label>
+              <Input
+                id="edit-title"
+                type="text"
+                value={editTitle}
+                onChange={(e) => setEditTitle(e.target.value)}
+                required
+                disabled={editIsLoading}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Date et heure de début</Label>
+              <DateTimePicker
+                date={editStartDateTime}
+                setDate={setEditStartDateTime}
+                disabled={editIsLoading}
+                placeholder="Choisir la date et l'heure de début"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Date et heure de fin</Label>
+              <DateTimePicker
+                date={editEndDateTime}
+                setDate={setEditEndDateTime}
+                disabled={editIsLoading}
+                placeholder="Choisir la date et l'heure de fin"
+              />
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Checkbox id="available" checked={editIsAvailable} onCheckedChange={(v) => setEditIsAvailable(Boolean(v))} />
+              <Label htmlFor="available">Créneau disponible</Label>
+            </div>
+
+            {editError && (
+              <div className="text-sm text-red-600">{editError}</div>
+            )}
+
+            <div className="flex gap-2 pt-2">
+              <Button type="submit" disabled={editIsLoading} className="flex-1">
+                {editIsLoading ? "Sauvegarde..." : "Enregistrer"}
+              </Button>
+              <Button type="button" variant="destructive" onClick={handleDelete} disabled={editIsLoading}>
+                Supprimer
+              </Button>
+              <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)} disabled={editIsLoading}>
+                Annuler
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </Card>
   )
 }
