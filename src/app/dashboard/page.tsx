@@ -1,11 +1,12 @@
 "use client"
 
-import { useSession } from "next-auth/react"
 import { useEffect, useState } from "react"
 import { Navbar } from "@/components/navbar"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Checkbox } from "@/components/ui/checkbox"
+import { Button } from "@/components/ui/button"
+import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
 import { ConferenceForm } from "@/components/conference-form"
 
@@ -15,6 +16,9 @@ interface User {
   email: string
   role: string
   wantsToSpeak: boolean
+  isAttending: boolean
+  attendanceDays: 'NONE' | 'DAY1' | 'DAY2' | 'BOTH'
+  sleepsOnSite: boolean
   conferences: Array<{
     id: string
     title: string
@@ -29,7 +33,6 @@ interface User {
 }
 
 export default function Dashboard() {
-  const { data: session } = useSession()
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isUpdating, setIsUpdating] = useState(false)
@@ -75,6 +78,68 @@ export default function Dashboard() {
     }
   }
 
+  const handleIsAttendingChange = async (checked: boolean) => {
+    if (!user) return
+    setIsUpdating(true)
+    try {
+      const payload: Record<string, unknown> = { isAttending: checked }
+      if (checked && user.attendanceDays === 'NONE') {
+        payload.attendanceDays = 'BOTH'
+      }
+      const response = await fetch("/api/user/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      })
+      if (response.ok) {
+        const result = await response.json()
+        setUser(result.user)
+      }
+    } catch (error) {
+      console.error("🚨 Erreur lors de la mise à jour de la présence:", error)
+    } finally {
+      setIsUpdating(false)
+    }
+  }
+
+  const handleAttendanceDaysChange = async (value: 'NONE' | 'DAY1' | 'DAY2' | 'BOTH') => {
+    setIsUpdating(true)
+    try {
+      const response = await fetch("/api/user/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ attendanceDays: value }),
+      })
+      if (response.ok) {
+        const result = await response.json()
+        setUser(result.user)
+      }
+    } catch (error) {
+      console.error("🚨 Erreur lors de la mise à jour des jours de présence:", error)
+    } finally {
+      setIsUpdating(false)
+    }
+  }
+
+  const handleSleepsOnSiteChange = async (checked: boolean) => {
+    setIsUpdating(true)
+    try {
+      const response = await fetch("/api/user/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sleepsOnSite: checked }),
+      })
+      if (response.ok) {
+        const result = await response.json()
+        setUser(result.user)
+      }
+    } catch (error) {
+      console.error("🚨 Erreur lors de la mise à jour de l'hébergement:", error)
+    } finally {
+      setIsUpdating(false)
+    }
+  }
+
   const handleConferenceCreated = () => {
     fetchUserProfile()
   }
@@ -104,7 +169,7 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
       <Navbar />
-      
+
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
@@ -116,72 +181,145 @@ export default function Dashboard() {
         </div>
 
         <div className="grid gap-6 md:grid-cols-2">
-          {/* Participation aux conférences */}
+          {/* RSVP / Présence */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                Participation aux conférences
+                Présence au weekend
               </CardTitle>
               <CardDescription>
-                Indiquez si vous souhaitez présenter une conférence
+                Indiquez vos disponibilités et hébergement
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center gap-3">
-                <Checkbox
-                  id="wantsToSpeak"
-                  checked={user.wantsToSpeak}
-                  onCheckedChange={handleWantsToSpeakChange}
-                  disabled={isUpdating}
-                />
-                <label htmlFor="wantsToSpeak" className="text-sm font-medium">
-                  Je souhaite faire une présentation
-                </label>
-              </div>
-              
-              {user.wantsToSpeak && (
-                <div className="pt-4 border-t">
-                  <Badge variant="secondary" className="mb-4">
-                    Conférencier inscrit
-                  </Badge>
-                  
-                  {user.conferences.length === 0 ? (
-                    <ConferenceForm onConferenceCreated={handleConferenceCreated} />
-                  ) : (
-                    <div className="space-y-3">
-                      <h4 className="text-sm font-semibold">Votre conférence :</h4>
-                      {user.conferences.map((conference) => (
-                        <div key={conference.id} className="p-3 bg-gray-50 rounded-lg">
-                          <h5 className="font-medium">{conference.title}</h5>
-                          {conference.description && (
-                            <p className="text-sm text-gray-600 mt-1">
-                              {conference.description}
-                            </p>
-                          )}
-                          {conference.timeSlot ? (
-                            <div className="mt-2 text-sm">
-                              <Badge variant="outline">
-                                {conference.timeSlot.title}
-                              </Badge>
-                              <p className="text-xs text-gray-500 mt-1">
-                                {new Date(conference.timeSlot.startTime).toLocaleString("fr-FR")} - {" "}
-                                {new Date(conference.timeSlot.endTime).toLocaleString("fr-FR")}
-                              </p>
-                            </div>
-                          ) : (
-                            <Badge variant="secondary" className="mt-2">
-                              En attente d&apos;attribution de créneau
-                            </Badge>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  )}
+            <CardContent>
+              <div className="flex flex-col gap-4">
+                <div className="flex items-center gap-3">
+                  <Checkbox
+                    id="isAttending"
+                    checked={user.isAttending}
+                    onCheckedChange={(v) => handleIsAttendingChange(Boolean(v))}
+                    disabled={isUpdating}
+                  />
+                  <label htmlFor="isAttending" className="text-sm font-medium">
+                    Je serai présent
+                  </label>
                 </div>
-              )}
+
+                {user.isAttending && (
+                  <div className="flex flex-col gap-3">
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="attendanceDays" className="text-sm font-medium">Jours de présence</Label>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Button
+                        type="button"
+                        variant={user.attendanceDays === 'BOTH' ? 'secondary' : 'outline'}
+                        onClick={() => handleAttendanceDaysChange('BOTH')}
+                        disabled={isUpdating}
+                      >
+                        Les deux jours
+                      </Button>
+                      <Button
+                        type="button"
+                        variant={user.attendanceDays === 'DAY1' ? 'secondary' : 'outline'}
+                        onClick={() => handleAttendanceDaysChange('DAY1')}
+                        disabled={isUpdating}
+                      >
+                        Seulement le samedi
+                      </Button>
+                      <Button
+                        type="button"
+                        variant={user.attendanceDays === 'DAY2' ? 'secondary' : 'outline'}
+                        onClick={() => handleAttendanceDaysChange('DAY2')}
+                        disabled={isUpdating}
+                      >
+                        Seulement le dimanche
+                      </Button>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <Checkbox
+                        id="sleepsOnSite"
+                        checked={user.sleepsOnSite}
+                        onCheckedChange={(v) => handleSleepsOnSiteChange(Boolean(v))}
+                        disabled={isUpdating || !user.isAttending}
+                      />
+                      <label htmlFor="sleepsOnSite" className="text-sm font-medium">
+                        Je dors sur place
+                      </label>
+                    </div>
+                  </div>
+                )}
+              </div>
             </CardContent>
           </Card>
+          {/* Participation aux conférences */}
+          {user.isAttending && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  Participation aux conférences
+                </CardTitle>
+                <CardDescription>
+                  Indiquez si vous souhaitez présenter une conférence
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center gap-3">
+                  <Checkbox
+                    id="wantsToSpeak"
+                    checked={user.wantsToSpeak}
+                    onCheckedChange={handleWantsToSpeakChange}
+                    disabled={isUpdating}
+                  />
+                  <label htmlFor="wantsToSpeak" className="text-sm font-medium">
+                    Je souhaite faire une présentation
+                  </label>
+                </div>
 
+                {user.wantsToSpeak && (
+                  <div className="pt-4 border-t">
+                    <Badge variant="secondary" className="mb-4">
+                      Conférencier inscrit
+                    </Badge>
+
+                    {user.conferences.length === 0 ? (
+                      <ConferenceForm onConferenceCreated={handleConferenceCreated} />
+                    ) : (
+                      <div className="space-y-3">
+                        <h4 className="text-sm font-semibold">Votre conférence :</h4>
+                        {user.conferences.map((conference) => (
+                          <div key={conference.id} className="p-3 bg-gray-50 rounded-lg">
+                            <h5 className="font-medium">{conference.title}</h5>
+                            {conference.description && (
+                              <p className="text-sm text-gray-600 mt-1">
+                                {conference.description}
+                              </p>
+                            )}
+                            {conference.timeSlot ? (
+                              <div className="mt-2 text-sm">
+                                <Badge variant="outline">
+                                  {conference.timeSlot.title}
+                                </Badge>
+                                <p className="text-xs text-gray-500 mt-1">
+                                  {new Date(conference.timeSlot.startTime).toLocaleString("fr-FR")} - {" "}
+                                  {new Date(conference.timeSlot.endTime).toLocaleString("fr-FR")}
+                                </p>
+                              </div>
+                            ) : (
+                              <Badge variant="secondary" className="mt-2">
+                                En attente d&apos;attribution de créneau
+                              </Badge>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
           {/* Informations générales */}
           <Card>
             <CardHeader>
@@ -201,9 +339,9 @@ export default function Dashboard() {
                     <p className="text-sm text-gray-600">À définir</p>
                   </div>
                 </div>
-                
+
                 <Separator />
-                
+
                 <div className="flex items-center gap-2">
                   <span className="text-2xl">•</span>
                   <div>
@@ -211,9 +349,9 @@ export default function Dashboard() {
                     <p className="text-sm text-gray-600">Weekend à venir</p>
                   </div>
                 </div>
-                
+
                 <Separator />
-                
+
                 <div className="flex items-center gap-2">
                   <span className="text-2xl">•</span>
                   <div>

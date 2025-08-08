@@ -22,6 +22,9 @@ export async function GET() {
         email: true,
         role: true,
         wantsToSpeak: true,
+        isAttending: true,
+        attendanceDays: true,
+        sleepsOnSite: true,
         createdAt: true,
         conferences: {
           include: {
@@ -60,31 +63,79 @@ export async function PATCH(request: NextRequest) {
       )
     }
 
-    const { wantsToSpeak } = await request.json()
+    const body = await request.json()
 
-    if (typeof wantsToSpeak !== 'boolean') {
+    const current = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { isAttending: true }
+    })
+    if (!current) {
       return NextResponse.json(
-        { error: "📝 Le statut doit être un booléen" },
-        { status: 400 }
+        { error: "👤 Utilisateur non trouvé" },
+        { status: 404 }
       )
     }
 
-    // Si l'utilisateur ne veut plus faire de conférence, supprimer ses conférences
-    if (!wantsToSpeak) {
-      await prisma.conference.deleteMany({
-        where: { speakerId: session.user.id }
-      })
+    const updateData: Record<string, unknown> = {}
+
+    if (typeof body.wantsToSpeak === 'boolean') {
+      updateData.wantsToSpeak = body.wantsToSpeak
+      if (body.wantsToSpeak === false) {
+        await prisma.conference.deleteMany({
+          where: { speakerId: session.user.id }
+        })
+      }
+    }
+
+    if (typeof body.isAttending === 'boolean') {
+      updateData.isAttending = body.isAttending
+      if (body.isAttending === false) {
+        updateData.attendanceDays = 'NONE'
+        updateData.sleepsOnSite = false
+      }
+    }
+
+    if (typeof body.attendanceDays === 'string') {
+      const allowed = ['NONE', 'DAY1', 'DAY2', 'BOTH']
+      if (!allowed.includes(body.attendanceDays)) {
+        return NextResponse.json(
+          { error: '📝 Valeur attendanceDays invalide' },
+          { status: 400 }
+        )
+      }
+      updateData.attendanceDays = body.attendanceDays
+      // If user sets any day, he is attending
+      if (body.attendanceDays !== 'NONE') updateData.isAttending = true
+    }
+
+    // Validate sleepsOnSite against final attending state
+    const finalIsAttending =
+      typeof updateData.isAttending === 'boolean'
+        ? (updateData.isAttending as boolean)
+        : current.isAttending
+
+    if (typeof body.sleepsOnSite === 'boolean') {
+      if (body.sleepsOnSite && !finalIsAttending) {
+        return NextResponse.json(
+          { error: '📝 Impossible de dormir sur place si non présent' },
+          { status: 400 }
+        )
+      }
+      updateData.sleepsOnSite = body.sleepsOnSite
     }
 
     const user = await prisma.user.update({
       where: { id: session.user.id },
-      data: { wantsToSpeak },
+      data: updateData,
       select: {
         id: true,
         name: true,
         email: true,
         role: true,
         wantsToSpeak: true,
+        isAttending: true,
+        attendanceDays: true,
+        sleepsOnSite: true,
         conferences: {
           include: {
             timeSlot: true
@@ -95,9 +146,7 @@ export async function PATCH(request: NextRequest) {
 
     return NextResponse.json(
       {
-        message: wantsToSpeak
-          ? "✅ Vous êtes maintenant inscrit comme conférencier"
-          : "✅ Vous n'êtes plus inscrit comme conférencier",
+        message: '✅ Profil mis à jour',
         user
       }
     )

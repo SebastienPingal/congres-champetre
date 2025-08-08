@@ -47,6 +47,10 @@ model User {
   password      String?
   role          Role      @default(USER)
   wantsToSpeak  Boolean   @default(false)
+  // RSVP fields for weekend attendance
+  isAttending    Boolean         @default(false)
+  attendanceDays AttendanceDays  @default(NONE)
+  sleepsOnSite   Boolean         @default(false)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
@@ -92,4 +96,11 @@ model Conference {
 enum Role {
   USER
   ADMIN
+}
+
+enum AttendanceDays {
+  NONE
+  DAY1
+  DAY2
+  BOTH
 }
