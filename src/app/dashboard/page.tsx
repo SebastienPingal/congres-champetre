@@ -175,7 +175,7 @@ export default function Dashboard() {
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
             Bienvenue, {user.name} !
-          </h1>
+          </h1>mt-16 
           <p className="text-gray-600">
             Gérez votre participation au weekend champêtre
           </p>

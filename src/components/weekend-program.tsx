@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { cn } from "@/lib/utils"
 
 type Speaker = {
   id: string
@@ -67,7 +68,7 @@ export function WeekendProgram() {
         }
         const data: TimeSlot[] = await res.json()
         if (!isCancelled) setTimeSlots(data)
-      } catch (e) {
+      } catch {
         setError("Impossible de charger le programme")
       } finally {
         if (!isCancelled) setIsLoading(false)
@@ -131,45 +132,50 @@ export function WeekendProgram() {
                   {day.slots.map(slot => (
                     <div
                       key={slot.id}
-                      className="rounded-lg ring-1 ring-gray-200 bg-white"
+                      className={cn(
+                        "rounded-lg ring-1",
+                        slot.kind === 'CONFERENCE' && "bg-violet-50 ring-violet-200 border-l-4 border-violet-400",
+                        slot.kind === 'MEAL' && "bg-amber-50 ring-amber-200 border-l-4 border-amber-400",
+                        slot.kind === 'BREAK' && "bg-sky-50 ring-sky-200 border-l-4 border-sky-400",
+                        (!slot.kind || slot.kind === 'OTHER') && "bg-gray-50 ring-gray-200 border-l-4 border-gray-300"
+                      )}
                     >
-                      <div className="flex items-start gap-4 p-4">
-                        <div className="shrink-0">
-                          <div className="text-xs text-gray-500">
-                            {formatHourMinute(slot.startTime)} – {formatHourMinute(slot.endTime)}
+                      {slot.kind === 'MEAL' ? (
+                        <div className="flex items-start gap-4 p-4">
+                          <div className="shrink-0">
+                            <div className="text-xs text-gray-500">
+                              {formatHourMinute(slot.startTime)} – {formatHourMinute(slot.endTime)}
+                            </div>
                           </div>
-                          <div className="mt-1 text-xs">
-                            {Math.round((new Date(slot.endTime).getTime() - new Date(slot.startTime).getTime()) / 60000)} min
+                          <div className="flex grow flex-col">
+                            <p className="text-sm font-medium">{slot.title}</p>
                           </div>
                         </div>
-
-                        <div className="flex grow flex-col gap-2">
-                          <div className="flex items-center justify-between">
-                            <p className="font-medium">{slot.title}</p>
-                            <Badge variant={slot.isAvailable ? "secondary" : "destructive"}>
-                              {slot.isAvailable ? "Disponible" : "Indisponible"}
-                            </Badge>
+                      ) : (
+                        <div className="flex items-start gap-4 p-4">
+                          <div className="shrink-0">
+                            <div className="text-xs text-gray-500">
+                              {formatHourMinute(slot.startTime)} – {formatHourMinute(slot.endTime)}
+                            </div>
                           </div>
 
-                          {slot.conference && (
-                            <div className="flex flex-col gap-2">
-                              <div className="rounded-md bg-gray-50 p-3">
-                                <p className="text-sm font-medium">{slot.conference.title}</p>
+                          <div className="flex grow flex-col gap-1">
+                            {slot.conference ? (
+                              <div className="flex flex-col gap-1">
+                                <p className="text-base font-semibold">{slot.conference.title}</p>
                                 <p className="text-xs text-gray-600">{slot.conference.speaker.name}</p>
+                                {slot.title && (
+                                  <p className="text-xs text-gray-500">{slot.title}</p>
+                                )}
                               </div>
-                            </div>
-                          )}
-                          {!slot.conference && slot.kind && slot.kind !== 'CONFERENCE' && (
-                            <div className="flex flex-col gap-2">
-                              <div className="rounded-md bg-amber-50 p-3">
-                                <p className="text-sm font-medium">
-                                  {slot.kind === 'MEAL' ? 'Repas' : slot.kind === 'BREAK' ? 'Pause' : 'Autre activité'}
-                                </p>
+                            ) : (
+                              <div className="flex flex-col">
+                                <p className="text-sm font-medium">{slot.title}</p>
                               </div>
-                            </div>
-                          )}
+                            )}
+                          </div>
                         </div>
-                      </div>
+                      )}
                     </div>
                   ))}
                 </div>
