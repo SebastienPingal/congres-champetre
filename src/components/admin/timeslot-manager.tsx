@@ -281,37 +281,48 @@ export function TimeSlotManager({ timeSlots, onTimeSlotCreated }: TimeSlotManage
           </div>
         ) : (
           <div className="space-y-4">
-            {timeSlots.map((slot) => (
-              <div key={slot.id} className="p-4 border rounded-lg">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex flex-col gap-1">
-                    <h4 className="font-medium">{slot.title}</h4>
-                    <p className="text-sm text-gray-600">{formatDateTime(slot.startTime)}</p>
-                    <p className="text-sm text-gray-600">Durée: {Math.round((new Date(slot.endTime).getTime() - new Date(slot.startTime).getTime()) / (1000 * 60))} minutes</p>
+            {[...timeSlots]
+              .sort((a, b) => {
+                // If either slot is "last", put it at the end
+                if (a.title.toLowerCase() === "last") return 1
+                if (b.title.toLowerCase() === "last") return -1
+                // Otherwise, sort by startTime
+                return new Date(a.startTime).getTime() - new Date(b.startTime).getTime()
+              })
+              .map((slot) => (
+                <div key={slot.id} className="p-4 border rounded-lg">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex flex-col gap-1">
+                      <h4 className="font-medium">{slot.title}</h4>
+                      <p className="text-sm text-gray-600">{formatDateTime(slot.startTime)}</p>
+                      <p className="text-sm text-gray-600">
+                        Durée: {Math.round((new Date(slot.endTime).getTime() - new Date(slot.startTime).getTime()) / (1000 * 60))} minutes
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {slot.isAvailable ? (
+                        <Badge variant="secondary">Disponible</Badge>
+                      ) : (
+                        <Badge variant="destructive">Indisponible</Badge>
+                      )}
+                      <Button variant="outline" onClick={() => openEditDialog(slot)}>Éditer</Button>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    {slot.isAvailable ? (
-                      <Badge variant="secondary">Disponible</Badge>
-                    ) : (
-                      <Badge variant="destructive">Indisponible</Badge>
-                    )}
-                    <Button variant="outline" onClick={() => openEditDialog(slot)}>Éditer</Button>
-                  </div>
+                  
+                  {slot.conferences.length > 0 && (
+                    <div className="mt-3 p-3 bg-blue-50 rounded-lg">
+                      <h5 className="text-sm font-medium mb-2">Conférence assignée:</h5>
+                      {slot.conferences.map((conference) => (
+                        <div key={conference.id} className="text-sm">
+                          <p className="font-medium">{conference.title}</p>
+                          <p className="text-gray-600">{conference.speaker.name}</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
-                
-                {slot.conferences.length > 0 && (
-                  <div className="mt-3 p-3 bg-blue-50 rounded-lg">
-                    <h5 className="text-sm font-medium mb-2">Conférence assignée:</h5>
-                    {slot.conferences.map((conference) => (
-                      <div key={conference.id} className="text-sm">
-                        <p className="font-medium">{conference.title}</p>
-                        <p className="text-gray-600">{conference.speaker.name}</p>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            ))}
+              ))
+            }
           </div>
         )}
       </CardContent>
