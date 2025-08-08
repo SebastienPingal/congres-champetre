@@ -14,12 +14,13 @@ interface TimeSlot {
   startTime: string
   endTime: string
   isAvailable: boolean
-  conferences: Array<{
+  kind?: 'CONFERENCE' | 'MEAL' | 'BREAK' | 'OTHER'
+  conference?: {
     id: string
     speaker: {
       name: string
     }
-  }>
+  }
 }
 
 interface ConferenceFormProps {
@@ -95,7 +96,7 @@ export function ConferenceForm({ onConferenceCreated }: ConferenceFormProps) {
   }
 
   const availableSlots = timeSlots.filter(slot =>
-    slot.isAvailable && slot.conferences.length === 0
+    slot.kind === 'CONFERENCE' && slot.isAvailable && !slot.conference
   )
 
   return (

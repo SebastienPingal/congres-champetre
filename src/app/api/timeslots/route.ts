@@ -7,7 +7,7 @@ export async function GET() {
   try {
     const timeSlots = await prisma.timeSlot.findMany({
       include: {
-        conferences: {
+        conference: {
           include: {
             speaker: {
               select: {
@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const { title, startTime, endTime } = await request.json()
+    const { title, startTime, endTime, kind } = await request.json()
 
     if (!title || !startTime || !endTime) {
       return NextResponse.json(
@@ -80,6 +80,7 @@ export async function POST(request: NextRequest) {
         title,
         startTime: new Date(startTime),
         endTime: new Date(endTime),
+        ...(kind ? { kind } : {}),
       },
     })
 

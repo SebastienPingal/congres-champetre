@@ -54,7 +54,7 @@ export async function PATCH(
         // Vérifier que le nouveau créneau est disponible
         const timeSlot = await prisma.timeSlot.findUnique({
           where: { id: timeSlotId },
-          include: { conferences: true }
+          include: { conference: true }
         })
 
         if (!timeSlot) {
@@ -64,18 +64,17 @@ export async function PATCH(
           )
         }
 
-        if (!timeSlot.isAvailable || (timeSlot.conferences.length > 0 && timeSlot.conferences[0].id !== id)) {
+        if (!timeSlot.isAvailable || timeSlot.kind !== 'CONFERENCE' || (timeSlot.conference && timeSlot.conference.id !== id)) {
           return NextResponse.json(
             { error: "⚠️ Ce créneau n'est plus disponible" },
             { status: 400 }
           )
         }
-      }
-
-      updateData.timeSlot = {
-        connect: {
-          id: timeSlotId
+        updateData.timeSlot = {
+          connect: { id: timeSlotId as string }
         }
+      } else {
+        updateData.timeSlot = { disconnect: true }
       }
     }
 

@@ -12,7 +12,7 @@ interface TimeSlot {
   startTime: string
   endTime: string
   isAvailable: boolean
-  conferences: Array<{
+  conference?: {
     id: string
     title: string
     speaker: {
@@ -20,7 +20,7 @@ interface TimeSlot {
       name: string
       email: string
     }
-  }>
+  }
 }
 
 interface Conference {

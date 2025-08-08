@@ -16,7 +16,8 @@ interface TimeSlot {
   startTime: string
   endTime: string
   isAvailable: boolean
-  conferences: Array<{
+  kind?: 'CONFERENCE' | 'MEAL' | 'BREAK' | 'OTHER'
+  conference?: {
     id: string
     title: string
     speaker: {
@@ -24,7 +25,7 @@ interface TimeSlot {
       name: string
       email: string
     }
-  }>
+  }
 }
 
 interface TimeSlotManagerProps {
@@ -39,6 +40,7 @@ export function TimeSlotManager({ timeSlots, onTimeSlotCreated }: TimeSlotManage
   const [endDateTime, setEndDateTime] = useState<Date>()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
+  const [createKind, setCreateKind] = useState<'CONFERENCE' | 'MEAL' | 'BREAK' | 'OTHER'>('CONFERENCE')
 
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [editingSlot, setEditingSlot] = useState<TimeSlot | null>(null)
@@ -46,6 +48,7 @@ export function TimeSlotManager({ timeSlots, onTimeSlotCreated }: TimeSlotManage
   const [editStartDateTime, setEditStartDateTime] = useState<Date>()
   const [editEndDateTime, setEditEndDateTime] = useState<Date>()
   const [editIsAvailable, setEditIsAvailable] = useState<boolean>(true)
+  const [editKind, setEditKind] = useState<'CONFERENCE' | 'MEAL' | 'BREAK' | 'OTHER'>('CONFERENCE')
   const [editIsLoading, setEditIsLoading] = useState(false)
   const [editError, setEditError] = useState("")
 
@@ -76,6 +79,7 @@ export function TimeSlotManager({ timeSlots, onTimeSlotCreated }: TimeSlotManage
           title: title.trim(),
           startTime: startDateTime.toISOString(),
           endTime: endDateTime.toISOString(),
+            kind: createKind,
         }),
       })
 
@@ -85,6 +89,7 @@ export function TimeSlotManager({ timeSlots, onTimeSlotCreated }: TimeSlotManage
         setTitle("")
         setStartDateTime(undefined)
         setEndDateTime(undefined)
+        setCreateKind('CONFERENCE')
         setIsDialogOpen(false)
         onTimeSlotCreated()
       } else {
@@ -115,6 +120,7 @@ export function TimeSlotManager({ timeSlots, onTimeSlotCreated }: TimeSlotManage
     setEditStartDateTime(new Date(slot.startTime))
     setEditEndDateTime(new Date(slot.endTime))
     setEditIsAvailable(slot.isAvailable)
+    setEditKind(slot.kind || 'CONFERENCE')
     setEditError("")
     setIsEditDialogOpen(true)
   }
@@ -147,6 +153,7 @@ export function TimeSlotManager({ timeSlots, onTimeSlotCreated }: TimeSlotManage
           startTime: editStartDateTime.toISOString(),
           endTime: editEndDateTime.toISOString(),
           isAvailable: editIsAvailable,
+            kind: editKind,
         })
       })
 
@@ -249,6 +256,24 @@ export function TimeSlotManager({ timeSlots, onTimeSlotCreated }: TimeSlotManage
                 />
               </div>
 
+              <div className="space-y-2">
+                <Label>Type de créneau</Label>
+                <div className="flex flex-wrap items-center gap-2">
+                  {(['CONFERENCE','MEAL','BREAK','OTHER'] as const).map(k => (
+                    <Button
+                      key={k}
+                      type="button"
+                      variant={createKind === k ? 'secondary' : 'outline'}
+                      onClick={() => setCreateKind(k)}
+                      disabled={isLoading}
+                      size="sm"
+                    >
+                      {k === 'CONFERENCE' ? 'Conférence' : k === 'MEAL' ? 'Repas' : k === 'BREAK' ? 'Pause' : 'Autre'}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+
               {error && (
                 <div className="text-sm text-red-600">
                   {error}
@@ -309,15 +334,13 @@ export function TimeSlotManager({ timeSlots, onTimeSlotCreated }: TimeSlotManage
                     </div>
                   </div>
                   
-                  {slot.conferences.length > 0 && (
+                  {slot.conference && (
                     <div className="mt-3 p-3 bg-blue-50 rounded-lg">
                       <h5 className="text-sm font-medium mb-2">Conférence assignée:</h5>
-                      {slot.conferences.map((conference) => (
-                        <div key={conference.id} className="text-sm">
-                          <p className="font-medium">{conference.title}</p>
-                          <p className="text-gray-600">{conference.speaker.name}</p>
-                        </div>
-                      ))}
+                      <div className="text-sm">
+                        <p className="font-medium">{slot.conference.title}</p>
+                        <p className="text-gray-600">{slot.conference.speaker.name}</p>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -365,6 +388,24 @@ export function TimeSlotManager({ timeSlots, onTimeSlotCreated }: TimeSlotManage
                 disabled={editIsLoading}
                 placeholder="Choisir la date et l'heure de fin"
               />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Type de créneau</Label>
+              <div className="flex flex-wrap items-center gap-2">
+                {(['CONFERENCE','MEAL','BREAK','OTHER'] as const).map(k => (
+                  <Button
+                    key={k}
+                    type="button"
+                    variant={editKind === k ? 'secondary' : 'outline'}
+                    onClick={() => setEditKind(k)}
+                    disabled={editIsLoading}
+                    size="sm"
+                  >
+                    {k === 'CONFERENCE' ? 'Conférence' : k === 'MEAL' ? 'Repas' : k === 'BREAK' ? 'Pause' : 'Autre'}
+                  </Button>
+                ))}
+              </div>
             </div>
 
             <div className="flex items-center gap-2">

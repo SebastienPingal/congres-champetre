@@ -31,7 +31,7 @@ interface TimeSlot {
   startTime: string
   endTime: string
   isAvailable: boolean
-  conferences: Array<{
+  conference?: {
     id: string
     title: string
     speaker: {
@@ -39,7 +39,7 @@ interface TimeSlot {
       name: string
       email: string
     }
-  }>
+  }
 }
 
 interface ConferenceManagerProps {
@@ -100,8 +100,8 @@ export function ConferenceManager({ conferences, timeSlots, onConferenceUpdated 
     return timeSlots.filter(slot => {
       // Slot disponible ET (soit vide, soit occupé par la conférence actuelle)
       return slot.isAvailable && (
-        slot.conferences.length === 0 ||
-        (selectedConference && slot.conferences.some(c => c.id === selectedConference.id))
+        !slot.conference ||
+        (selectedConference && slot.conference.id === selectedConference.id)
       )
     })
   }
@@ -214,7 +214,7 @@ export function ConferenceManager({ conferences, timeSlots, onConferenceUpdated 
                         <span className="text-xs text-gray-500">
                           {formatDateTimeRange(slot.startTime, slot.endTime)}
                         </span>
-                        {slot.conferences.some(c => c.id === selectedConference?.id) && (
+                        {slot.conference && slot.conference.id === selectedConference?.id && (
                           <Badge variant="secondary" className="text-xs">
                             Actuellement assigné
                           </Badge>

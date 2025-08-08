@@ -74,10 +74,11 @@ model TimeSlot {
   startTime   DateTime
   endTime     DateTime
   isAvailable Boolean  @default(true)
+  kind        SlotKind @default(CONFERENCE)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  conferences Conference[]
+  conference  Conference?
 }
 
 model Conference {
@@ -85,7 +86,7 @@ model Conference {
   title       String
   description String?
   speakerId   String
-  timeSlotId  String?
+  timeSlotId  String? @unique
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -103,4 +104,11 @@ enum AttendanceDays {
   DAY1
   DAY2
   BOTH
+}
+
+enum SlotKind {
+  CONFERENCE
+  MEAL
+  BREAK
+  OTHER
 }

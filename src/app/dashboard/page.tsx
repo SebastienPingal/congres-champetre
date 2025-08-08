@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { ConferenceForm } from "@/components/conference-form"
 import { CalendarDays, MapPin, Users } from "lucide-react"
+import { WeekendProgram } from "@/components/weekend-program"
 
 interface User {
   id: string
@@ -226,6 +227,9 @@ export default function Dashboard() {
               </div>
             </CardContent>
           </Card>
+
+
+          <WeekendProgram />
 
           {/* RSVP / Présence */}
           <Card>

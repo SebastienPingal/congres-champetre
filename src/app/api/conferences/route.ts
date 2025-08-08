@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
     if (timeSlotId) {
       const timeSlot = await prisma.timeSlot.findUnique({
         where: { id: timeSlotId },
-        include: { conferences: true }
+        include: { conference: true }
       })
 
       if (!timeSlot) {
@@ -80,7 +80,7 @@ export async function POST(request: NextRequest) {
         )
       }
 
-      if (!timeSlot.isAvailable || timeSlot.conferences.length > 0) {
+      if (!timeSlot.isAvailable || timeSlot.conference || timeSlot.kind !== 'CONFERENCE') {
         return NextResponse.json(
           { error: "⚠️ Ce créneau n'est plus disponible" },
           { status: 400 }

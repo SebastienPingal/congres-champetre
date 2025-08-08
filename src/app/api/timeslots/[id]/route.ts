@@ -13,7 +13,7 @@ export async function GET(
     const timeSlot = await prisma.timeSlot.findUnique({
       where: { id },
       include: {
-        conferences: {
+        conference: {
           include: {
             speaker: {
               select: { id: true, name: true, email: true }
@@ -65,11 +65,12 @@ export async function PATCH(
     }
 
     const payload = await request.json()
-    const { title, startTime, endTime, isAvailable } = payload as {
+    const { title, startTime, endTime, isAvailable, kind } = payload as {
       title?: string
       startTime?: string
       endTime?: string
       isAvailable?: boolean
+      kind?: 'CONFERENCE' | 'MEAL' | 'BREAK' | 'OTHER'
     }
 
     const existing = await prisma.timeSlot.findUnique({ where: { id } })
@@ -97,9 +98,10 @@ export async function PATCH(
         ...(startTime !== undefined ? { startTime: nextStart } : {}),
         ...(endTime !== undefined ? { endTime: nextEnd } : {}),
         ...(isAvailable !== undefined ? { isAvailable } : {}),
+        ...(kind !== undefined ? { kind } : {}),
       },
       include: {
-        conferences: {
+        conference: {
           include: {
             speaker: { select: { id: true, name: true, email: true } }
           }
@@ -146,7 +148,7 @@ export async function DELETE(
 
     const withRelations = await prisma.timeSlot.findUnique({
       where: { id },
-      include: { conferences: true }
+      include: { conference: true }
     })
 
     if (!withRelations) {
@@ -156,9 +158,9 @@ export async function DELETE(
       )
     }
 
-    if (withRelations.conferences.length > 0) {
+    if (withRelations.conference) {
       return NextResponse.json(
-        { error: "🎤 Ce créneau est déjà assigné à au moins une conférence" },
+        { error: "🎤 Ce créneau est déjà assigné à une conférence" },
         { status: 400 }
       )
     }
