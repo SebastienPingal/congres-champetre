@@ -8,6 +8,8 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { ConferenceForm } from "@/components/conference-form"
+import { ConferenceEditForm } from "@/components/conference-edit-form"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { CalendarDays, MapPin, Users } from "lucide-react"
 import { WeekendProgram } from "@/components/weekend-program"
 
@@ -38,6 +40,7 @@ export default function Dashboard() {
   const [isLoading, setIsLoading] = useState(true)
   const [isUpdating, setIsUpdating] = useState(false)
   const [pendingAttendanceDays, setPendingAttendanceDays] = useState<User["attendanceDays"] | null>(null)
+  const [editingConferenceId, setEditingConferenceId] = useState<string | null>(null)
 
   useEffect(() => {
     // 🛡️ Middleware ensures we're authenticated, so we can directly fetch user data
@@ -184,6 +187,10 @@ export default function Dashboard() {
   }
 
   const handleConferenceCreated = () => {
+    fetchUserProfile()
+  }
+
+  const handleConferenceUpdated = () => {
     fetchUserProfile()
   }
 
@@ -437,6 +444,29 @@ export default function Dashboard() {
                                 En attente d&apos;attribution de créneau
                               </Badge>
                             )}
+
+                            <div className="flex items-center gap-2 mt-3">
+                              <Dialog open={editingConferenceId === conference.id} onOpenChange={(open) => setEditingConferenceId(open ? conference.id : null)}>
+                                <DialogTrigger asChild>
+                                  <Button type="button" variant="outline">Modifier</Button>
+                                </DialogTrigger>
+                                <DialogContent>
+                                  <DialogHeader>
+                                    <DialogTitle>Modifier la conférence</DialogTitle>
+                                  </DialogHeader>
+                                  <ConferenceEditForm
+                                    conference={{
+                                      id: conference.id,
+                                      title: conference.title,
+                                      description: conference.description,
+                                      timeSlot: conference.timeSlot ? { id: conference.timeSlot.id } : null
+                                    }}
+                                    onUpdated={handleConferenceUpdated}
+                                    onClose={() => setEditingConferenceId(null)}
+                                  />
+                                </DialogContent>
+                              </Dialog>
+                            </div>
                           </div>
                         ))}
                       </div>
