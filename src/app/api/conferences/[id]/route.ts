@@ -34,10 +34,13 @@ export async function PATCH(
       )
     }
 
-    // Vérifier que l'utilisateur est le propriétaire de la conférence
-    if (existingConference.speakerId !== session.user.id) {
+    // Vérifier que l'utilisateur est le propriétaire OU admin
+    const actor = await prisma.user.findUnique({ where: { id: session.user.id } })
+    const isOwner = existingConference.speakerId === session.user.id
+    const isAdmin = actor?.role === "ADMIN"
+    if (!isOwner && !isAdmin) {
       return NextResponse.json(
-        { error: "⚠️ Vous ne pouvez modifier que vos propres conférences" },
+        { error: "⚠️ Accès refusé" },
         { status: 403 }
       )
     }

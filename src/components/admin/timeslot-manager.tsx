@@ -196,6 +196,36 @@ export function TimeSlotManager({ timeSlots, onTimeSlotCreated }: TimeSlotManage
     }
   }
 
+  const handleDisconnectConference = async (conferenceId?: string) => {
+    const idToDisconnect = conferenceId ?? editingSlot?.conference?.id
+    if (!idToDisconnect) return
+    setEditIsLoading(true)
+    setEditError("")
+
+    try {
+      const response = await fetch(`/api/conferences/${idToDisconnect}` , {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ timeSlotId: null })
+      })
+      const result = await response.json().catch(() => ({}))
+
+      if (response.ok) {
+        if (isEditDialogOpen) {
+          setIsEditDialogOpen(false)
+          setEditingSlot(null)
+        }
+        onTimeSlotCreated()
+      } else {
+        setEditError(result.error || "❌ Impossible de retirer la conférence du créneau")
+      }
+    } catch {
+      setEditError("❌ Une erreur est survenue lors du retrait")
+    } finally {
+      setEditIsLoading(false)
+    }
+  }
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
@@ -337,9 +367,14 @@ export function TimeSlotManager({ timeSlots, onTimeSlotCreated }: TimeSlotManage
                   {slot.conference && (
                     <div className="mt-3 p-3 bg-blue-50 rounded-lg">
                       <h5 className="text-sm font-medium mb-2">Conférence assignée:</h5>
-                      <div className="text-sm">
+                      <div className="text-sm flex flex-col gap-2">
                         <p className="font-medium">{slot.conference.title}</p>
                         <p className="text-gray-600">{slot.conference.speaker.name}</p>
+                        <div className="flex items-center gap-2">
+                          <Button variant="destructive" size="sm" onClick={() => handleDisconnectConference(slot.conference?.id)}>
+                            Retirer
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   )}
@@ -421,6 +456,11 @@ export function TimeSlotManager({ timeSlots, onTimeSlotCreated }: TimeSlotManage
               <Button type="submit" disabled={editIsLoading} className="flex-1">
                 {editIsLoading ? "Sauvegarde..." : "Enregistrer"}
               </Button>
+              {editingSlot?.conference && (
+                <Button type="button" variant="destructive" onClick={() => handleDisconnectConference()} disabled={editIsLoading}>
+                  Retirer la conférence
+                </Button>
+              )}
               <Button type="button" variant="destructive" onClick={handleDelete} disabled={editIsLoading}>
                 Supprimer
               </Button>
