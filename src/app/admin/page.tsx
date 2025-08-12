@@ -137,7 +137,6 @@ export default function AdminPage() {
             <CardContent>
               <ConferenceManager
                 conferences={conferences}
-                timeSlots={timeSlots}
                 onConferenceUpdated={handleConferenceUpdated}
               />
             </CardContent>
