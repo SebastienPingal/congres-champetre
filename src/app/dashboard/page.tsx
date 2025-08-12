@@ -57,6 +57,45 @@ export default function Dashboard() {
     }
   }
 
+  const buildGoogleCalendarUrl = (
+    selection: 'DAY1' | 'DAY2' | 'BOTH'
+  ) => {
+    const title = 'Congrès Champêtre'
+    const location = '4 allée des tertres, 77250 Moret-Loing-et-Orvanne'
+    const details = `Weekend champêtre. Renseignez vos conférences et consultez le programme dans l'application.`
+
+    // All-day event(s) using Google Calendar all-day format YYYYMMDD/YYYYMMDD (exclusive end)
+    // Samedi 30 août 2025, Dimanche 31 août 2025
+    const day1Start = '20250830'
+    const day1EndExclusive = '20250831'
+    const day2Start = '20250831'
+    const day2EndExclusive = '20250901'
+
+    const dates = selection === 'DAY1'
+      ? `${day1Start}/${day1EndExclusive}`
+      : selection === 'DAY2'
+      ? `${day2Start}/${day2EndExclusive}`
+      : `${day1Start}/${day2EndExclusive}` // BOTH
+
+    const params = new URLSearchParams({
+      action: 'TEMPLATE',
+      text: title,
+      details,
+      location,
+      trp: 'false',
+      dates
+    })
+    return `https://calendar.google.com/calendar/render?${params.toString()}`
+  }
+
+  const handleAddToGoogleCalendar = () => {
+    if (!user || !user.isAttending) return
+    const selection = user.attendanceDays
+    if (selection === 'NONE') return
+    const url = buildGoogleCalendarUrl(selection)
+    window.open(url, '_blank', 'noopener,noreferrer')
+  }
+
   const handleWantsToSpeakChange = async (checked: boolean) => {
     setIsUpdating(true)
     try {
@@ -297,6 +336,12 @@ export default function Dashboard() {
                       <label htmlFor="sleepsOnSite" className="text-sm font-medium">
                         Je dors sur place
                       </label>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <Button type="button" onClick={handleAddToGoogleCalendar} variant="secondary">
+                        Ajouter à Google Calendar
+                      </Button>
                     </div>
                   </div>
                 )}
