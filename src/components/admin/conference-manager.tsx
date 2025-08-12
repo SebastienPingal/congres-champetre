@@ -4,9 +4,9 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Label } from "@/components/ui/label"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { formatDateTimeRange } from "@/lib/helper"
+import { ConferenceEditForm } from "@/components/conference-edit-form"
 
 interface Conference {
   id: string
@@ -25,85 +25,15 @@ interface Conference {
   }
 }
 
-interface TimeSlot {
-  id: string
-  title: string
-  startTime: string
-  endTime: string
-  conference?: {
-    id: string
-    title: string
-    speaker: {
-      id: string
-      name: string
-      email: string
-    }
-  }
-}
+// Removed TimeSlot type usage in this component
 
 interface ConferenceManagerProps {
   conferences: Conference[]
-  timeSlots: TimeSlot[]
   onConferenceUpdated: () => void
 }
 
-export function ConferenceManager({ conferences, timeSlots, onConferenceUpdated }: ConferenceManagerProps) {
-  const [selectedConference, setSelectedConference] = useState<Conference | null>(null)
-  const [selectedTimeSlotId, setSelectedTimeSlotId] = useState<string>("")
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState("")
-
-  const openAssignDialog = (conference: Conference) => {
-    setSelectedConference(conference)
-    setSelectedTimeSlotId(conference.timeSlot?.id || "")
-    setIsDialogOpen(true)
-    setError("")
-  }
-
-  const handleAssignTimeSlot = async () => {
-    if (!selectedConference) return
-
-    setIsLoading(true)
-    setError("")
-
-    try {
-      const response = await fetch(`/api/conferences/${selectedConference.id}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          timeSlotId: selectedTimeSlotId || null,
-        }),
-      })
-
-      const result = await response.json()
-
-      if (response.ok) {
-        setIsDialogOpen(false)
-        setSelectedConference(null)
-        setSelectedTimeSlotId("")
-        onConferenceUpdated()
-      } else {
-        setError(result.error || "❌ Une erreur est survenue")
-      }
-    } catch {
-      setError("❌ Une erreur est survenue lors de l&apos;assignation")
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const getAvailableSlots = () => {
-    return timeSlots.filter(slot => {
-      // Slot disponible si non occupé, ou s'il est déjà assigné à la conférence sélectionnée
-      return (
-        !slot.conference ||
-        (selectedConference && slot.conference.id === selectedConference.id)
-      )
-    })
-  }
+export function ConferenceManager({ conferences, onConferenceUpdated }: ConferenceManagerProps) {
+  const [editingConferenceId, setEditingConferenceId] = useState<string | null>(null)
 
   return (
     <Card>
@@ -155,96 +85,35 @@ export function ConferenceManager({ conferences, timeSlots, onConferenceUpdated 
                     )}
                   </div>
 
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => openAssignDialog(conference)}
-                  >
-                    {conference.timeSlot ? "↻" : "+"} {conference.timeSlot ? "Modifier" : "Assigner"}
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Dialog open={editingConferenceId === conference.id} onOpenChange={(open) => setEditingConferenceId(open ? conference.id : null)}>
+                      <DialogTrigger asChild>
+                        <Button variant="outline" size="sm">Éditer</Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>Modifier la conférence</DialogTitle>
+                        </DialogHeader>
+                        <ConferenceEditForm
+                          conference={{
+                            id: conference.id,
+                            title: conference.title,
+                            description: conference.description,
+                            timeSlot: conference.timeSlot ? { id: conference.timeSlot.id } : null
+                          }}
+                          onUpdated={() => {
+                            onConferenceUpdated()
+                          }}
+                          onClose={() => setEditingConferenceId(null)}
+                        />
+                      </DialogContent>
+                    </Dialog>
+                  </div>
                 </div>
               </div>
             ))}
           </div>
         )}
-
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Assigner un créneau</DialogTitle>
-              <DialogDescription>
-                Choisissez un créneau pour la conférence &quot;{selectedConference?.title}&quot;
-              </DialogDescription>
-            </DialogHeader>
-
-            <div className="space-y-4">
-              <div className="space-y-3">
-                <Label>Créneaux disponibles</Label>
-
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="radio"
-                      id="no-slot"
-                      name="timeSlot"
-                      value=""
-                      checked={selectedTimeSlotId === ""}
-                      onChange={(e) => setSelectedTimeSlotId(e.target.value)}
-                      disabled={isLoading}
-                    />
-                    <label htmlFor="no-slot" className="text-sm">
-                      Retirer l&apos;assignation
-                    </label>
-                  </div>
-
-                  {getAvailableSlots().map((slot) => (
-                    <div key={slot.id} className="flex items-center gap-2">
-                      <input
-                        type="radio"
-                        id={slot.id}
-                        name="timeSlot"
-                        value={slot.id}
-                        checked={selectedTimeSlotId === slot.id}
-                        onChange={(e) => setSelectedTimeSlotId(e.target.value)}
-                        disabled={isLoading}
-                      />
-                      <label htmlFor={slot.id} className="text-sm flex items-center gap-2 flex-1">
-                        <Badge variant="outline">{slot.title}</Badge>
-                        <span className="text-xs text-gray-500">
-                          {formatDateTimeRange(slot.startTime, slot.endTime)}
-                        </span>
-                        {slot.conference && slot.conference.id === selectedConference?.id && (
-                          <Badge variant="secondary" className="text-xs">
-                            Actuellement assigné
-                          </Badge>
-                        )}
-                      </label>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {error && (
-                <div className="text-sm text-red-600">
-                  {error}
-                </div>
-              )}
-
-              <div className="flex gap-2 pt-4">
-                <Button onClick={handleAssignTimeSlot} disabled={isLoading} className="flex-1">
-                  {isLoading ? "Assignation..." : "Confirmer"}
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => setIsDialogOpen(false)}
-                  disabled={isLoading}
-                >
-                  Annuler
-                </Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
       </CardContent>
     </Card>
   )

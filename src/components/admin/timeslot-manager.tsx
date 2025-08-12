@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { DateTimePicker } from "@/components/ui/date-time-picker"
+import { ConferenceEditForm } from "@/components/conference-edit-form"
 
 interface TimeSlot {
   id: string
@@ -48,6 +49,9 @@ export function TimeSlotManager({ timeSlots, onTimeSlotCreated }: TimeSlotManage
   const [editKind, setEditKind] = useState<'CONFERENCE' | 'MEAL' | 'BREAK' | 'OTHER'>('CONFERENCE')
   const [editIsLoading, setEditIsLoading] = useState(false)
   const [editError, setEditError] = useState("")
+
+  // Conference edit from left column
+  const [editingConferenceId, setEditingConferenceId] = useState<string | null>(null)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -120,6 +124,8 @@ export function TimeSlotManager({ timeSlots, onTimeSlotCreated }: TimeSlotManage
     setEditError("")
     setIsEditDialogOpen(true)
   }
+
+  // Removed explicit assign dialog; handled within edit modal
 
   const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -366,6 +372,28 @@ export function TimeSlotManager({ timeSlots, onTimeSlotCreated }: TimeSlotManage
                         <p className="font-medium">{slot.conference.title}</p>
                         <p className="text-gray-600">{slot.conference.speaker.name}</p>
                         <div className="flex items-center gap-2">
+                          <Dialog open={editingConferenceId === slot.conference.id} onOpenChange={(open) => setEditingConferenceId(open ? slot.conference!.id : null)}>
+                            <DialogTrigger asChild>
+                              <Button variant="outline" size="sm">Éditer</Button>
+                            </DialogTrigger>
+                            <DialogContent>
+                              <DialogHeader>
+                                <DialogTitle>Modifier la conférence</DialogTitle>
+                              </DialogHeader>
+                              <ConferenceEditForm
+                                conference={{
+                                  id: slot.conference.id,
+                                  title: slot.conference.title,
+                                  description: undefined,
+                                  timeSlot: { id: slot.id }
+                                }}
+                                onUpdated={() => {
+                                  onTimeSlotCreated()
+                                }}
+                                onClose={() => setEditingConferenceId(null)}
+                              />
+                            </DialogContent>
+                          </Dialog>
                           <Button variant="destructive" size="sm" onClick={() => handleDisconnectConference(slot.conference?.id)}>
                             Retirer
                           </Button>
@@ -463,6 +491,7 @@ export function TimeSlotManager({ timeSlots, onTimeSlotCreated }: TimeSlotManage
           </form>
         </DialogContent>
       </Dialog>
+
     </Card>
   )
 }
