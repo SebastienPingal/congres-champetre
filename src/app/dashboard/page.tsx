@@ -37,6 +37,7 @@ export default function Dashboard() {
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isUpdating, setIsUpdating] = useState(false)
+  const [pendingAttendanceDays, setPendingAttendanceDays] = useState<User["attendanceDays"] | null>(null)
 
   useEffect(() => {
     // 🛡️ Middleware ensures we're authenticated, so we can directly fetch user data
@@ -144,6 +145,7 @@ export default function Dashboard() {
 
   const handleAttendanceDaysChange = async (value: 'NONE' | 'DAY1' | 'DAY2' | 'BOTH') => {
     setIsUpdating(true)
+    setPendingAttendanceDays(value)
     try {
       const response = await fetch("/api/user/profile", {
         method: "PATCH",
@@ -158,6 +160,7 @@ export default function Dashboard() {
       console.error("🚨 Erreur lors de la mise à jour des jours de présence:", error)
     } finally {
       setIsUpdating(false)
+      setPendingAttendanceDays(null)
     }
   }
 
@@ -214,7 +217,7 @@ export default function Dashboard() {
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
             Bienvenue, {user.name} !
-          </h1>mt-16 
+          </h1>
           <p className="text-gray-600">
             Gérez votre participation au weekend champêtre
           </p>
@@ -297,33 +300,50 @@ export default function Dashboard() {
                 {user.isAttending && (
                   <div className="flex flex-col gap-3">
                     <div className="flex items-center justify-between">
-                      <Label htmlFor="attendanceDays" className="text-sm font-medium">Jours de présence</Label>
+                      <Label id="attendanceDaysLabel" className="text-sm font-medium">Jours de présence</Label>
                     </div>
-                    <div className="flex flex-wrap items-center gap-2">
+                    <div
+                      className="flex flex-wrap items-center gap-2"
+                      role="radiogroup"
+                      aria-labelledby="attendanceDaysLabel"
+                    >
+                      {(() => {
+                        const selectedDays = pendingAttendanceDays ?? user.attendanceDays
+                        return (
+                          <>
                       <Button
                         type="button"
-                        variant={user.attendanceDays === 'BOTH' ? 'secondary' : 'outline'}
-                        onClick={() => handleAttendanceDaysChange('BOTH')}
+                            role="radio"
+                            aria-checked={selectedDays === 'BOTH'}
+                            variant={selectedDays === 'BOTH' ? 'secondary' : 'outline'}
+                            onClick={() => handleAttendanceDaysChange('BOTH')}
                         disabled={isUpdating}
                       >
                         Les deux jours
                       </Button>
                       <Button
                         type="button"
-                        variant={user.attendanceDays === 'DAY1' ? 'secondary' : 'outline'}
-                        onClick={() => handleAttendanceDaysChange('DAY1')}
+                            role="radio"
+                            aria-checked={selectedDays === 'DAY1'}
+                            variant={selectedDays === 'DAY1' ? 'secondary' : 'outline'}
+                            onClick={() => handleAttendanceDaysChange('DAY1')}
                         disabled={isUpdating}
                       >
                         Seulement le samedi
                       </Button>
                       <Button
                         type="button"
-                        variant={user.attendanceDays === 'DAY2' ? 'secondary' : 'outline'}
-                        onClick={() => handleAttendanceDaysChange('DAY2')}
+                            role="radio"
+                            aria-checked={selectedDays === 'DAY2'}
+                            variant={selectedDays === 'DAY2' ? 'secondary' : 'outline'}
+                            onClick={() => handleAttendanceDaysChange('DAY2')}
                         disabled={isUpdating}
                       >
                         Seulement le dimanche
                       </Button>
+                          </>
+                        )
+                      })()}
                     </div>
 
                     <div className="flex items-center gap-3">
