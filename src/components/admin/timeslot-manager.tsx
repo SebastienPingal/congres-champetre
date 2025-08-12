@@ -8,14 +8,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { DateTimePicker } from "@/components/ui/date-time-picker"
-import { Checkbox } from "@/components/ui/checkbox"
 
 interface TimeSlot {
   id: string
   title: string
   startTime: string
   endTime: string
-  isAvailable: boolean
   kind?: 'CONFERENCE' | 'MEAL' | 'BREAK' | 'OTHER'
   conference?: {
     id: string
@@ -47,7 +45,6 @@ export function TimeSlotManager({ timeSlots, onTimeSlotCreated }: TimeSlotManage
   const [editTitle, setEditTitle] = useState("")
   const [editStartDateTime, setEditStartDateTime] = useState<Date>()
   const [editEndDateTime, setEditEndDateTime] = useState<Date>()
-  const [editIsAvailable, setEditIsAvailable] = useState<boolean>(true)
   const [editKind, setEditKind] = useState<'CONFERENCE' | 'MEAL' | 'BREAK' | 'OTHER'>('CONFERENCE')
   const [editIsLoading, setEditIsLoading] = useState(false)
   const [editError, setEditError] = useState("")
@@ -119,7 +116,6 @@ export function TimeSlotManager({ timeSlots, onTimeSlotCreated }: TimeSlotManage
     setEditTitle(slot.title)
     setEditStartDateTime(new Date(slot.startTime))
     setEditEndDateTime(new Date(slot.endTime))
-    setEditIsAvailable(slot.isAvailable)
     setEditKind(slot.kind || 'CONFERENCE')
     setEditError("")
     setIsEditDialogOpen(true)
@@ -152,7 +148,6 @@ export function TimeSlotManager({ timeSlots, onTimeSlotCreated }: TimeSlotManage
           title: editTitle.trim(),
           startTime: editStartDateTime.toISOString(),
           endTime: editEndDateTime.toISOString(),
-          isAvailable: editIsAvailable,
             kind: editKind,
         })
       })
@@ -355,10 +350,10 @@ export function TimeSlotManager({ timeSlots, onTimeSlotCreated }: TimeSlotManage
                       </p>
                     </div>
                     <div className="flex items-center gap-2">
-                      {slot.isAvailable ? (
-                        <Badge variant="secondary">Disponible</Badge>
+                      {slot.conference ? (
+                        <Badge variant="destructive">Occupé</Badge>
                       ) : (
-                        <Badge variant="destructive">Indisponible</Badge>
+                        <Badge variant="secondary">Disponible</Badge>
                       )}
                       <Button variant="outline" onClick={() => openEditDialog(slot)}>Éditer</Button>
                     </div>
@@ -443,10 +438,7 @@ export function TimeSlotManager({ timeSlots, onTimeSlotCreated }: TimeSlotManage
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
-              <Checkbox id="available" checked={editIsAvailable} onCheckedChange={(v) => setEditIsAvailable(Boolean(v))} />
-              <Label htmlFor="available">Créneau disponible</Label>
-            </div>
+            
 
             {editError && (
               <div className="text-sm text-red-600">{editError}</div>

@@ -22,7 +22,6 @@ type TimeSlot = {
   title: string
   startTime: string
   endTime: string
-  isAvailable: boolean
   kind?: 'CONFERENCE' | 'MEAL' | 'BREAK' | 'OTHER'
   conference?: Conference
 }

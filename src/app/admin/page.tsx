@@ -11,7 +11,6 @@ interface TimeSlot {
   title: string
   startTime: string
   endTime: string
-  isAvailable: boolean
   conference?: {
     id: string
     title: string

@@ -30,7 +30,6 @@ interface TimeSlot {
   title: string
   startTime: string
   endTime: string
-  isAvailable: boolean
   conference?: {
     id: string
     title: string
@@ -98,8 +97,8 @@ export function ConferenceManager({ conferences, timeSlots, onConferenceUpdated 
 
   const getAvailableSlots = () => {
     return timeSlots.filter(slot => {
-      // Slot disponible ET (soit vide, soit occupé par la conférence actuelle)
-      return slot.isAvailable && (
+      // Slot disponible si non occupé, ou s'il est déjà assigné à la conférence sélectionnée
+      return (
         !slot.conference ||
         (selectedConference && slot.conference.id === selectedConference.id)
       )

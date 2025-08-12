@@ -73,7 +73,6 @@ model TimeSlot {
   title       String
   startTime   DateTime
   endTime     DateTime
-  isAvailable Boolean  @default(true)
   kind        SlotKind @default(CONFERENCE)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt

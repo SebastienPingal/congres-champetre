@@ -65,11 +65,10 @@ export async function PATCH(
     }
 
     const payload = await request.json()
-    const { title, startTime, endTime, isAvailable, kind } = payload as {
+    const { title, startTime, endTime, kind } = payload as {
       title?: string
       startTime?: string
       endTime?: string
-      isAvailable?: boolean
       kind?: 'CONFERENCE' | 'MEAL' | 'BREAK' | 'OTHER'
     }
 
@@ -97,7 +96,6 @@ export async function PATCH(
         ...(title !== undefined ? { title } : {}),
         ...(startTime !== undefined ? { startTime: nextStart } : {}),
         ...(endTime !== undefined ? { endTime: nextEnd } : {}),
-        ...(isAvailable !== undefined ? { isAvailable } : {}),
         ...(kind !== undefined ? { kind } : {}),
       },
       include: {

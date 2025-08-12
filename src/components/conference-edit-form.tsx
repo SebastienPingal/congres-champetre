@@ -13,7 +13,6 @@ interface TimeSlot {
   title: string
   startTime: string
   endTime: string
-  isAvailable: boolean
   kind?: "CONFERENCE" | "MEAL" | "BREAK" | "OTHER"
   conference?: {
     id: string
@@ -70,7 +69,7 @@ export function ConferenceEditForm({ conference, onUpdated, onClose }: Conferenc
       timeSlots.filter((slot) =>
         slot.kind === "CONFERENCE" && (
           // Either the slot is free, or it's the one currently assigned to this conference
-          (slot.isAvailable && !slot.conference) || slot.conference?.id === conference.id
+          (!slot.conference) || slot.conference?.id === conference.id
         )
       ),
     [timeSlots, conference.id]

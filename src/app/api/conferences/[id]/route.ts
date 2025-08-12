@@ -67,7 +67,8 @@ export async function PATCH(
           )
         }
 
-        if (!timeSlot.isAvailable || timeSlot.kind !== 'CONFERENCE' || (timeSlot.conference && timeSlot.conference.id !== id)) {
+        // Disponible si type CONFERENCE et (aucune conférence) ou (déjà assigné à cette conférence)
+        if (timeSlot.kind !== 'CONFERENCE' || (timeSlot.conference && timeSlot.conference.id !== id)) {
           return NextResponse.json(
             { error: "⚠️ Ce créneau n'est plus disponible" },
             { status: 400 }

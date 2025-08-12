@@ -80,7 +80,8 @@ export async function POST(request: NextRequest) {
         )
       }
 
-      if (!timeSlot.isAvailable || timeSlot.conference || timeSlot.kind !== 'CONFERENCE') {
+      // Un créneau est considéré disponible s'il n'a pas de conférence assignée et que son type est CONFERENCE
+      if (timeSlot.conference || timeSlot.kind !== 'CONFERENCE') {
         return NextResponse.json(
           { error: "⚠️ Ce créneau n'est plus disponible" },
           { status: 400 }

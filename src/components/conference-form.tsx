@@ -13,7 +13,6 @@ interface TimeSlot {
   title: string
   startTime: string
   endTime: string
-  isAvailable: boolean
   kind?: 'CONFERENCE' | 'MEAL' | 'BREAK' | 'OTHER'
   conference?: {
     id: string
@@ -96,7 +95,7 @@ export function ConferenceForm({ onConferenceCreated }: ConferenceFormProps) {
   }
 
   const availableSlots = timeSlots.filter(slot =>
-    slot.kind === 'CONFERENCE' && slot.isAvailable && !slot.conference
+    slot.kind === 'CONFERENCE' && !slot.conference
   )
 
   return (
