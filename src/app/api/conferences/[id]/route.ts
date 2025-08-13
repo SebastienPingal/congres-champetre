@@ -140,10 +140,13 @@ export async function DELETE(
       )
     }
 
-    // Vérifier que l'utilisateur est le propriétaire de la conférence
-    if (existingConference.speakerId !== session.user.id) {
+    // Vérifier que l'utilisateur est le propriétaire OU admin
+    const actor = await prisma.user.findUnique({ where: { id: session.user.id } })
+    const isOwner = existingConference.speakerId === session.user.id
+    const isAdmin = actor?.role === "ADMIN"
+    if (!isOwner && !isAdmin) {
       return NextResponse.json(
-        { error: "⚠️ Vous ne pouvez supprimer que vos propres conférences" },
+        { error: "⚠️ Accès refusé" },
         { status: 403 }
       )
     }
@@ -152,9 +155,9 @@ export async function DELETE(
       where: { id }
     })
 
-    // Mettre à jour le statut wantsToSpeak de l'utilisateur
+    // Mettre à jour le statut wantsToSpeak du conférencier concerné
     await prisma.user.update({
-      where: { id: session.user.id },
+      where: { id: existingConference.speakerId },
       data: { wantsToSpeak: false }
     })
 

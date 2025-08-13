@@ -12,6 +12,7 @@ import { ConferenceEditForm } from "@/components/conference-edit-form"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { CalendarDays, MapPin, Users } from "lucide-react"
 import { WeekendProgram } from "@/components/weekend-program"
+import { ConferenceDeleteButton } from "@/components/conference-delete-button"
 
 interface User {
   id: string
@@ -193,6 +194,8 @@ export default function Dashboard() {
   const handleConferenceUpdated = () => {
     fetchUserProfile()
   }
+
+  
 
   if (isLoading) {
     return (
@@ -466,6 +469,14 @@ export default function Dashboard() {
                                   />
                                 </DialogContent>
                               </Dialog>
+                              <ConferenceDeleteButton
+                                conferenceId={conference.id}
+                                onDeleted={() => {
+                                  setEditingConferenceId(null)
+                                  fetchUserProfile()
+                                }}
+                                label="Supprimer"
+                              />
                             </div>
                           </div>
                         ))}

@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { formatDateTimeRange } from "@/lib/helper"
 import { ConferenceEditForm } from "@/components/conference-edit-form"
+import { ConferenceDeleteButton } from "@/components/conference-delete-button"
 
 interface Conference {
   id: string
@@ -34,6 +35,7 @@ interface ConferenceManagerProps {
 
 export function ConferenceManager({ conferences, onConferenceUpdated }: ConferenceManagerProps) {
   const [editingConferenceId, setEditingConferenceId] = useState<string | null>(null)
+  
 
   return (
     <Card>
@@ -108,6 +110,14 @@ export function ConferenceManager({ conferences, onConferenceUpdated }: Conferen
                         />
                       </DialogContent>
                     </Dialog>
+                    <ConferenceDeleteButton 
+                      conferenceId={conference.id}
+                      onDeleted={() => {
+                        if (editingConferenceId === conference.id) setEditingConferenceId(null)
+                        onConferenceUpdated()
+                      }}
+                      label="Supprimer"
+                    />
                   </div>
                 </div>
               </div>
