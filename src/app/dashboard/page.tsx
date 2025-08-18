@@ -235,6 +235,8 @@ export default function Dashboard() {
 
         <div className="grid gap-6 md:grid-cols-2">
 
+          <WeekendProgram className="md:col-span-2" />
+
           {/* Informations générales */}
           <Card>
             <CardHeader>
@@ -279,9 +281,6 @@ export default function Dashboard() {
               </div>
             </CardContent>
           </Card>
-
-
-          <WeekendProgram />
 
           {/* RSVP / Présence */}
           <Card>

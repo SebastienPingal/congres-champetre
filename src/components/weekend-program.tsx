@@ -50,7 +50,7 @@ function getDayLabel(dateString: string) {
   })
 }
 
-export function WeekendProgram() {
+export function WeekendProgram({ className }: { className?: string }) {
   const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -99,7 +99,7 @@ export function WeekendProgram() {
   }, [timeSlots])
 
   return (
-    <Card>
+    <Card className={cn(className)}>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           Programme du weekend
