@@ -4,8 +4,6 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { DateTimePicker } from "@/components/ui/date-time-picker"
 import { ConferenceEditForm } from "@/components/conference-edit-form"
@@ -228,17 +226,8 @@ export function TimeSlotManager({ timeSlots, onTimeSlotCreated }: TimeSlotManage
   }
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <div>
-          <CardTitle className="flex items-center gap-2">
-            Créneaux horaires
-          </CardTitle>
-          <CardDescription>
-            Gérez les créneaux disponibles pour les conférences
-          </CardDescription>
-        </div>
-        
+    <div className="flex flex-col gap-4">
+      <div className="flex items-center justify-end">
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
             <Button>
@@ -252,9 +241,8 @@ export function TimeSlotManager({ timeSlots, onTimeSlotCreated }: TimeSlotManage
                 Définissez les détails du créneau horaire
               </DialogDescription>
             </DialogHeader>
-            
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
+            <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+              <div className="flex flex-col gap-2">
                 <Label htmlFor="title">Titre du créneau</Label>
                 <Input
                   id="title"
@@ -266,8 +254,7 @@ export function TimeSlotManager({ timeSlots, onTimeSlotCreated }: TimeSlotManage
                   disabled={isLoading}
                 />
               </div>
-
-              <div className="space-y-2">
+              <div className="flex flex-col gap-2">
                 <Label>Date et heure de début</Label>
                 <DateTimePicker
                   date={startDateTime}
@@ -276,8 +263,7 @@ export function TimeSlotManager({ timeSlots, onTimeSlotCreated }: TimeSlotManage
                   placeholder="Choisir la date et l'heure de début"
                 />
               </div>
-
-              <div className="space-y-2">
+              <div className="flex flex-col gap-2">
                 <Label>Date et heure de fin</Label>
                 <DateTimePicker
                   date={endDateTime}
@@ -286,8 +272,7 @@ export function TimeSlotManager({ timeSlots, onTimeSlotCreated }: TimeSlotManage
                   placeholder="Choisir la date et l'heure de fin"
                 />
               </div>
-
-              <div className="space-y-2">
+              <div className="flex flex-col gap-2">
                 <Label>Type de créneau</Label>
                 <div className="flex flex-wrap items-center gap-2">
                   {(['CONFERENCE','MEAL','BREAK','OTHER'] as const).map(k => (
@@ -304,14 +289,12 @@ export function TimeSlotManager({ timeSlots, onTimeSlotCreated }: TimeSlotManage
                   ))}
                 </div>
               </div>
-
               {error && (
                 <div className="text-sm text-red-600">
                   {error}
                 </div>
               )}
-
-              <div className="flex gap-2 pt-4">
+              <div className="flex gap-2">
                 <Button type="submit" disabled={isLoading} className="flex-1">
                   {isLoading ? "Création..." : "Créer le créneau"}
                 </Button>
@@ -327,96 +310,83 @@ export function TimeSlotManager({ timeSlots, onTimeSlotCreated }: TimeSlotManage
             </form>
           </DialogContent>
         </Dialog>
-      </CardHeader>
-      
-      <CardContent>
-        {timeSlots.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">
-            <p>Aucun créneau créé pour le moment</p>
-            <p className="text-sm">Commencez par créer votre premier créneau</p>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {[...timeSlots]
-              .sort((a, b) => {
-                // If either slot is "last", put it at the end
-                if (a.title.toLowerCase() === "last") return 1
-                if (b.title.toLowerCase() === "last") return -1
-                // Otherwise, sort by startTime
-                return new Date(a.startTime).getTime() - new Date(b.startTime).getTime()
-              })
-              .map((slot) => (
-                <div key={slot.id} className="p-4 border rounded-lg">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex flex-col gap-1">
-                      <h4 className="font-medium">{slot.title}</h4>
-                      <p className="text-sm text-gray-600">{formatDateTime(slot.startTime)}</p>
-                      <p className="text-sm text-gray-600">
-                        Durée: {Math.round((new Date(slot.endTime).getTime() - new Date(slot.startTime).getTime()) / (1000 * 60))} minutes
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {slot.conference ? (
-                        <Badge variant="destructive">Occupé</Badge>
-                      ) : (
-                        <Badge variant="secondary">Disponible</Badge>
-                      )}
-                      <Button variant="outline" onClick={() => openEditDialog(slot)}>Éditer</Button>
-                    </div>
+      </div>
+      {timeSlots.length === 0 ? (
+        <div className="text-center py-8 text-gray-500">
+          <p>Aucun créneau créé pour le moment</p>
+          <p className="text-sm">Commencez par créer votre premier créneau</p>
+        </div>
+      ) : (
+        <div className="flex flex-col gap-4">
+          {[...timeSlots]
+            .sort((a, b) => {
+              if (a.title.toLowerCase() === "last") return 1
+              if (b.title.toLowerCase() === "last") return -1
+              return new Date(a.startTime).getTime() - new Date(b.startTime).getTime()
+            })
+            .map((slot) => (
+              <div key={slot.id} className="border rounded-lg p-4 flex flex-col gap-3">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex flex-col gap-1">
+                    <h4 className="font-medium">{slot.title}</h4>
+                    <p className="text-sm text-gray-600">{formatDateTime(slot.startTime)}</p>
+                    <p className="text-sm text-gray-600">
+                      Durée: {Math.round((new Date(slot.endTime).getTime() - new Date(slot.startTime).getTime()) / (1000 * 60))} minutes
+                    </p>
                   </div>
-                  
-                  {slot.conference && (
-                    <div className="mt-3 p-3 bg-blue-50 rounded-lg">
-                      <h5 className="text-sm font-medium mb-2">Conférence assignée:</h5>
-                      <div className="text-sm flex flex-col gap-2">
-                        <p className="font-medium">{slot.conference.title}</p>
-                        <p className="text-gray-600">{slot.conference.speaker.name}</p>
-                        <div className="flex items-center gap-2">
-                          <Dialog open={editingConferenceId === slot.conference.id} onOpenChange={(open) => setEditingConferenceId(open ? slot.conference!.id : null)}>
-                            <DialogTrigger asChild>
-                              <Button variant="outline" size="sm">Éditer</Button>
-                            </DialogTrigger>
-                            <DialogContent>
-                              <DialogHeader>
-                                <DialogTitle>Modifier la conférence</DialogTitle>
-                              </DialogHeader>
-                              <ConferenceEditForm
-                                conference={{
-                                  id: slot.conference.id,
-                                  title: slot.conference.title,
-                                  description: undefined,
-                                  timeSlot: { id: slot.id }
-                                }}
-                                onUpdated={() => {
-                                  onTimeSlotCreated()
-                                }}
-                                onClose={() => setEditingConferenceId(null)}
-                              />
-                            </DialogContent>
-                          </Dialog>
-                          <Button variant="destructive" size="sm" onClick={() => handleDisconnectConference(slot.conference?.id)}>
-                            Retirer
-                          </Button>
-                        </div>
+                  <div className="flex items-center gap-2">
+                    <Button variant="outline" size="sm" onClick={() => openEditDialog(slot)}>Éditer</Button>
+                  </div>
+                </div>
+                {slot.conference && (
+                  <div className="rounded-lg bg-blue-50 p-3">
+                    <h5 className="text-sm font-medium">Conférence assignée:</h5>
+                    <div className="text-sm flex flex-col gap-2">
+                      <p className="font-medium">{slot.conference.title}</p>
+                      <p className="text-gray-600">{slot.conference.speaker.name}</p>
+                      <div className="flex items-center gap-2">
+                        <Dialog open={editingConferenceId === slot.conference.id} onOpenChange={(open) => setEditingConferenceId(open ? slot.conference!.id : null)}>
+                          <DialogTrigger asChild>
+                            <Button variant="outline" size="sm">Éditer</Button>
+                          </DialogTrigger>
+                          <DialogContent>
+                            <DialogHeader>
+                              <DialogTitle>Modifier la conférence</DialogTitle>
+                            </DialogHeader>
+                            <ConferenceEditForm
+                              conference={{
+                                id: slot.conference.id,
+                                title: slot.conference.title,
+                                description: undefined,
+                                timeSlot: { id: slot.id }
+                              }}
+                              onUpdated={() => {
+                                onTimeSlotCreated()
+                              }}
+                              onClose={() => setEditingConferenceId(null)}
+                            />
+                          </DialogContent>
+                        </Dialog>
+                        <Button variant="destructive" size="sm" onClick={() => handleDisconnectConference(slot.conference?.id)}>
+                          Retirer
+                        </Button>
                       </div>
                     </div>
-                  )}
-                </div>
-              ))
-            }
-          </div>
-        )}
-      </CardContent>
-
+                  </div>
+                )}
+              </div>
+            ))
+          }
+        </div>
+      )}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Modifier le créneau</DialogTitle>
             <DialogDescription>Ajustez les informations du créneau</DialogDescription>
           </DialogHeader>
-
-          <form onSubmit={handleEditSubmit} className="space-y-4">
-            <div className="space-y-2">
+          <form onSubmit={handleEditSubmit} className="flex flex-col gap-4">
+            <div className="flex flex-col gap-2">
               <Label htmlFor="edit-title">Titre du créneau</Label>
               <Input
                 id="edit-title"
@@ -427,8 +397,7 @@ export function TimeSlotManager({ timeSlots, onTimeSlotCreated }: TimeSlotManage
                 disabled={editIsLoading}
               />
             </div>
-
-            <div className="space-y-2">
+            <div className="flex flex-col gap-2">
               <Label>Date et heure de début</Label>
               <DateTimePicker
                 date={editStartDateTime}
@@ -437,8 +406,7 @@ export function TimeSlotManager({ timeSlots, onTimeSlotCreated }: TimeSlotManage
                 placeholder="Choisir la date et l'heure de début"
               />
             </div>
-
-            <div className="space-y-2">
+            <div className="flex flex-col gap-2">
               <Label>Date et heure de fin</Label>
               <DateTimePicker
                 date={editEndDateTime}
@@ -447,8 +415,7 @@ export function TimeSlotManager({ timeSlots, onTimeSlotCreated }: TimeSlotManage
                 placeholder="Choisir la date et l'heure de fin"
               />
             </div>
-
-            <div className="space-y-2">
+            <div className="flex flex-col gap-2">
               <Label>Type de créneau</Label>
               <div className="flex flex-wrap items-center gap-2">
                 {(['CONFERENCE','MEAL','BREAK','OTHER'] as const).map(k => (
@@ -465,14 +432,10 @@ export function TimeSlotManager({ timeSlots, onTimeSlotCreated }: TimeSlotManage
                 ))}
               </div>
             </div>
-
-            
-
             {editError && (
               <div className="text-sm text-red-600">{editError}</div>
             )}
-
-            <div className="flex gap-2 pt-2">
+            <div className="flex gap-2">
               <Button type="submit" disabled={editIsLoading} className="flex-1">
                 {editIsLoading ? "Sauvegarde..." : "Enregistrer"}
               </Button>
@@ -491,7 +454,6 @@ export function TimeSlotManager({ timeSlots, onTimeSlotCreated }: TimeSlotManage
           </form>
         </DialogContent>
       </Dialog>
-
-    </Card>
+    </div>
   )
 }
