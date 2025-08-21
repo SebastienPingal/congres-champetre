@@ -5,9 +5,8 @@ import { Navbar } from "@/components/navbar"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { TimeSlotManager } from "@/components/admin/timeslot-manager"
 import { ConferenceManager } from "@/components/admin/conference-manager"
-import { Users, UserCheck, CalendarRange, Moon, Mic } from "lucide-react"
-import { Badge } from "@/components/ui/badge"
-import { ScrollArea } from "@/components/ui/scroll-area"
+import { Users, UserCheck, CalendarRange } from "lucide-react"
+import { UsersTable } from "@/components/admin/users-table"
 
 interface TimeSlot {
   id: string
@@ -47,20 +46,6 @@ export default function AdminPage() {
   const [conferences, setConferences] = useState<Conference[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [stats, setStats] = useState<{ totalUsers: number; attendingUsers: number; attendingRate: number } | null>(null)
-  const [users, setUsers] = useState<Array<{
-    id: string
-    name: string | null
-    email: string
-    isAttending: boolean
-    attendanceDays: "NONE" | "DAY1" | "DAY2" | "BOTH"
-    sleepsOnSite: boolean
-    wantsToSpeak: boolean
-    isSpeaker: boolean
-    conferencesCount: number
-    conferenceTitles: string[]
-  }>>([])
-
-  const tableCols = "grid grid-cols-[1.2fr_1.6fr_auto_auto_auto_auto_1.6fr] items-center gap-3"
 
   useEffect(() => {
     // 🛡️ Middleware ensures we're authenticated and have admin role
@@ -69,11 +54,10 @@ export default function AdminPage() {
 
   const fetchData = async () => {
     try {
-      const [slotsResponse, conferencesResponse, statsResponse, usersResponse] = await Promise.all([
+      const [slotsResponse, conferencesResponse, statsResponse] = await Promise.all([
         fetch("/api/timeslots"),
         fetch("/api/conferences"),
-        fetch("/api/admin/stats"),
-        fetch("/api/admin/users")
+        fetch("/api/admin/stats")
       ])
 
       if (slotsResponse.ok) {
@@ -89,11 +73,6 @@ export default function AdminPage() {
       if (statsResponse.ok) {
         const s = await statsResponse.json()
         setStats(s)
-      }
-
-      if (usersResponse.ok) {
-        const u = await usersResponse.json()
-        setUsers(u)
       }
     } catch (error) {
       console.error("🚨 Erreur lors du chargement des données:", error)
@@ -288,75 +267,22 @@ export default function AdminPage() {
           </Card>
         </div>
 
-        {/* Liste des utilisateurs */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              Liste des utilisateurs
-            </CardTitle>
-            <CardDescription>
-              Présence, jours, statut orateur et coordonnées
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {users.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
-                <div className="text-4xl">•</div>
-                <p>Aucun utilisateur pour le moment</p>
-              </div>
-            ) : (
-              <ScrollArea className="max-h-[480px]">
-                <div className="flex flex-col">
-                  {/* Header */}
-                  <div className={`${tableCols} text-xs font-medium text-gray-600 sticky top-0 z-10 bg-card border-b`}>
-                    <div>Nom</div>
-                    <div>Email</div>
-                    <div>Participe</div>
-                    <div>Jours</div>
-                    <div>Nuit</div>
-                    <div>Orateur</div>
-                    <div>Conférences</div>
-                  </div>
-                  {/* Rows */}
-                  {users.map((u) => (
-                    <div key={u.id} className={`${tableCols} text-sm border-b`}>
-                      <div className="truncate" title={u.name ?? undefined}>{u.name ?? "—"}</div>
-                      <div className="truncate text-gray-700" title={u.email}>{u.email}</div>
-                      <div className="flex items-center">
-                        <Badge variant={u.isAttending ? "default" : "secondary"}>
-                          {u.isAttending ? "Oui" : "Non"}
-                        </Badge>
-                      </div>
-                      <div className="flex items-center">
-                        <Badge variant="outline">
-                          {u.attendanceDays === "NONE" && "—"}
-                          {u.attendanceDays === "DAY1" && "Samedi"}
-                          {u.attendanceDays === "DAY2" && "Dimanche"}
-                          {u.attendanceDays === "BOTH" && "Samedi + Dimanche"}
-                        </Badge>
-                      </div>
-                      <div className="flex items-center">
-                        {u.sleepsOnSite ? (
-                          <Badge variant="secondary"><Moon className="h-3 w-3"/> Oui</Badge>
-                        ) : (
-                          <span className="text-gray-500">—</span>
-                        )}
-                      </div>
-                      <div className="flex items-center">
-                        {(u.wantsToSpeak || u.isSpeaker) ? (
-                          <Badge variant="outline"><Mic className="h-3 w-3"/> {u.isSpeaker ? `Oui (${u.conferencesCount})` : "Souhaite"}</Badge>
-                        ) : (
-                          <span className="text-gray-500">—</span>
-                        )}
-                      </div>
-                      <div className="truncate text-gray-700" title={u.conferenceTitles.join(", ")}>{u.conferenceTitles.join(", ") || ""}</div>
-                    </div>
-                  ))}
-                </div>
-              </ScrollArea>
-            )}
-          </CardContent>
-        </Card>
+        {/* Utilisateurs */}
+        <div className="grid gap-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                Utilisateurs
+              </CardTitle>
+              <CardDescription>
+                Liste des inscrits et leurs informations
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <UsersTable />
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   )
