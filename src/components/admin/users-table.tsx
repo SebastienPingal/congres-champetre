@@ -22,6 +22,13 @@ interface AdminUserRow {
   updatedAt: string
 }
 
+const attendanceOrder: Record<AttendanceDays, number> = {
+  NONE: 0,
+  DAY1: 1,
+  DAY2: 2,
+  BOTH: 3,
+}
+
 export function UsersTable() {
   const [users, setUsers] = useState<AdminUserRow[]>([])
   const [loading, setLoading] = useState(true)
@@ -41,7 +48,7 @@ export function UsersTable() {
         if (!res.ok) throw new Error("Failed to fetch users")
         const data = await res.json()
         setUsers(data)
-      } catch (e) {
+      } catch {
         setError("Impossible de charger les utilisateurs")
       } finally {
         setLoading(false)
@@ -56,13 +63,6 @@ export function UsersTable() {
     setFilterParticipation("ALL")
     setFilterSleep("ALL")
     setFilterDays("ALL")
-  }
-
-  const attendanceOrder: Record<AttendanceDays, number> = {
-    NONE: 0,
-    DAY1: 1,
-    DAY2: 2,
-    BOTH: 3,
   }
 
   const filteredAndSortedUsers = useMemo(() => {
@@ -159,7 +159,7 @@ export function UsersTable() {
             id="role"
             className="h-9 rounded-md border border-input bg-background px-3 text-sm"
             value={filterRole}
-            onChange={(e) => setFilterRole(e.target.value as any)}
+            onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setFilterRole(e.target.value as ("ALL" | "ADMIN" | "USER"))}
           >
             <option value="ALL">Tous</option>
             <option value="ADMIN">Admin</option>
@@ -173,7 +173,7 @@ export function UsersTable() {
             id="participation"
             className="h-9 rounded-md border border-input bg-background px-3 text-sm"
             value={filterParticipation}
-            onChange={(e) => setFilterParticipation(e.target.value as any)}
+            onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setFilterParticipation(e.target.value as ("ALL" | "YES" | "NO"))}
           >
             <option value="ALL">Tous</option>
             <option value="YES">Oui</option>
@@ -187,7 +187,7 @@ export function UsersTable() {
             id="sleep"
             className="h-9 rounded-md border border-input bg-background px-3 text-sm"
             value={filterSleep}
-            onChange={(e) => setFilterSleep(e.target.value as any)}
+            onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setFilterSleep(e.target.value as ("ALL" | "YES" | "NO"))}
           >
             <option value="ALL">Tous</option>
             <option value="YES">Oui</option>
@@ -201,7 +201,7 @@ export function UsersTable() {
             id="days"
             className="h-9 rounded-md border border-input bg-background px-3 text-sm"
             value={filterDays}
-            onChange={(e) => setFilterDays(e.target.value as any)}
+            onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setFilterDays(e.target.value as ("ALL" | AttendanceDays))}
           >
             <option value="ALL">Tous</option>
             <option value="NONE">—</option>
