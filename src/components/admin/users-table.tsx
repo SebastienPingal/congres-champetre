@@ -336,7 +336,7 @@ export function UsersTable() {
                   <Badge variant="outline">Non</Badge>
                 )}
               </TableCell>
-              <TableCell className={u.isAttending && !u.hasPaid ? "bg-red-50" : undefined}>
+              <TableCell className={u.isAttending && !u.hasPaid ? "bg-red-200" : undefined}>
                 <div className="flex items-center gap-2">
                   <Checkbox
                     aria-label="A payé"
@@ -359,7 +359,7 @@ export function UsersTable() {
                   />
                 </div>
               </TableCell>
-              <TableCell className={u.willPayInCash ? "bg-amber-50" : undefined}>
+              <TableCell className={u.willPayInCash ? "bg-amber-200" : undefined}>
                 <div className="flex items-center gap-2">
                   <Checkbox
                     aria-label="Paiera en cash"
