@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
 
 type AttendanceDays = "NONE" | "DAY1" | "DAY2" | "BOTH"
 
@@ -18,6 +19,8 @@ interface AdminUserRow {
   isAttending: boolean
   attendanceDays: AttendanceDays
   sleepsOnSite: boolean
+  hasPaid: boolean
+  willPayInCash: boolean
   createdAt: string
   updatedAt: string
 }
@@ -37,6 +40,8 @@ export function UsersTable() {
   const [filterRole, setFilterRole] = useState<"ALL" | "ADMIN" | "USER">("ALL")
   const [filterParticipation, setFilterParticipation] = useState<"ALL" | "YES" | "NO">("ALL")
   const [filterSleep, setFilterSleep] = useState<"ALL" | "YES" | "NO">("ALL")
+  const [filterPaid, setFilterPaid] = useState<"ALL" | "YES" | "NO">("ALL")
+  const [filterCash, setFilterCash] = useState<"ALL" | "YES" | "NO">("ALL")
   const [filterDays, setFilterDays] = useState<"ALL" | AttendanceDays>("ALL")
   const [sortKey, setSortKey] = useState<keyof AdminUserRow | "">("")
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc")
@@ -63,6 +68,8 @@ export function UsersTable() {
     setFilterParticipation("ALL")
     setFilterSleep("ALL")
     setFilterDays("ALL")
+    setFilterPaid("ALL")
+    setFilterCash("ALL")
   }
 
   const filteredAndSortedUsers = useMemo(() => {
@@ -76,8 +83,10 @@ export function UsersTable() {
       const matchesParticipation = filterParticipation === "ALL" || (filterParticipation === "YES" ? u.isAttending : !u.isAttending)
       const matchesSleep = filterSleep === "ALL" || (filterSleep === "YES" ? u.sleepsOnSite : !u.sleepsOnSite)
       const matchesDays = filterDays === "ALL" || u.attendanceDays === filterDays
+      const matchesPaid = filterPaid === "ALL" || (filterPaid === "YES" ? u.hasPaid : !u.hasPaid)
+      const matchesCash = filterCash === "ALL" || (filterCash === "YES" ? u.willPayInCash : !u.willPayInCash)
 
-      return matchesQuery && matchesRole && matchesParticipation && matchesSleep && matchesDays
+      return matchesQuery && matchesRole && matchesParticipation && matchesSleep && matchesDays && matchesPaid && matchesCash
     })
 
     if (sortKey) {
@@ -101,7 +110,7 @@ export function UsersTable() {
     }
 
     return result
-  }, [users, searchQuery, filterRole, filterParticipation, filterSleep, filterDays, sortKey, sortDirection])
+  }, [users, searchQuery, filterRole, filterParticipation, filterSleep, filterPaid, filterCash, filterDays, sortKey, sortDirection])
 
   const applySort = (key: keyof AdminUserRow) => {
     if (sortKey === key) {
@@ -196,6 +205,34 @@ export function UsersTable() {
         </div>
 
         <div className="flex flex-col gap-1">
+          <Label htmlFor="paid">A payé</Label>
+          <select
+            id="paid"
+            className="h-9 rounded-md border border-input bg-background px-3 text-sm"
+            value={filterPaid}
+            onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setFilterPaid(e.target.value as ("ALL" | "YES" | "NO"))}
+          >
+            <option value="ALL">Tous</option>
+            <option value="YES">Oui</option>
+            <option value="NO">Non</option>
+          </select>
+        </div>
+
+        <div className="flex flex-col gap-1">
+          <Label htmlFor="cash">Paiera en cash</Label>
+          <select
+            id="cash"
+            className="h-9 rounded-md border border-input bg-background px-3 text-sm"
+            value={filterCash}
+            onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setFilterCash(e.target.value as ("ALL" | "YES" | "NO"))}
+          >
+            <option value="ALL">Tous</option>
+            <option value="YES">Oui</option>
+            <option value="NO">Non</option>
+          </select>
+        </div>
+
+        <div className="flex flex-col gap-1">
           <Label htmlFor="days">Jours</Label>
           <select
             id="days"
@@ -213,6 +250,25 @@ export function UsersTable() {
 
         <div className="flex items-center gap-2">
           <Button variant="outline" onClick={resetFilters}>♻️ Réinitialiser</Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              setFilterPaid("NO")
+              setFilterCash("ALL")
+            }}
+          >
+            Non payés
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              setFilterCash("YES")
+            }}
+          >
+            Cash
+          </Button>
         </div>
       </div>
 
@@ -227,6 +283,8 @@ export function UsersTable() {
             <TableHead><SortHeader label="Participe" column="isAttending" /></TableHead>
             <TableHead><SortHeader label="Jours" column="attendanceDays" /></TableHead>
             <TableHead><SortHeader label="Dort sur place" column="sleepsOnSite" /></TableHead>
+            <TableHead><SortHeader label="A payé" column="hasPaid" /></TableHead>
+            <TableHead><SortHeader label="Paiera cash" column="willPayInCash" /></TableHead>
             <TableHead><SortHeader label="Inscription" column="createdAt" /></TableHead>
             <TableHead><SortHeader label="Maj" column="updatedAt" /></TableHead>
           </TableRow>
@@ -277,6 +335,52 @@ export function UsersTable() {
                 ) : (
                   <Badge variant="outline">Non</Badge>
                 )}
+              </TableCell>
+              <TableCell className={u.isAttending && !u.hasPaid ? "bg-red-50" : undefined}>
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    aria-label="A payé"
+                    checked={u.hasPaid}
+                    onCheckedChange={async (value) => {
+                      if (typeof value !== "boolean") return
+                      const next = value
+                      setUsers(prev => prev.map(x => x.id === u.id ? { ...x, hasPaid: next } : x))
+                      try {
+                        const res = await fetch("/api/admin/users", {
+                          method: "PATCH",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ userId: u.id, hasPaid: next })
+                        })
+                        if (!res.ok) throw new Error("Update failed")
+                      } catch {
+                        setUsers(prev => prev.map(x => x.id === u.id ? { ...x, hasPaid: !next } : x))
+                      }
+                    }}
+                  />
+                </div>
+              </TableCell>
+              <TableCell className={u.willPayInCash ? "bg-amber-50" : undefined}>
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    aria-label="Paiera en cash"
+                    checked={u.willPayInCash}
+                    onCheckedChange={async (value) => {
+                      if (typeof value !== "boolean") return
+                      const next = value
+                      setUsers(prev => prev.map(x => x.id === u.id ? { ...x, willPayInCash: next } : x))
+                      try {
+                        const res = await fetch("/api/admin/users", {
+                          method: "PATCH",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ userId: u.id, willPayInCash: next })
+                        })
+                        if (!res.ok) throw new Error("Update failed")
+                      } catch {
+                        setUsers(prev => prev.map(x => x.id === u.id ? { ...x, willPayInCash: !next } : x))
+                      }
+                    }}
+                  />
+                </div>
               </TableCell>
               <TableCell>{new Date(u.createdAt).toLocaleDateString()}</TableCell>
               <TableCell>{new Date(u.updatedAt).toLocaleDateString()}</TableCell>
