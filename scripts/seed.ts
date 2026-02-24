@@ -7,6 +7,16 @@ async function main() {
 
   console.log('ℹ️  Pas de création d\'admin automatique - Utilisez OAuth pour vous connecter')
 
+  // Ensure there is an active edition before creating edition-scoped data.
+  const activeEdition =
+    (await prisma.edition.findFirst({ where: { isActive: true } })) ??
+    (await prisma.edition.create({
+      data: {
+        name: `Édition ${new Date().getFullYear()}`,
+        isActive: true,
+      },
+    }))
+
   // Créer quelques créneaux d'exemple
   const existingSlots = await prisma.timeSlot.findMany()
   
@@ -34,7 +44,10 @@ async function main() {
 
     for (const slot of slots) {
       await prisma.timeSlot.create({
-        data: slot
+        data: {
+          ...slot,
+          editionId: activeEdition.id,
+        }
       })
     }
 
