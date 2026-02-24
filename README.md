@@ -63,6 +63,14 @@ DISCORD_CLIENT_SECRET="your-discord-client-secret"
 
 GITHUB_CLIENT_ID="your-github-client-id"
 GITHUB_CLIENT_SECRET="your-github-client-secret"
+
+# SMTP (emailing admin global)
+SMTP_HOST="smtp.example.com"
+SMTP_PORT="587"
+SMTP_USER="smtp-user"
+SMTP_PASS="smtp-password"
+SMTP_FROM="Congres Champetre <noreply@congres-champetre.com>"
+SMTP_SECURE="false"
 ```
 
 ### 3. Migration de la base de données

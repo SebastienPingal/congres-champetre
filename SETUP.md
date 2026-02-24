@@ -16,6 +16,14 @@ DISCORD_CLIENT_ID=""
 DISCORD_CLIENT_SECRET=""
 GITHUB_CLIENT_ID=""
 GITHUB_CLIENT_SECRET=""
+
+# SMTP (emailing admin global)
+SMTP_HOST=""
+SMTP_PORT="587"
+SMTP_USER=""
+SMTP_PASS=""
+SMTP_FROM="Congres Champetre <noreply@congres-champetre.com>"
+SMTP_SECURE="false"
 ```
 
 ## 2. Base de données PostgreSQL

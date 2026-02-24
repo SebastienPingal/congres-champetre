@@ -55,13 +55,22 @@ export function Navbar() {
                 </NavigationMenuLink>
               </NavigationMenuItem>
               {(session.user as User).role === "ADMIN" && (
-                <NavigationMenuItem>
-                  <NavigationMenuLink asChild>
-                    <Link href="/admin" className="text-sm">
-                      Administration
-                    </Link>
-                  </NavigationMenuLink>
-                </NavigationMenuItem>
+                <>
+                  <NavigationMenuItem>
+                    <NavigationMenuLink asChild>
+                      <Link href="/admin" className="text-sm">
+                        Administration
+                      </Link>
+                    </NavigationMenuLink>
+                  </NavigationMenuItem>
+                  <NavigationMenuItem>
+                    <NavigationMenuLink asChild>
+                      <Link href="/admin/emails" className="text-sm">
+                        Email global
+                      </Link>
+                    </NavigationMenuLink>
+                  </NavigationMenuItem>
+                </>
               )}
             </NavigationMenuList>
           </NavigationMenu>
@@ -90,9 +99,14 @@ export function Navbar() {
                         Accueil
                       </Link>
                       {(session.user as User).role === "ADMIN" && (
-                        <Link href="/admin" className="text-base hover:text-green-600 transition-colors">
-                          Administration
-                        </Link>
+                        <>
+                          <Link href="/admin" className="text-base hover:text-green-600 transition-colors">
+                            Administration
+                          </Link>
+                          <Link href="/admin/emails" className="text-base hover:text-green-600 transition-colors">
+                            Email global
+                          </Link>
+                        </>
                       )}
                     </div>
                   </div>
