@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { getActiveEdition } from "@/lib/edition"
+import type { AttendanceDays } from "@prisma/client"
 
-// GET - Récupérer le profil utilisateur
 export async function GET() {
   try {
     const session = await auth()
@@ -14,6 +15,8 @@ export async function GET() {
       )
     }
 
+    const activeEdition = await getActiveEdition()
+
     const user = await prisma.user.findUnique({
       where: { id: session.user.id },
       select: {
@@ -22,16 +25,16 @@ export async function GET() {
         email: true,
         role: true,
         wantsToSpeak: true,
-        isAttending: true,
-        attendanceDays: true,
-        sleepsOnSite: true,
         createdAt: true,
         conferences: {
-          include: {
-            timeSlot: true
-          }
-        }
-      }
+          where: { editionId: activeEdition.id },
+          include: { timeSlot: true },
+        },
+        participations: {
+          where: { editionId: activeEdition.id },
+          take: 1,
+        },
+      },
     })
 
     if (!user) {
@@ -41,7 +44,26 @@ export async function GET() {
       )
     }
 
-    return NextResponse.json(user)
+    const participation = user.participations[0]
+
+    return NextResponse.json({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      wantsToSpeak: user.wantsToSpeak,
+      createdAt: user.createdAt,
+      conferences: user.conferences,
+      isAttending: participation?.isAttending ?? false,
+      attendanceDays: participation?.attendanceDays ?? "NONE",
+      sleepsOnSite: participation?.sleepsOnSite ?? false,
+      edition: {
+        id: activeEdition.id,
+        name: activeEdition.name,
+        startDate: activeEdition.startDate,
+        endDate: activeEdition.endDate,
+      },
+    })
   } catch (error) {
     console.error("🚨 Erreur lors de la récupération du profil:", error)
     return NextResponse.json(
@@ -51,7 +73,6 @@ export async function GET() {
   }
 }
 
-// PATCH - Mettre à jour le statut "veut faire une conférence"
 export async function PATCH(request: NextRequest) {
   try {
     const session = await auth()
@@ -64,92 +85,144 @@ export async function PATCH(request: NextRequest) {
     }
 
     const body = await request.json()
+    const activeEdition = await getActiveEdition()
 
-    const current = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      select: { isAttending: true }
-    })
-    if (!current) {
-      return NextResponse.json(
-        { error: "👤 Utilisateur non trouvé" },
-        { status: 404 }
-      )
-    }
-
-    const updateData: Record<string, unknown> = {}
-
-    if (typeof body.wantsToSpeak === 'boolean') {
-      updateData.wantsToSpeak = body.wantsToSpeak
+    const userUpdateData: Record<string, unknown> = {}
+    if (typeof body.wantsToSpeak === "boolean") {
+      userUpdateData.wantsToSpeak = body.wantsToSpeak
       if (body.wantsToSpeak === false) {
         await prisma.conference.deleteMany({
-          where: { speakerId: session.user.id }
+          where: { speakerId: session.user.id, editionId: activeEdition.id },
         })
       }
     }
 
-    if (typeof body.isAttending === 'boolean') {
-      updateData.isAttending = body.isAttending
+    if (Object.keys(userUpdateData).length > 0) {
+      await prisma.user.update({
+        where: { id: session.user.id },
+        data: userUpdateData,
+      })
+    }
+
+    const participationData: Record<string, unknown> = {}
+    let needsParticipationUpdate = false
+
+    if (typeof body.isAttending === "boolean") {
+      participationData.isAttending = body.isAttending
+      needsParticipationUpdate = true
       if (body.isAttending === false) {
-        updateData.attendanceDays = 'NONE'
-        updateData.sleepsOnSite = false
+        participationData.attendanceDays = "NONE"
+        participationData.sleepsOnSite = false
       }
     }
 
-    if (typeof body.attendanceDays === 'string') {
-      const allowed = ['NONE', 'DAY1', 'DAY2', 'BOTH']
+    if (typeof body.attendanceDays === "string") {
+      const allowed = ["NONE", "DAY1", "DAY2", "BOTH"]
       if (!allowed.includes(body.attendanceDays)) {
         return NextResponse.json(
-          { error: '📝 Valeur attendanceDays invalide' },
+          { error: "📝 Valeur attendanceDays invalide" },
           { status: 400 }
         )
       }
-      updateData.attendanceDays = body.attendanceDays
-      // If user sets any day, he is attending
-      if (body.attendanceDays !== 'NONE') updateData.isAttending = true
+      participationData.attendanceDays = body.attendanceDays
+      needsParticipationUpdate = true
+      if (body.attendanceDays !== "NONE") {
+        participationData.isAttending = true
+      }
     }
 
-    // Validate sleepsOnSite against final attending state
-    const finalIsAttending =
-      typeof updateData.isAttending === 'boolean'
-        ? (updateData.isAttending as boolean)
-        : current.isAttending
+    if (typeof body.sleepsOnSite === "boolean") {
+      participationData.sleepsOnSite = body.sleepsOnSite
+      needsParticipationUpdate = true
+    }
 
-    if (typeof body.sleepsOnSite === 'boolean') {
-      if (body.sleepsOnSite && !finalIsAttending) {
+    if (needsParticipationUpdate) {
+      const existing = await prisma.editionParticipation.findUnique({
+        where: {
+          userId_editionId: {
+            userId: session.user.id,
+            editionId: activeEdition.id,
+          },
+        },
+      })
+
+      const finalIsAttending =
+        typeof participationData.isAttending === "boolean"
+          ? (participationData.isAttending as boolean)
+          : (existing?.isAttending ?? false)
+
+      if (body.sleepsOnSite === true && !finalIsAttending) {
         return NextResponse.json(
-          { error: '📝 Impossible de dormir sur place si non présent' },
+          { error: "📝 Impossible de dormir sur place si non présent" },
           { status: 400 }
         )
       }
-      updateData.sleepsOnSite = body.sleepsOnSite
+
+      if (body.isAttending === true && !existing) {
+        participationData.attendanceDays =
+          participationData.attendanceDays ?? "BOTH"
+      }
+
+      await prisma.editionParticipation.upsert({
+        where: {
+          userId_editionId: {
+            userId: session.user.id,
+            editionId: activeEdition.id,
+          },
+        },
+        create: {
+          userId: session.user.id,
+          editionId: activeEdition.id,
+          isAttending: (participationData.isAttending as boolean) ?? false,
+          attendanceDays:
+            (participationData.attendanceDays as AttendanceDays) ?? "NONE",
+          sleepsOnSite: (participationData.sleepsOnSite as boolean) ?? false,
+        },
+        update: participationData,
+      })
     }
 
-    const user = await prisma.user.update({
+    const user = await prisma.user.findUnique({
       where: { id: session.user.id },
-      data: updateData,
       select: {
         id: true,
         name: true,
         email: true,
         role: true,
         wantsToSpeak: true,
-        isAttending: true,
-        attendanceDays: true,
-        sleepsOnSite: true,
         conferences: {
-          include: {
-            timeSlot: true
-          }
-        }
-      }
+          where: { editionId: activeEdition.id },
+          include: { timeSlot: true },
+        },
+        participations: {
+          where: { editionId: activeEdition.id },
+          take: 1,
+        },
+      },
     })
 
-    return NextResponse.json(
-      {
-        message: '✅ Profil mis à jour',
-        user
-      }
-    )
+    const participation = user?.participations[0]
+
+    return NextResponse.json({
+      message: "✅ Profil mis à jour",
+      user: {
+        id: user?.id,
+        name: user?.name,
+        email: user?.email,
+        role: user?.role,
+        wantsToSpeak: user?.wantsToSpeak,
+        conferences: user?.conferences,
+        isAttending: participation?.isAttending ?? false,
+        attendanceDays: participation?.attendanceDays ?? "NONE",
+        sleepsOnSite: participation?.sleepsOnSite ?? false,
+        edition: {
+          id: activeEdition.id,
+          name: activeEdition.name,
+          startDate: activeEdition.startDate,
+          endDate: activeEdition.endDate,
+        },
+      },
+    })
   } catch (error) {
     console.error("🚨 Erreur lors de la mise à jour du profil:", error)
     return NextResponse.json(

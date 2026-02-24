@@ -7,6 +7,7 @@ import { TimeSlotManager } from "@/components/admin/timeslot-manager"
 import { ConferenceManager } from "@/components/admin/conference-manager"
 import { Users, UserCheck, CalendarRange } from "lucide-react"
 import { UsersTable } from "@/components/admin/users-table"
+import { EditionManager } from "@/components/admin/edition-manager"
 
 interface TimeSlot {
   id: string
@@ -228,6 +229,21 @@ export default function AdminPage() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Gestion des éditions */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              Gestion des éditions
+            </CardTitle>
+            <CardDescription>
+              Créez et gérez les différentes éditions de l&apos;événement
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <EditionManager onEditionChanged={fetchData} />
+          </CardContent>
+        </Card>
 
         <div className="grid gap-6 lg:grid-cols-2">
           {/* Gestion des créneaux */}

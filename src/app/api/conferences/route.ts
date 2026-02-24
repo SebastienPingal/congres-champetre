@@ -1,24 +1,27 @@
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { getActiveEdition } from "@/lib/edition"
 
-// GET - Récupérer toutes les conférences
 export async function GET() {
   try {
+    const activeEdition = await getActiveEdition()
+
     const conferences = await prisma.conference.findMany({
+      where: { editionId: activeEdition.id },
       include: {
         speaker: {
           select: {
             id: true,
             name: true,
-            email: true
-          }
+            email: true,
+          },
         },
-        timeSlot: true
+        timeSlot: true,
       },
       orderBy: {
-        createdAt: 'desc'
-      }
+        createdAt: "desc",
+      },
     })
 
     return NextResponse.json(conferences)
@@ -31,7 +34,6 @@ export async function GET() {
   }
 }
 
-// POST - Créer une nouvelle conférence
 export async function POST(request: NextRequest) {
   try {
     const session = await auth()
@@ -52,25 +54,26 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Vérifier si l'utilisateur a déjà une conférence
+    const activeEdition = await getActiveEdition()
+
     const existingConference = await prisma.conference.findFirst({
       where: {
-        speakerId: session.user.id
-      }
+        speakerId: session.user.id,
+        editionId: activeEdition.id,
+      },
     })
 
     if (existingConference) {
       return NextResponse.json(
-        { error: "🎤 Vous avez déjà proposé une conférence" },
+        { error: "🎤 Vous avez déjà proposé une conférence pour cette édition" },
         { status: 400 }
       )
     }
 
-    // Si un créneau est spécifié, vérifier qu'il est disponible
     if (timeSlotId) {
       const timeSlot = await prisma.timeSlot.findUnique({
         where: { id: timeSlotId },
-        include: { conference: true }
+        include: { conference: true },
       })
 
       if (!timeSlot) {
@@ -80,8 +83,7 @@ export async function POST(request: NextRequest) {
         )
       }
 
-      // Un créneau est considéré disponible s'il n'a pas de conférence assignée et que son type est CONFERENCE
-      if (timeSlot.conference || timeSlot.kind !== 'CONFERENCE') {
+      if (timeSlot.conference || timeSlot.kind !== "CONFERENCE") {
         return NextResponse.json(
           { error: "⚠️ Ce créneau n'est plus disponible" },
           { status: 400 }
@@ -94,6 +96,7 @@ export async function POST(request: NextRequest) {
         title,
         description,
         speakerId: session.user.id,
+        editionId: activeEdition.id,
         timeSlotId: timeSlotId || null,
       },
       include: {
@@ -101,23 +104,22 @@ export async function POST(request: NextRequest) {
           select: {
             id: true,
             name: true,
-            email: true
-          }
+            email: true,
+          },
         },
-        timeSlot: true
-      }
+        timeSlot: true,
+      },
     })
 
-    // Mettre à jour le statut wantsToSpeak de l'utilisateur
     await prisma.user.update({
       where: { id: session.user.id },
-      data: { wantsToSpeak: true }
+      data: { wantsToSpeak: true },
     })
 
     return NextResponse.json(
-      { 
+      {
         message: "✅ Conférence créée avec succès",
-        conference 
+        conference,
       },
       { status: 201 }
     )

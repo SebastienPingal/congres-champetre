@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { getActiveEdition } from "@/lib/edition"
 
 export async function GET() {
   try {
@@ -14,6 +15,8 @@ export async function GET() {
       return NextResponse.json({ error: "⚠️ Accès refusé - Admin requis" }, { status: 403 })
     }
 
+    const activeEdition = await getActiveEdition()
+
     const users = await prisma.user.findMany({
       orderBy: { createdAt: "desc" },
       select: {
@@ -22,17 +25,34 @@ export async function GET() {
         email: true,
         role: true,
         wantsToSpeak: true,
-        isAttending: true,
-        attendanceDays: true,
-        sleepsOnSite: true,
-        hasPaid: true,
-        willPayInCash: true,
         createdAt: true,
         updatedAt: true,
+        participations: {
+          where: { editionId: activeEdition.id },
+          take: 1,
+        },
+      },
+    })
+
+    const result = users.map((u) => {
+      const p = u.participations[0]
+      return {
+        id: u.id,
+        name: u.name,
+        email: u.email,
+        role: u.role,
+        wantsToSpeak: u.wantsToSpeak,
+        isAttending: p?.isAttending ?? false,
+        attendanceDays: p?.attendanceDays ?? "NONE",
+        sleepsOnSite: p?.sleepsOnSite ?? false,
+        hasPaid: p?.hasPaid ?? false,
+        willPayInCash: p?.willPayInCash ?? false,
+        createdAt: u.createdAt,
+        updatedAt: p?.updatedAt ?? u.updatedAt,
       }
     })
 
-    return NextResponse.json(users)
+    return NextResponse.json(result)
   } catch (error) {
     console.error("🚨 Erreur lors de la récupération des utilisateurs:", error)
     return NextResponse.json({ error: "❌ Erreur serveur" }, { status: 500 })
@@ -74,15 +94,27 @@ export async function PATCH(req: Request) {
       return NextResponse.json({ error: "Aucun champ à mettre à jour" }, { status: 400 })
     }
 
-    const updated = await prisma.user.update({
-      where: { id: userId },
-      data,
+    const activeEdition = await getActiveEdition()
+
+    const updated = await prisma.editionParticipation.upsert({
+      where: {
+        userId_editionId: {
+          userId,
+          editionId: activeEdition.id,
+        },
+      },
+      create: {
+        userId,
+        editionId: activeEdition.id,
+        ...data,
+      },
+      update: data,
       select: {
         id: true,
         hasPaid: true,
         willPayInCash: true,
         updatedAt: true,
-      }
+      },
     })
 
     return NextResponse.json(updated)

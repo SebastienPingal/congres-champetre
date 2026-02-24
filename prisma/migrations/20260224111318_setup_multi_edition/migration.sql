@@ -36,7 +36,7 @@ ALTER TABLE "public"."TimeSlot" ADD COLUMN "editionId" TEXT;
 -- 4. CRÉATION DE L'ÉDITION INITIALE
 -- On génère un ID fixe pour pouvoir lier les données
 INSERT INTO "public"."Edition" ("id", "name", "isActive", "updatedAt")
-VALUES ('initial-edition-uuid', 'Édition 2024', true, CURRENT_TIMESTAMP);
+VALUES ('initial-edition-uuid', 'Première édition', true, CURRENT_TIMESTAMP);
 
 -- 5. TRANSFERT DES DONNÉES (Le plus important)
 -- On lie les conférences et slots à l'édition créée

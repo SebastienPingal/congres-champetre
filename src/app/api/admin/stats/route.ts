@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { getActiveEdition } from "@/lib/edition"
 
-// GET - Admin stats: total users and attendees
 export async function GET() {
   try {
     const session = await auth()
@@ -22,15 +22,25 @@ export async function GET() {
       )
     }
 
+    const activeEdition = await getActiveEdition()
+
     const [totalUsers, attendingUsers] = await Promise.all([
       prisma.user.count(),
-      prisma.user.count({ where: { isAttending: true } }),
+      prisma.editionParticipation.count({
+        where: {
+          editionId: activeEdition.id,
+          isAttending: true,
+        },
+      }),
     ])
 
     return NextResponse.json({
       totalUsers,
       attendingUsers,
-      attendingRate: totalUsers === 0 ? 0 : Math.round((attendingUsers / totalUsers) * 100),
+      attendingRate:
+        totalUsers === 0
+          ? 0
+          : Math.round((attendingUsers / totalUsers) * 100),
     })
   } catch (error) {
     console.error("🚨 Erreur lors de la récupération des stats admin:", error)
@@ -40,5 +50,3 @@ export async function GET() {
     )
   }
 }
-
-

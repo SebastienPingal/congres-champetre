@@ -1,11 +1,14 @@
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { getActiveEdition } from "@/lib/edition"
 
-// GET - Récupérer tous les créneaux
 export async function GET() {
   try {
+    const activeEdition = await getActiveEdition()
+
     const timeSlots = await prisma.timeSlot.findMany({
+      where: { editionId: activeEdition.id },
       include: {
         conference: {
           include: {
@@ -13,15 +16,15 @@ export async function GET() {
               select: {
                 id: true,
                 name: true,
-                email: true
-              }
-            }
-          }
-        }
+                email: true,
+              },
+            },
+          },
+        },
       },
       orderBy: {
-        startTime: 'asc'
-      }
+        startTime: "asc",
+      },
     })
 
     return NextResponse.json(timeSlots)
@@ -34,7 +37,6 @@ export async function GET() {
   }
 }
 
-// POST - Créer un nouveau créneau (admin uniquement)
 export async function POST(request: NextRequest) {
   try {
     const session = await auth()
@@ -46,12 +48,11 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Vérifier si l'utilisateur est admin
     const user = await prisma.user.findUnique({
-      where: { id: session.user.id }
+      where: { id: session.user.id },
     })
 
-    if (user?.role !== 'ADMIN') {
+    if (user?.role !== "ADMIN") {
       return NextResponse.json(
         { error: "⚠️ Accès refusé - Admin requis" },
         { status: 403 }
@@ -67,7 +68,6 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Vérifier que l'heure de fin est après l'heure de début
     if (new Date(endTime) <= new Date(startTime)) {
       return NextResponse.json(
         { error: "⏰ L'heure de fin doit être après l'heure de début" },
@@ -75,11 +75,14 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    const activeEdition = await getActiveEdition()
+
     const timeSlot = await prisma.timeSlot.create({
       data: {
         title,
         startTime: new Date(startTime),
         endTime: new Date(endTime),
+        editionId: activeEdition.id,
         ...(kind ? { kind } : {}),
       },
     })
@@ -87,7 +90,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         message: "✅ Créneau créé avec succès",
-        timeSlot
+        timeSlot,
       },
       { status: 201 }
     )
