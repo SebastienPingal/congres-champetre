@@ -46,12 +46,17 @@ function readMailConfig(): MailConfig {
     throw new Error(`📭 Configuration SMTP incomplète: ${missing.join(", ")}`)
   }
 
+  const resolvedHost = host as string
+  const resolvedUser = user as string
+  const resolvedPass = pass as string
+  const resolvedFrom = from as string
+
   const port = Number(portRaw)
   if (!Number.isInteger(port) || port <= 0) {
     throw new Error("⚠️ SMTP_PORT doit être un entier positif")
   }
 
-  return { host, port, secure, user, pass, from }
+  return { host: resolvedHost, port, secure, user: resolvedUser, pass: resolvedPass, from: resolvedFrom }
 }
 
 function escapeHtml(text: string): string {
