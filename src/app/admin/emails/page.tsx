@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 
 type SendResponse = {
+  mode?: "admin_test" | "broadcast"
   total: number
   sent: number
   failed: number
@@ -26,8 +27,7 @@ export default function AdminEmailsPage() {
 
   const isAdmin = (session?.user as User | undefined)?.role === "ADMIN"
 
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
+  const submitEmail = async (sendToAdminOnly: boolean) => {
     setError(null)
     setResult(null)
 
@@ -41,7 +41,10 @@ export default function AdminEmailsPage() {
       return
     }
 
-    const confirmed = window.confirm("Confirmer l'envoi de cet email à tous les utilisateurs ?")
+    const confirmationMessage = sendToAdminOnly
+      ? "Confirmer l'envoi d'un email test vers votre adresse admin ?"
+      : "Confirmer l'envoi de cet email à tous les utilisateurs ?"
+    const confirmed = window.confirm(confirmationMessage)
     if (!confirmed) return
 
     try {
@@ -52,6 +55,7 @@ export default function AdminEmailsPage() {
         body: JSON.stringify({
           subject: subject.trim(),
           message: message.trim(),
+          sendToAdminOnly,
         }),
       })
 
@@ -62,14 +66,21 @@ export default function AdminEmailsPage() {
       }
 
       setResult(data)
-      setSubject("")
-      setMessage("")
+      if (!sendToAdminOnly) {
+        setSubject("")
+        setMessage("")
+      }
     } catch (submitError) {
       console.error("📧🚨 Erreur lors de l'envoi depuis la page admin:", submitError)
       setError("❌ Une erreur est survenue pendant l'envoi.")
     } finally {
       setIsSending(false)
     }
+  }
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    await submitEmail(false)
   }
 
   if (status === "loading") {
@@ -142,8 +153,11 @@ export default function AdminEmailsPage() {
                 <Button type="submit" disabled={isSending}>
                   {isSending ? "Envoi en cours..." : "Envoyer à tous les utilisateurs"}
                 </Button>
+                <Button type="button" variant="outline" disabled={isSending} onClick={() => submitEmail(true)}>
+                  {isSending ? "Envoi en cours..." : "Envoyer un test à mon email admin"}
+                </Button>
                 <p className="text-sm text-gray-600">
-                  Un email est envoyé individuellement à chaque destinataire.
+                  Test admin puis envoi global: un email est envoyé individuellement à chaque destinataire.
                 </p>
               </div>
             </form>
@@ -164,6 +178,9 @@ export default function AdminEmailsPage() {
               <CardTitle>Résultat de l&apos;envoi</CardTitle>
             </CardHeader>
             <CardContent className="flex flex-col gap-2 text-sm">
+              <p>
+                🧪 Mode: {result.mode === "admin_test" ? "Test admin" : "Envoi global"}
+              </p>
               <p>📨 Total ciblé: {result.total}</p>
               <p>✅ Envoyés: {result.sent}</p>
               <p>❌ En échec: {result.failed}</p>

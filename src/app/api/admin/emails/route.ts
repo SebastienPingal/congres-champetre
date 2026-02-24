@@ -7,6 +7,7 @@ import { sendBroadcastEmail } from "@/lib/mail"
 const payloadSchema = z.object({
   subject: z.string().trim().min(3, "Le sujet doit contenir au moins 3 caractères").max(200, "Le sujet est trop long"),
   message: z.string().trim().min(5, "Le message doit contenir au moins 5 caractères").max(10000, "Le message est trop long"),
+  sendToAdminOnly: z.boolean().optional().default(false),
 })
 
 export async function POST(req: Request) {
@@ -34,11 +35,20 @@ export async function POST(req: Request) {
       )
     }
 
-    const users = await prisma.user.findMany({
-      where: { role: "USER" },
-      select: { email: true },
-    })
-    const recipients = users.map((user) => user.email).filter((email) => email.trim().length > 0)
+    let recipients: string[] = []
+
+    if (parsed.data.sendToAdminOnly) {
+      const adminEmail = session.user.email?.trim()
+      if (!adminEmail) {
+        return NextResponse.json({ error: "📭 Email admin introuvable pour l'envoi test" }, { status: 400 })
+      }
+      recipients = [adminEmail]
+    } else {
+      const users = await prisma.user.findMany({
+        select: { email: true },
+      })
+      recipients = users.map((user) => user.email).filter((email) => email.trim().length > 0)
+    }
 
     if (recipients.length === 0) {
       return NextResponse.json({ error: "📭 Aucun utilisateur destinataire trouvé" }, { status: 400 })
@@ -51,6 +61,7 @@ export async function POST(req: Request) {
     })
 
     return NextResponse.json({
+      mode: parsed.data.sendToAdminOnly ? "admin_test" : "broadcast",
       total: result.total,
       sent: result.sent,
       failed: result.failed,
