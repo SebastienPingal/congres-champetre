@@ -389,7 +389,7 @@ export default function Dashboard() {
           </Card>
 
           {/* RSVP / Présence */}
-          <Card className={`border-l-4 ${needsPresenceAction ? "border-l-green-500 shadow-md ring-1 ring-green-200" : "border-l-green-300"}`}>
+          <Card className={needsPresenceAction ? "animate-border-rotate animate-border-rotate-green shadow-md" : "border-l-4 border-l-green-300"}>
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle className="flex items-center gap-2">
@@ -512,7 +512,7 @@ export default function Dashboard() {
 
           {/* Repas */}
           {user.isAttending && meals.length > 0 && (
-            <Card className={`border-l-4 ${needsMealAction ? "border-l-amber-500 shadow-md ring-1 ring-amber-200" : "border-l-amber-300"}`}>
+            <Card className={needsMealAction ? "animate-border-rotate animate-border-rotate-amber shadow-md" : "border-l-4 border-l-amber-300"}>
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <CardTitle className="flex items-center gap-2">
@@ -667,7 +667,7 @@ export default function Dashboard() {
 
           {/* Participation aux conférences */}
           {user.isAttending && (
-            <Card className={`border-l-4 ${needsConferenceAction ? "border-l-violet-500 shadow-md ring-1 ring-violet-200" : "border-l-violet-300"}`}>
+            <Card className={needsConferenceAction ? "animate-border-rotate animate-border-rotate-violet shadow-md" : "border-l-4 border-l-violet-300"}>
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <CardTitle className="flex items-center gap-2">

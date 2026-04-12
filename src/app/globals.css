@@ -120,3 +120,44 @@
     @apply bg-background text-foreground;
   }
 }
+
+@layer utilities {
+  @keyframes border-rotate {
+    0% {
+      --border-angle: 0deg;
+    }
+    100% {
+      --border-angle: 360deg;
+    }
+  }
+
+  @property --border-angle {
+    syntax: "<angle>";
+    initial-value: 0deg;
+    inherits: false;
+  }
+
+  .animate-border-rotate {
+    --border-width: 2px;
+    --border-color: oklch(0.6 0.2 150);
+    position: relative;
+    background:
+      padding-box linear-gradient(to bottom, var(--color-card), var(--color-card)),
+      border-box conic-gradient(from var(--border-angle), transparent 25%, var(--border-color) 50%, transparent 75%);
+    border: var(--border-width) solid transparent !important;
+    border-radius: var(--radius-lg);
+    animation: border-rotate 1.5s linear infinite;
+  }
+
+  .animate-border-rotate-green {
+    --border-color: oklch(0.6 0.2 150);
+  }
+
+  .animate-border-rotate-amber {
+    --border-color: oklch(0.7 0.18 75);
+  }
+
+  .animate-border-rotate-violet {
+    --border-color: oklch(0.55 0.2 290);
+  }
+}
