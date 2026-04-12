@@ -58,10 +58,11 @@ model User {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  accounts       Account[]
-  sessions       Session[]
-  conferences    Conference[]
-  participations EditionParticipation[]
+  accounts           Account[]
+  sessions           Session[]
+  conferences        Conference[]
+  participations     EditionParticipation[]
+  mealRegistrations  MealRegistration[]
 }
 
 model Edition {
@@ -97,17 +98,20 @@ model EditionParticipation {
 }
 
 model TimeSlot {
-  id        String   @id @default(cuid())
-  editionId String
-  title     String
-  startTime DateTime
-  endTime   DateTime
-  kind      SlotKind @default(CONFERENCE)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id          String   @id @default(cuid())
+  editionId   String
+  title       String
+  startTime   DateTime
+  endTime     DateTime
+  kind        SlotKind @default(CONFERENCE)
+  description String?
+  price       Float?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
-  edition    Edition     @relation(fields: [editionId], references: [id], onDelete: Cascade)
-  conference Conference?
+  edition            Edition            @relation(fields: [editionId], references: [id], onDelete: Cascade)
+  conference         Conference?
+  mealRegistrations  MealRegistration[]
 }
 
 model Conference {
@@ -123,6 +127,18 @@ model Conference {
   edition  Edition   @relation(fields: [editionId], references: [id], onDelete: Cascade)
   speaker  User      @relation(fields: [speakerId], references: [id], onDelete: Cascade)
   timeSlot TimeSlot? @relation(fields: [timeSlotId], references: [id])
+}
+
+model MealRegistration {
+  id         String   @id @default(cuid())
+  userId     String
+  timeSlotId String
+  createdAt  DateTime @default(now())
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  timeSlot TimeSlot @relation(fields: [timeSlotId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, timeSlotId])
 }
 
 enum Role {

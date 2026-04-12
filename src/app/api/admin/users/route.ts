@@ -31,6 +31,14 @@ export async function GET() {
           where: { editionId: activeEdition.id },
           take: 1,
         },
+        mealRegistrations: {
+          where: { timeSlot: { editionId: activeEdition.id, kind: "MEAL" } },
+          select: {
+            timeSlot: {
+              select: { id: true, title: true, price: true },
+            },
+          },
+        },
       },
     })
 
@@ -47,6 +55,8 @@ export async function GET() {
         sleepsOnSite: p?.sleepsOnSite ?? false,
         hasPaid: p?.hasPaid ?? false,
         willPayInCash: p?.willPayInCash ?? false,
+        meals: u.mealRegistrations.map((mr) => mr.timeSlot.title),
+        mealTotal: u.mealRegistrations.reduce((sum, mr) => sum + (mr.timeSlot.price ?? 0), 0),
         createdAt: u.createdAt,
         updatedAt: p?.updatedAt ?? u.updatedAt,
       }

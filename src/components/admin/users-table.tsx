@@ -21,6 +21,8 @@ interface AdminUserRow {
   sleepsOnSite: boolean
   hasPaid: boolean
   willPayInCash: boolean
+  meals: string[]
+  mealTotal: number
   createdAt: string
   updatedAt: string
 }
@@ -285,6 +287,7 @@ export function UsersTable() {
             <TableHead><SortHeader label="Dort sur place" column="sleepsOnSite" /></TableHead>
             <TableHead><SortHeader label="A payé" column="hasPaid" /></TableHead>
             <TableHead><SortHeader label="Paiera cash" column="willPayInCash" /></TableHead>
+            <TableHead>Repas</TableHead>
             <TableHead><SortHeader label="Inscription" column="createdAt" /></TableHead>
             <TableHead><SortHeader label="Maj" column="updatedAt" /></TableHead>
           </TableRow>
@@ -381,6 +384,20 @@ export function UsersTable() {
                     }}
                   />
                 </div>
+              </TableCell>
+              <TableCell>
+                {u.meals.length > 0 ? (
+                  <div className="flex flex-col gap-1">
+                    {u.meals.map((m, i) => (
+                      <Badge key={i} variant="outline" className="text-xs">{m}</Badge>
+                    ))}
+                    {u.mealTotal > 0 && (
+                      <span className="text-xs text-gray-500">{u.mealTotal} &euro;</span>
+                    )}
+                  </div>
+                ) : (
+                  <span className="text-gray-400">—</span>
+                )}
               </TableCell>
               <TableCell>{new Date(u.createdAt).toLocaleDateString()}</TableCell>
               <TableCell>{new Date(u.updatedAt).toLocaleDateString()}</TableCell>

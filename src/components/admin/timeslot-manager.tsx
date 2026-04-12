@@ -14,6 +14,8 @@ interface TimeSlot {
   startTime: string
   endTime: string
   kind?: 'CONFERENCE' | 'MEAL' | 'BREAK' | 'OTHER'
+  description?: string | null
+  price?: number | null
   conference?: {
     id: string
     title: string
@@ -38,6 +40,8 @@ export function TimeSlotManager({ timeSlots, onTimeSlotCreated }: TimeSlotManage
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
   const [createKind, setCreateKind] = useState<'CONFERENCE' | 'MEAL' | 'BREAK' | 'OTHER'>('CONFERENCE')
+  const [createDescription, setCreateDescription] = useState("")
+  const [createPrice, setCreatePrice] = useState("")
 
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [editingSlot, setEditingSlot] = useState<TimeSlot | null>(null)
@@ -45,6 +49,8 @@ export function TimeSlotManager({ timeSlots, onTimeSlotCreated }: TimeSlotManage
   const [editStartDateTime, setEditStartDateTime] = useState<Date>()
   const [editEndDateTime, setEditEndDateTime] = useState<Date>()
   const [editKind, setEditKind] = useState<'CONFERENCE' | 'MEAL' | 'BREAK' | 'OTHER'>('CONFERENCE')
+  const [editDescription, setEditDescription] = useState("")
+  const [editPrice, setEditPrice] = useState("")
   const [editIsLoading, setEditIsLoading] = useState(false)
   const [editError, setEditError] = useState("")
 
@@ -78,7 +84,11 @@ export function TimeSlotManager({ timeSlots, onTimeSlotCreated }: TimeSlotManage
           title: title.trim(),
           startTime: startDateTime.toISOString(),
           endTime: endDateTime.toISOString(),
-            kind: createKind,
+          kind: createKind,
+          ...(createKind === 'MEAL' ? {
+            description: createDescription.trim() || null,
+            price: createPrice ? Number(createPrice) : null,
+          } : {}),
         }),
       })
 
@@ -89,6 +99,8 @@ export function TimeSlotManager({ timeSlots, onTimeSlotCreated }: TimeSlotManage
         setStartDateTime(undefined)
         setEndDateTime(undefined)
         setCreateKind('CONFERENCE')
+        setCreateDescription("")
+        setCreatePrice("")
         setIsDialogOpen(false)
         onTimeSlotCreated()
       } else {
@@ -119,6 +131,8 @@ export function TimeSlotManager({ timeSlots, onTimeSlotCreated }: TimeSlotManage
     setEditStartDateTime(new Date(slot.startTime))
     setEditEndDateTime(new Date(slot.endTime))
     setEditKind(slot.kind || 'CONFERENCE')
+    setEditDescription(slot.description || "")
+    setEditPrice(slot.price != null ? String(slot.price) : "")
     setEditError("")
     setIsEditDialogOpen(true)
   }
@@ -152,7 +166,9 @@ export function TimeSlotManager({ timeSlots, onTimeSlotCreated }: TimeSlotManage
           title: editTitle.trim(),
           startTime: editStartDateTime.toISOString(),
           endTime: editEndDateTime.toISOString(),
-            kind: editKind,
+          kind: editKind,
+          description: editKind === 'MEAL' ? (editDescription.trim() || null) : null,
+          price: editKind === 'MEAL' && editPrice ? Number(editPrice) : null,
         })
       })
 
@@ -289,6 +305,34 @@ export function TimeSlotManager({ timeSlots, onTimeSlotCreated }: TimeSlotManage
                   ))}
                 </div>
               </div>
+              {createKind === 'MEAL' && (
+                <>
+                  <div className="flex flex-col gap-2">
+                    <Label htmlFor="create-description">Description du menu</Label>
+                    <textarea
+                      id="create-description"
+                      className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      placeholder="ex: Barbecue, salades, fromages..."
+                      value={createDescription}
+                      onChange={(e) => setCreateDescription(e.target.value)}
+                      disabled={isLoading}
+                    />
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <Label htmlFor="create-price">Prix (euros)</Label>
+                    <Input
+                      id="create-price"
+                      type="number"
+                      min="0"
+                      step="0.5"
+                      placeholder="ex: 5"
+                      value={createPrice}
+                      onChange={(e) => setCreatePrice(e.target.value)}
+                      disabled={isLoading}
+                    />
+                  </div>
+                </>
+              )}
               {error && (
                 <div className="text-sm text-red-600">
                   {error}
@@ -432,6 +476,34 @@ export function TimeSlotManager({ timeSlots, onTimeSlotCreated }: TimeSlotManage
                 ))}
               </div>
             </div>
+            {editKind === 'MEAL' && (
+              <>
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor="edit-description">Description du menu</Label>
+                  <textarea
+                    id="edit-description"
+                    className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    placeholder="ex: Barbecue, salades, fromages..."
+                    value={editDescription}
+                    onChange={(e) => setEditDescription(e.target.value)}
+                    disabled={editIsLoading}
+                  />
+                </div>
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor="edit-price">Prix (euros)</Label>
+                  <Input
+                    id="edit-price"
+                    type="number"
+                    min="0"
+                    step="0.5"
+                    placeholder="ex: 5"
+                    value={editPrice}
+                    onChange={(e) => setEditPrice(e.target.value)}
+                    disabled={editIsLoading}
+                  />
+                </div>
+              </>
+            )}
             {editError && (
               <div className="text-sm text-red-600">{editError}</div>
             )}

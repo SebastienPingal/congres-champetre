@@ -65,11 +65,13 @@ export async function PATCH(
     }
 
     const payload = await request.json()
-    const { title, startTime, endTime, kind } = payload as {
+    const { title, startTime, endTime, kind, description, price } = payload as {
       title?: string
       startTime?: string
       endTime?: string
       kind?: 'CONFERENCE' | 'MEAL' | 'BREAK' | 'OTHER'
+      description?: string | null
+      price?: number | null
     }
 
     const existing = await prisma.timeSlot.findUnique({ where: { id } })
@@ -97,6 +99,8 @@ export async function PATCH(
         ...(startTime !== undefined ? { startTime: nextStart } : {}),
         ...(endTime !== undefined ? { endTime: nextEnd } : {}),
         ...(kind !== undefined ? { kind } : {}),
+        ...(description !== undefined ? { description } : {}),
+        ...(price !== undefined ? { price: price !== null ? Number(price) : null } : {}),
       },
       include: {
         conference: {

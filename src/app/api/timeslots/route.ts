@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const { title, startTime, endTime, kind } = await request.json()
+    const { title, startTime, endTime, kind, description, price } = await request.json()
 
     if (!title || !startTime || !endTime) {
       return NextResponse.json(
@@ -84,6 +84,8 @@ export async function POST(request: NextRequest) {
         endTime: new Date(endTime),
         editionId: activeEdition.id,
         ...(kind ? { kind } : {}),
+        ...(description !== undefined ? { description } : {}),
+        ...(price !== undefined ? { price: price !== null ? Number(price) : null } : {}),
       },
     })
 
