@@ -46,6 +46,10 @@ export async function GET() {
 
     const participation = user.participations[0]
 
+    const participantCount = await prisma.editionParticipation.count({
+      where: { editionId: activeEdition.id, isAttending: true },
+    })
+
     return NextResponse.json({
       id: user.id,
       name: user.name,
@@ -62,6 +66,7 @@ export async function GET() {
         name: activeEdition.name,
         startDate: activeEdition.startDate,
         endDate: activeEdition.endDate,
+        participantCount,
       },
     })
   } catch (error) {
@@ -203,6 +208,10 @@ export async function PATCH(request: NextRequest) {
 
     const participation = user?.participations[0]
 
+    const participantCount = await prisma.editionParticipation.count({
+      where: { editionId: activeEdition.id, isAttending: true },
+    })
+
     return NextResponse.json({
       message: "✅ Profil mis à jour",
       user: {
@@ -220,6 +229,7 @@ export async function PATCH(request: NextRequest) {
           name: activeEdition.name,
           startDate: activeEdition.startDate,
           endDate: activeEdition.endDate,
+          participantCount,
         },
       },
     })

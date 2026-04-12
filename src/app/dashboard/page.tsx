@@ -19,6 +19,7 @@ interface EditionInfo {
   name: string
   startDate: string | null
   endDate: string | null
+  participantCount: number
 }
 
 interface User {
@@ -353,7 +354,7 @@ export default function Dashboard() {
                   </div>
                   <div className="flex flex-col gap-1">
                     <p className="font-medium">Participants</p>
-                    <p className="text-sm text-gray-700">Liste en cours de constitution</p>
+                    <p className="text-sm text-gray-700">Pour le moment, vous serez {user.edition.participantCount} {user.edition.participantCount > 1 ? "participants" : "participant"} au congrès</p>
                   </div>
                 </div>
               </div>
