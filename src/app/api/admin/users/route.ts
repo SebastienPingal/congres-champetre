@@ -32,7 +32,7 @@ export async function GET() {
           take: 1,
         },
         mealRegistrations: {
-          where: { timeSlot: { editionId: activeEdition.id, kind: "MEAL" } },
+          where: { timeSlot: { editionId: activeEdition.id, kind: "MEAL" }, status: "PRESENT" },
           select: {
             timeSlot: {
               select: { id: true, title: true, price: true },

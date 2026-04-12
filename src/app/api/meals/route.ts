@@ -19,22 +19,24 @@ export async function GET() {
         startTime: true,
         endTime: true,
         mealRegistrations: session?.user
-          ? { where: { userId: session.user.id }, select: { id: true } }
+          ? { where: { userId: session.user.id }, select: { id: true, status: true } }
           : false,
       },
     })
 
-    const result = mealSlots.map((slot) => ({
-      id: slot.id,
-      title: slot.title,
-      description: slot.description,
-      price: slot.price,
-      startTime: slot.startTime,
-      endTime: slot.endTime,
-      isRegistered: session?.user
-        ? (slot.mealRegistrations as { id: string }[]).length > 0
-        : false,
-    }))
+    const result = mealSlots.map((slot) => {
+      const registrations = slot.mealRegistrations as { id: string; status: string }[] | undefined
+      const registration = registrations?.[0] ?? null
+      return {
+        id: slot.id,
+        title: slot.title,
+        description: slot.description,
+        price: slot.price,
+        startTime: slot.startTime,
+        endTime: slot.endTime,
+        status: registration?.status ?? null,
+      }
+    })
 
     return NextResponse.json(result)
   } catch (error) {
@@ -57,11 +59,18 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const { timeSlotId } = await request.json()
+    const { timeSlotId, status } = await request.json()
 
     if (!timeSlotId || typeof timeSlotId !== "string") {
       return NextResponse.json(
         { error: "timeSlotId requis" },
+        { status: 400 }
+      )
+    }
+
+    if (status !== "PRESENT" && status !== "ABSENT") {
+      return NextResponse.json(
+        { error: "status doit être PRESENT ou ABSENT" },
         { status: 400 }
       )
     }
@@ -79,30 +88,24 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Toggle: if already registered, unregister; otherwise register
-    const existing = await prisma.mealRegistration.findUnique({
+    await prisma.mealRegistration.upsert({
       where: {
         userId_timeSlotId: {
           userId: session.user.id,
           timeSlotId,
         },
       },
+      create: {
+        userId: session.user.id,
+        timeSlotId,
+        status,
+      },
+      update: {
+        status,
+      },
     })
 
-    if (existing) {
-      await prisma.mealRegistration.delete({
-        where: { id: existing.id },
-      })
-      return NextResponse.json({ registered: false })
-    } else {
-      await prisma.mealRegistration.create({
-        data: {
-          userId: session.user.id,
-          timeSlotId,
-        },
-      })
-      return NextResponse.json({ registered: true })
-    }
+    return NextResponse.json({ status })
   } catch (error) {
     console.error("Erreur lors de l'inscription au repas:", error)
     return NextResponse.json(

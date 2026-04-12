@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label"
 import { ConferenceForm } from "@/components/conference-form"
 import { ConferenceEditForm } from "@/components/conference-edit-form"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { CalendarDays, MapPin, Users, UtensilsCrossed } from "lucide-react"
+import { CalendarDays, CheckCircle2, CircleDot, MapPin, Users, UtensilsCrossed } from "lucide-react"
 import { WeekendProgram } from "@/components/weekend-program"
 import { ConferenceDeleteButton } from "@/components/conference-delete-button"
 
@@ -45,6 +45,8 @@ interface User {
   }>
 }
 
+type MealStatus = "PRESENT" | "ABSENT" | null
+
 interface MealSlot {
   id: string
   title: string
@@ -52,7 +54,7 @@ interface MealSlot {
   price: number | null
   startTime: string
   endTime: string
-  isRegistered: boolean
+  status: MealStatus
 }
 
 function formatEditionDates(edition: EditionInfo): string {
@@ -161,19 +163,19 @@ export default function Dashboard() {
     }
   }
 
-  const handleMealToggle = async (timeSlotId: string) => {
+  const handleMealStatusChange = async (timeSlotId: string, status: "PRESENT" | "ABSENT") => {
     setIsMealUpdating(timeSlotId)
     try {
       const response = await fetch("/api/meals", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ timeSlotId }),
+        body: JSON.stringify({ timeSlotId, status }),
       })
       if (response.ok) {
         const result = await response.json()
         setMeals((prev) =>
           prev.map((m) =>
-            m.id === timeSlotId ? { ...m, isRegistered: result.registered } : m
+            m.id === timeSlotId ? { ...m, status: result.status } : m
           )
         )
       }
@@ -298,6 +300,10 @@ export default function Dashboard() {
     )
   }
 
+  const needsPresenceAction = !user.isAttending
+  const needsMealAction = user.isAttending && meals.length > 0 && meals.some((m) => m.status === null)
+  const needsConferenceAction = user.isAttending && user.wantsToSpeak && user.conferences.length === 0
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
       <Navbar />
@@ -362,11 +368,24 @@ export default function Dashboard() {
           </Card>
 
           {/* RSVP / Présence */}
-          <Card>
+          <Card className={`border-l-4 ${needsPresenceAction ? "border-l-green-500 shadow-md ring-1 ring-green-200" : "border-l-green-300"}`}>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                Présence au weekend
-              </CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2">
+                  Présence au weekend
+                </CardTitle>
+                {needsPresenceAction ? (
+                  <Badge className="bg-green-100 text-green-800 hover:bg-green-100 border-green-300" variant="outline">
+                    <CircleDot className="h-3 w-3 mr-1" />
+                    À compléter
+                  </Badge>
+                ) : (
+                  <Badge className="bg-green-50 text-green-700 hover:bg-green-50 border-green-200" variant="outline">
+                    <CheckCircle2 className="h-3 w-3 mr-1" />
+                    Confirmé
+                  </Badge>
+                )}
+              </div>
               <CardDescription>
                 Indiquez vos disponibilités et hébergement
               </CardDescription>
@@ -469,14 +488,23 @@ export default function Dashboard() {
               </div>
             </CardContent>
           </Card>
+
           {/* Repas */}
           {user.isAttending && meals.length > 0 && (
-            <Card>
+            <Card className={`border-l-4 ${needsMealAction ? "border-l-amber-500 shadow-md ring-1 ring-amber-200" : "border-l-amber-300"}`}>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <UtensilsCrossed className="h-5 w-5" />
-                  Repas sur place
-                </CardTitle>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center gap-2">
+                    <UtensilsCrossed className="h-5 w-5" />
+                    Repas sur place
+                  </CardTitle>
+                  {needsMealAction && (
+                    <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-100 border-amber-300" variant="outline">
+                      <CircleDot className="h-3 w-3 mr-1" />
+                      À compléter
+                    </Badge>
+                  )}
+                </div>
                 <CardDescription>
                   Nous nous chargeons de toute la nourriture et des boissons (y compris un peu d&apos;alcool). Indiquez les repas auxquels vous participez.
                 </CardDescription>
@@ -487,9 +515,11 @@ export default function Dashboard() {
                     <div
                       key={meal.id}
                       className={`rounded-lg border p-4 transition-colors ${
-                        meal.isRegistered
+                        meal.status === "PRESENT"
                           ? "border-amber-300 bg-amber-50/60"
-                          : "border-gray-200"
+                          : meal.status === "ABSENT"
+                            ? "border-gray-300 bg-gray-50/60"
+                            : "border-gray-200"
                       }`}
                     >
                       <div className="flex items-start justify-between gap-3">
@@ -527,17 +557,17 @@ export default function Dashboard() {
                           <Button
                             type="button"
                             size="sm"
-                            variant={meal.isRegistered ? "default" : "outline"}
-                            onClick={() => { if (!meal.isRegistered) handleMealToggle(meal.id) }}
+                            variant={meal.status === "PRESENT" ? "default" : "outline"}
+                            onClick={() => handleMealStatusChange(meal.id, "PRESENT")}
                             disabled={isMealUpdating === meal.id || isUpdating}
                           >
-                            Present
+                            Présent
                           </Button>
                           <Button
                             type="button"
                             size="sm"
-                            variant={!meal.isRegistered ? "default" : "outline"}
-                            onClick={() => { if (meal.isRegistered) handleMealToggle(meal.id) }}
+                            variant={meal.status === "ABSENT" ? "default" : "outline"}
+                            onClick={() => handleMealStatusChange(meal.id, "ABSENT")}
                             disabled={isMealUpdating === meal.id || isUpdating}
                           >
                             Absent
@@ -548,7 +578,7 @@ export default function Dashboard() {
                   ))}
                   {(() => {
                     const total = meals
-                      .filter((m) => m.isRegistered && m.price != null)
+                      .filter((m) => m.status === "PRESENT" && m.price != null)
                       .reduce((sum, m) => sum + (m.price ?? 0), 0)
                     return total > 0 ? (
                       <div className="flex justify-end pt-2 border-t">
@@ -565,11 +595,19 @@ export default function Dashboard() {
 
           {/* Participation aux conférences */}
           {user.isAttending && (
-            <Card>
+            <Card className={`border-l-4 ${needsConferenceAction ? "border-l-violet-500 shadow-md ring-1 ring-violet-200" : "border-l-violet-300"}`}>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  Participation aux conférences
-                </CardTitle>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center gap-2">
+                    Participation aux conférences
+                  </CardTitle>
+                  {needsConferenceAction && (
+                    <Badge className="bg-violet-100 text-violet-800 hover:bg-violet-100 border-violet-300" variant="outline">
+                      <CircleDot className="h-3 w-3 mr-1" />
+                      À compléter
+                    </Badge>
+                  )}
+                </div>
                 <CardDescription>
                   Indiquez si vous souhaitez présenter une conférence
                 </CardDescription>
@@ -661,6 +699,7 @@ export default function Dashboard() {
               </CardContent>
             </Card>
           )}
+
         </div>
       </div>
     </div>
