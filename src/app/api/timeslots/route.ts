@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const { title, startTime, endTime, kind, description, price } = await request.json()
+    const { title, startTime, endTime, kind, description, price, showInRegistration } = await request.json()
 
     if (!title || !startTime || !endTime) {
       return NextResponse.json(
@@ -86,6 +86,7 @@ export async function POST(request: NextRequest) {
         ...(kind ? { kind } : {}),
         ...(description !== undefined ? { description } : {}),
         ...(price !== undefined ? { price: price !== null ? Number(price) : null } : {}),
+        ...(typeof showInRegistration === 'boolean' ? { showInRegistration } : {}),
       },
     })
 

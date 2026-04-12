@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
@@ -16,6 +17,7 @@ interface TimeSlot {
   kind?: 'CONFERENCE' | 'MEAL' | 'BREAK' | 'OTHER'
   description?: string | null
   price?: number | null
+  showInRegistration?: boolean
   conference?: {
     id: string
     title: string
@@ -42,6 +44,7 @@ export function TimeSlotManager({ timeSlots, onTimeSlotCreated }: TimeSlotManage
   const [createKind, setCreateKind] = useState<'CONFERENCE' | 'MEAL' | 'BREAK' | 'OTHER'>('CONFERENCE')
   const [createDescription, setCreateDescription] = useState("")
   const [createPrice, setCreatePrice] = useState("")
+  const [createShowInRegistration, setCreateShowInRegistration] = useState(true)
 
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [editingSlot, setEditingSlot] = useState<TimeSlot | null>(null)
@@ -51,6 +54,7 @@ export function TimeSlotManager({ timeSlots, onTimeSlotCreated }: TimeSlotManage
   const [editKind, setEditKind] = useState<'CONFERENCE' | 'MEAL' | 'BREAK' | 'OTHER'>('CONFERENCE')
   const [editDescription, setEditDescription] = useState("")
   const [editPrice, setEditPrice] = useState("")
+  const [editShowInRegistration, setEditShowInRegistration] = useState(true)
   const [editIsLoading, setEditIsLoading] = useState(false)
   const [editError, setEditError] = useState("")
 
@@ -88,6 +92,7 @@ export function TimeSlotManager({ timeSlots, onTimeSlotCreated }: TimeSlotManage
           ...(createKind === 'MEAL' ? {
             description: createDescription.trim() || null,
             price: createPrice ? Number(createPrice) : null,
+            showInRegistration: createShowInRegistration,
           } : {}),
         }),
       })
@@ -101,6 +106,7 @@ export function TimeSlotManager({ timeSlots, onTimeSlotCreated }: TimeSlotManage
         setCreateKind('CONFERENCE')
         setCreateDescription("")
         setCreatePrice("")
+        setCreateShowInRegistration(true)
         setIsDialogOpen(false)
         onTimeSlotCreated()
       } else {
@@ -133,6 +139,7 @@ export function TimeSlotManager({ timeSlots, onTimeSlotCreated }: TimeSlotManage
     setEditKind(slot.kind || 'CONFERENCE')
     setEditDescription(slot.description || "")
     setEditPrice(slot.price != null ? String(slot.price) : "")
+    setEditShowInRegistration(slot.showInRegistration !== false)
     setEditError("")
     setIsEditDialogOpen(true)
   }
@@ -169,6 +176,7 @@ export function TimeSlotManager({ timeSlots, onTimeSlotCreated }: TimeSlotManage
           kind: editKind,
           description: editKind === 'MEAL' ? (editDescription.trim() || null) : null,
           price: editKind === 'MEAL' && editPrice ? Number(editPrice) : null,
+          showInRegistration: editKind === 'MEAL' ? editShowInRegistration : true,
         })
       })
 
@@ -330,6 +338,15 @@ export function TimeSlotManager({ timeSlots, onTimeSlotCreated }: TimeSlotManage
                       onChange={(e) => setCreatePrice(e.target.value)}
                       disabled={isLoading}
                     />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      id="create-showInRegistration"
+                      checked={createShowInRegistration}
+                      onCheckedChange={(v) => setCreateShowInRegistration(Boolean(v))}
+                      disabled={isLoading}
+                    />
+                    <Label htmlFor="create-showInRegistration">Proposer à l&apos;inscription</Label>
                   </div>
                 </>
               )}
@@ -501,6 +518,15 @@ export function TimeSlotManager({ timeSlots, onTimeSlotCreated }: TimeSlotManage
                     onChange={(e) => setEditPrice(e.target.value)}
                     disabled={editIsLoading}
                   />
+                </div>
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    id="edit-showInRegistration"
+                    checked={editShowInRegistration}
+                    onCheckedChange={(v) => setEditShowInRegistration(Boolean(v))}
+                    disabled={editIsLoading}
+                  />
+                  <Label htmlFor="edit-showInRegistration">Proposer à l&apos;inscription</Label>
                 </div>
               </>
             )}

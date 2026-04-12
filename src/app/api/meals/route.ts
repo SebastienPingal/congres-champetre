@@ -9,7 +9,7 @@ export async function GET() {
     const activeEdition = await getActiveEdition()
 
     const mealSlots = await prisma.timeSlot.findMany({
-      where: { editionId: activeEdition.id, kind: "MEAL" },
+      where: { editionId: activeEdition.id, kind: "MEAL", showInRegistration: true },
       orderBy: { startTime: "asc" },
       select: {
         id: true,
