@@ -31,6 +31,7 @@ interface User {
   isAttending: boolean
   attendanceDays: 'NONE' | 'DAY1' | 'DAY2' | 'BOTH'
   sleepsOnSite: boolean
+  willPayInCash: boolean
   edition: EditionInfo
   conferences: Array<{
     id: string
@@ -248,6 +249,25 @@ export default function Dashboard() {
     } finally {
       setIsUpdating(false)
       setPendingAttendanceDays(null)
+    }
+  }
+
+  const handleWillPayInCashChange = async (checked: boolean) => {
+    setIsUpdating(true)
+    try {
+      const response = await fetch("/api/user/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ willPayInCash: checked }),
+      })
+      if (response.ok) {
+        const result = await response.json()
+        setUser(result.user)
+      }
+    } catch (error) {
+      console.error("🚨 Erreur lors de la mise à jour du mode de paiement:", error)
+    } finally {
+      setIsUpdating(false)
     }
   }
 
@@ -581,10 +601,33 @@ export default function Dashboard() {
                       .filter((m) => m.status === "PRESENT" && m.price != null)
                       .reduce((sum, m) => sum + (m.price ?? 0), 0)
                     return total > 0 ? (
-                      <div className="flex justify-end pt-2 border-t">
-                        <p className="font-medium">
-                          Total participation : {total} &euro;
-                        </p>
+                      <div className="flex flex-col gap-3 pt-2 border-t">
+                        <div className="flex justify-end">
+                          <p className="font-medium">
+                            Total participation : {total} &euro;
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-medium mr-1">Mode de paiement :</span>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant={user.willPayInCash ? "default" : "outline"}
+                            onClick={() => handleWillPayInCashChange(true)}
+                            disabled={isUpdating}
+                          >
+                            Liquide
+                          </Button>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant={!user.willPayInCash ? "default" : "outline"}
+                            onClick={() => handleWillPayInCashChange(false)}
+                            disabled={isUpdating}
+                          >
+                            Virement
+                          </Button>
+                        </div>
                       </div>
                     ) : null
                   })()}

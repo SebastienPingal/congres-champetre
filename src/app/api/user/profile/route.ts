@@ -61,6 +61,7 @@ export async function GET() {
       isAttending: participation?.isAttending ?? false,
       attendanceDays: participation?.attendanceDays ?? "NONE",
       sleepsOnSite: participation?.sleepsOnSite ?? false,
+      willPayInCash: participation?.willPayInCash ?? false,
       edition: {
         id: activeEdition.id,
         name: activeEdition.name,
@@ -138,6 +139,11 @@ export async function PATCH(request: NextRequest) {
 
     if (typeof body.sleepsOnSite === "boolean") {
       participationData.sleepsOnSite = body.sleepsOnSite
+      needsParticipationUpdate = true
+    }
+
+    if (typeof body.willPayInCash === "boolean") {
+      participationData.willPayInCash = body.willPayInCash
       needsParticipationUpdate = true
     }
 
@@ -224,6 +230,7 @@ export async function PATCH(request: NextRequest) {
         isAttending: participation?.isAttending ?? false,
         attendanceDays: participation?.attendanceDays ?? "NONE",
         sleepsOnSite: participation?.sleepsOnSite ?? false,
+        willPayInCash: participation?.willPayInCash ?? false,
         edition: {
           id: activeEdition.id,
           name: activeEdition.name,
