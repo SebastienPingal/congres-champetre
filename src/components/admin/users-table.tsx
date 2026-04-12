@@ -7,8 +7,15 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
+import { Check, X } from "lucide-react"
 
 type AttendanceDays = "NONE" | "DAY1" | "DAY2" | "BOTH"
+
+interface MealSlot {
+  id: string
+  title: string
+  price: number | null
+}
 
 interface AdminUserRow {
   id: string
@@ -21,7 +28,7 @@ interface AdminUserRow {
   sleepsOnSite: boolean
   hasPaid: boolean
   willPayInCash: boolean
-  meals: string[]
+  mealStatuses: Record<string, string>
   mealTotal: number
   createdAt: string
   updatedAt: string
@@ -36,10 +43,10 @@ const attendanceOrder: Record<AttendanceDays, number> = {
 
 export function UsersTable() {
   const [users, setUsers] = useState<AdminUserRow[]>([])
+  const [mealSlots, setMealSlots] = useState<MealSlot[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState("")
-  const [filterRole, setFilterRole] = useState<"ALL" | "ADMIN" | "USER">("ALL")
   const [filterParticipation, setFilterParticipation] = useState<"ALL" | "YES" | "NO">("ALL")
   const [filterSleep, setFilterSleep] = useState<"ALL" | "YES" | "NO">("ALL")
   const [filterPaid, setFilterPaid] = useState<"ALL" | "YES" | "NO">("ALL")
@@ -54,7 +61,8 @@ export function UsersTable() {
         const res = await fetch("/api/admin/users")
         if (!res.ok) throw new Error("Failed to fetch users")
         const data = await res.json()
-        setUsers(data)
+        setUsers(data.users)
+        setMealSlots(data.mealSlots)
       } catch {
         setError("Impossible de charger les utilisateurs")
       } finally {
@@ -66,7 +74,6 @@ export function UsersTable() {
 
   const resetFilters = () => {
     setSearchQuery("")
-    setFilterRole("ALL")
     setFilterParticipation("ALL")
     setFilterSleep("ALL")
     setFilterDays("ALL")
@@ -81,14 +88,13 @@ export function UsersTable() {
         (u.name?.toLowerCase().includes(normalizedQuery) ?? false) ||
         u.email.toLowerCase().includes(normalizedQuery)
 
-      const matchesRole = filterRole === "ALL" || u.role === filterRole
       const matchesParticipation = filterParticipation === "ALL" || (filterParticipation === "YES" ? u.isAttending : !u.isAttending)
       const matchesSleep = filterSleep === "ALL" || (filterSleep === "YES" ? u.sleepsOnSite : !u.sleepsOnSite)
       const matchesDays = filterDays === "ALL" || u.attendanceDays === filterDays
       const matchesPaid = filterPaid === "ALL" || (filterPaid === "YES" ? u.hasPaid : !u.hasPaid)
       const matchesCash = filterCash === "ALL" || (filterCash === "YES" ? u.willPayInCash : !u.willPayInCash)
 
-      return matchesQuery && matchesRole && matchesParticipation && matchesSleep && matchesDays && matchesPaid && matchesCash
+      return matchesQuery && matchesParticipation && matchesSleep && matchesDays && matchesPaid && matchesCash
     })
 
     if (sortKey) {
@@ -112,7 +118,7 @@ export function UsersTable() {
     }
 
     return result
-  }, [users, searchQuery, filterRole, filterParticipation, filterSleep, filterPaid, filterCash, filterDays, sortKey, sortDirection])
+  }, [users, searchQuery, filterParticipation, filterSleep, filterPaid, filterCash, filterDays, sortKey, sortDirection])
 
   const applySort = (key: keyof AdminUserRow) => {
     if (sortKey === key) {
@@ -138,6 +144,14 @@ export function UsersTable() {
     </button>
   )
 
+  const mealCounts = useMemo(() => {
+    const counts: Record<string, number> = {}
+    for (const slot of mealSlots) {
+      counts[slot.id] = filteredAndSortedUsers.filter(u => u.mealStatuses[slot.id] === "PRESENT").length
+    }
+    return counts
+  }, [mealSlots, filteredAndSortedUsers])
+
   if (loading) {
     return (
       <div className="text-sm text-gray-600">⏳ Chargement des utilisateurs…</div>
@@ -162,20 +176,6 @@ export function UsersTable() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
-        </div>
-
-        <div className="flex flex-col gap-1">
-          <Label htmlFor="role">Rôle</Label>
-          <select
-            id="role"
-            className="h-9 rounded-md border border-input bg-background px-3 text-sm"
-            value={filterRole}
-            onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setFilterRole(e.target.value as ("ALL" | "ADMIN" | "USER"))}
-          >
-            <option value="ALL">Tous</option>
-            <option value="ADMIN">Admin</option>
-            <option value="USER">Utilisateur</option>
-          </select>
         </div>
 
         <div className="flex flex-col gap-1">
@@ -280,16 +280,21 @@ export function UsersTable() {
           <TableRow>
             <TableHead><SortHeader label="Nom" column="name" /></TableHead>
             <TableHead><SortHeader label="Email" column="email" /></TableHead>
-            <TableHead><SortHeader label="Rôle" column="role" /></TableHead>
             <TableHead><SortHeader label="Parle ?" column="wantsToSpeak" /></TableHead>
             <TableHead><SortHeader label="Participe" column="isAttending" /></TableHead>
             <TableHead><SortHeader label="Jours" column="attendanceDays" /></TableHead>
-            <TableHead><SortHeader label="Dort sur place" column="sleepsOnSite" /></TableHead>
-            <TableHead><SortHeader label="A payé" column="hasPaid" /></TableHead>
-            <TableHead><SortHeader label="Paiera cash" column="willPayInCash" /></TableHead>
-            <TableHead>Repas</TableHead>
-            <TableHead><SortHeader label="Inscription" column="createdAt" /></TableHead>
-            <TableHead><SortHeader label="Maj" column="updatedAt" /></TableHead>
+            <TableHead><SortHeader label="Dort" column="sleepsOnSite" /></TableHead>
+            <TableHead><SortHeader label="Payé" column="hasPaid" /></TableHead>
+            <TableHead><SortHeader label="Cash" column="willPayInCash" /></TableHead>
+            {mealSlots.map((slot) => (
+              <TableHead key={slot.id} className="text-center px-2 max-w-[80px]">
+                <div className="flex flex-col items-center gap-0.5">
+                  <span className="text-xs leading-tight">{slot.title}</span>
+                  <span className="text-xs text-muted-foreground font-normal">{mealCounts[slot.id]}</span>
+                </div>
+              </TableHead>
+            ))}
+            <TableHead><SortHeader label="Total" column="mealTotal" /></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -297,13 +302,6 @@ export function UsersTable() {
             <TableRow key={u.id}>
               <TableCell className="font-medium">{u.name ?? "—"}</TableCell>
               <TableCell>{u.email}</TableCell>
-              <TableCell>
-                {u.role === "ADMIN" ? (
-                  <Badge variant="destructive">Admin</Badge>
-                ) : (
-                  <Badge>Utilisateur</Badge>
-                )}
-              </TableCell>
               <TableCell>
                 {u.wantsToSpeak ? (
                   <Badge className="bg-amber-100 text-amber-700">Oui</Badge>
@@ -385,22 +383,27 @@ export function UsersTable() {
                   />
                 </div>
               </TableCell>
-              <TableCell>
-                {u.meals.length > 0 ? (
-                  <div className="flex flex-col gap-1">
-                    {u.meals.map((m, i) => (
-                      <Badge key={i} variant="outline" className="text-xs">{m}</Badge>
-                    ))}
-                    {u.mealTotal > 0 && (
-                      <span className="text-xs text-gray-500">{u.mealTotal} &euro;</span>
+              {mealSlots.map((slot) => {
+                const status = u.mealStatuses[slot.id]
+                return (
+                  <TableCell key={slot.id} className="text-center px-2">
+                    {status === "PRESENT" ? (
+                      <Check className="h-4 w-4 text-emerald-600 mx-auto" />
+                    ) : status === "ABSENT" ? (
+                      <X className="h-4 w-4 text-red-400 mx-auto" />
+                    ) : (
+                      <span className="text-gray-300">—</span>
                     )}
-                  </div>
+                  </TableCell>
+                )
+              })}
+              <TableCell>
+                {u.mealTotal > 0 ? (
+                  <span className="text-sm font-medium">{u.mealTotal} €</span>
                 ) : (
                   <span className="text-gray-400">—</span>
                 )}
               </TableCell>
-              <TableCell>{new Date(u.createdAt).toLocaleDateString()}</TableCell>
-              <TableCell>{new Date(u.updatedAt).toLocaleDateString()}</TableCell>
             </TableRow>
           ))}
         </TableBody>
@@ -408,6 +411,3 @@ export function UsersTable() {
     </div>
   )
 }
-
-
-

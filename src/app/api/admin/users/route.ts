@@ -17,6 +17,12 @@ export async function GET() {
 
     const activeEdition = await getActiveEdition()
 
+    const mealSlots = await prisma.timeSlot.findMany({
+      where: { editionId: activeEdition.id, kind: "MEAL", showInRegistration: true },
+      orderBy: { startTime: "asc" },
+      select: { id: true, title: true, price: true },
+    })
+
     const users = await prisma.user.findMany({
       orderBy: { createdAt: "desc" },
       select: {
@@ -32,8 +38,9 @@ export async function GET() {
           take: 1,
         },
         mealRegistrations: {
-          where: { timeSlot: { editionId: activeEdition.id, kind: "MEAL" }, status: "PRESENT" },
+          where: { timeSlot: { editionId: activeEdition.id, kind: "MEAL" } },
           select: {
+            status: true,
             timeSlot: {
               select: { id: true, title: true, price: true },
             },
@@ -44,6 +51,11 @@ export async function GET() {
 
     const result = users.map((u) => {
       const p = u.participations[0]
+      const mealStatuses: Record<string, string> = {}
+      for (const mr of u.mealRegistrations) {
+        mealStatuses[mr.timeSlot.id] = mr.status
+      }
+      const presentMeals = u.mealRegistrations.filter((mr) => mr.status === "PRESENT")
       return {
         id: u.id,
         name: u.name,
@@ -55,14 +67,14 @@ export async function GET() {
         sleepsOnSite: p?.sleepsOnSite ?? false,
         hasPaid: p?.hasPaid ?? false,
         willPayInCash: p?.willPayInCash ?? false,
-        meals: u.mealRegistrations.map((mr) => mr.timeSlot.title),
-        mealTotal: u.mealRegistrations.reduce((sum, mr) => sum + (mr.timeSlot.price ?? 0), 0),
+        mealStatuses,
+        mealTotal: presentMeals.reduce((sum, mr) => sum + (mr.timeSlot.price ?? 0), 0),
         createdAt: u.createdAt,
         updatedAt: p?.updatedAt ?? u.updatedAt,
       }
     })
 
-    return NextResponse.json(result)
+    return NextResponse.json({ mealSlots, users: result })
   } catch (error) {
     console.error("🚨 Erreur lors de la récupération des utilisateurs:", error)
     return NextResponse.json({ error: "❌ Erreur serveur" }, { status: 500 })
