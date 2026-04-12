@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label"
 import { ConferenceForm } from "@/components/conference-form"
 import { ConferenceEditForm } from "@/components/conference-edit-form"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { CalendarDays, CheckCircle2, CircleDot, MapPin, Users, UtensilsCrossed } from "lucide-react"
+import { CalendarDays, CheckCircle2, CircleDot, ClipboardCopy, Download, MapPin, Users, UtensilsCrossed } from "lucide-react"
 import { WeekendProgram } from "@/components/weekend-program"
 import { ConferenceDeleteButton } from "@/components/conference-delete-button"
 
@@ -81,6 +81,7 @@ export default function Dashboard() {
   const [editingConferenceId, setEditingConferenceId] = useState<string | null>(null)
   const [meals, setMeals] = useState<MealSlot[]>([])
   const [isMealUpdating, setIsMealUpdating] = useState<string | null>(null)
+  const [ibanCopied, setIbanCopied] = useState(false)
 
   useEffect(() => {
     fetchUserProfile()
@@ -628,6 +629,34 @@ export default function Dashboard() {
                             Virement
                           </Button>
                         </div>
+                        {!user.willPayInCash && (
+                          <div className="flex items-center gap-2">
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              onClick={() => {
+                                navigator.clipboard.writeText("FR7640618803500004034542988")
+                                setIbanCopied(true)
+                                setTimeout(() => setIbanCopied(false), 2000)
+                              }}
+                            >
+                              <ClipboardCopy className="h-4 w-4 mr-1" />
+                              {ibanCopied ? "Copié !" : "Copier l'IBAN de Seb"}
+                            </Button>
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              asChild
+                            >
+                              <a href="/rib_boursobank-1736418249323.pdf" download>
+                                <Download className="h-4 w-4 mr-1" />
+                                Télécharger le RIB de Seb
+                              </a>
+                            </Button>
+                          </div>
+                        )}
                       </div>
                     ) : null
                   })()}
