@@ -4,10 +4,20 @@ import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { sendBroadcastEmail } from "@/lib/mail"
 
+const recipientFilter = z.enum([
+  "all",
+  "participants",
+  "non_participants",
+  "not_paid",
+  "paid",
+  "speakers",
+])
+
 const payloadSchema = z.object({
   subject: z.string().trim().min(3, "Le sujet doit contenir au moins 3 caractères").max(200, "Le sujet est trop long"),
   message: z.string().trim().min(5, "Le message doit contenir au moins 5 caractères").max(10000, "Le message est trop long"),
   sendToAdminOnly: z.boolean().optional().default(false),
+  filter: recipientFilter.optional().default("all"),
 })
 
 export async function POST(req: Request) {
@@ -44,10 +54,52 @@ export async function POST(req: Request) {
       }
       recipients = [adminEmail]
     } else {
-      const users = await prisma.user.findMany({
-        select: { email: true },
-      })
-      recipients = users.map((user) => user.email).filter((email) => email.trim().length > 0)
+      const activeEdition = await prisma.edition.findFirst({ where: { isActive: true } })
+      const filter = parsed.data.filter
+
+      if (filter === "all") {
+        const users = await prisma.user.findMany({ select: { email: true } })
+        recipients = users.map((u) => u.email)
+      } else if (filter === "participants" && activeEdition) {
+        const participations = await prisma.editionParticipation.findMany({
+          where: { editionId: activeEdition.id, isAttending: true },
+          select: { user: { select: { email: true } } },
+        })
+        recipients = participations.map((p) => p.user.email)
+      } else if (filter === "non_participants" && activeEdition) {
+        const participantIds = await prisma.editionParticipation.findMany({
+          where: { editionId: activeEdition.id, isAttending: true },
+          select: { userId: true },
+        })
+        const ids = participantIds.map((p) => p.userId)
+        const users = await prisma.user.findMany({
+          where: { id: { notIn: ids } },
+          select: { email: true },
+        })
+        recipients = users.map((u) => u.email)
+      } else if (filter === "not_paid" && activeEdition) {
+        const participations = await prisma.editionParticipation.findMany({
+          where: { editionId: activeEdition.id, isAttending: true, hasPaid: false },
+          select: { user: { select: { email: true } } },
+        })
+        recipients = participations.map((p) => p.user.email)
+      } else if (filter === "paid" && activeEdition) {
+        const participations = await prisma.editionParticipation.findMany({
+          where: { editionId: activeEdition.id, isAttending: true, hasPaid: true },
+          select: { user: { select: { email: true } } },
+        })
+        recipients = participations.map((p) => p.user.email)
+      } else if (filter === "speakers" && activeEdition) {
+        const conferences = await prisma.conference.findMany({
+          where: { editionId: activeEdition.id },
+          select: { speaker: { select: { email: true } } },
+        })
+        recipients = [...new Set(conferences.map((c) => c.speaker.email))]
+      } else if (filter !== "all" && !activeEdition) {
+        return NextResponse.json({ error: "📭 Aucune édition active — impossible de filtrer les destinataires" }, { status: 400 })
+      }
+
+      recipients = recipients.filter((email) => email.trim().length > 0)
     }
 
     if (recipients.length === 0) {

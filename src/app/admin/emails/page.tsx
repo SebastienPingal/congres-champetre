@@ -9,6 +9,17 @@ import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 
+type RecipientFilter = "all" | "participants" | "non_participants" | "not_paid" | "paid" | "speakers"
+
+const FILTER_LABELS: Record<RecipientFilter, string> = {
+  all: "Tous les utilisateurs",
+  participants: "Participants à l'édition en cours",
+  non_participants: "Non-participants (pas inscrits)",
+  not_paid: "Participants n'ayant pas payé",
+  paid: "Participants ayant payé",
+  speakers: "Conférenciers de l'édition en cours",
+}
+
 type SendResponse = {
   mode?: "admin_test" | "broadcast"
   total: number
@@ -21,6 +32,7 @@ export default function AdminEmailsPage() {
   const { data: session, status } = useSession()
   const [subject, setSubject] = useState("")
   const [message, setMessage] = useState("")
+  const [filter, setFilter] = useState<RecipientFilter>("all")
   const [isSending, setIsSending] = useState(false)
   const [result, setResult] = useState<SendResponse | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -41,9 +53,10 @@ export default function AdminEmailsPage() {
       return
     }
 
+    const filterLabel = FILTER_LABELS[filter].toLowerCase()
     const confirmationMessage = sendToAdminOnly
       ? "Confirmer l'envoi d'un email test vers votre adresse admin ?"
-      : "Confirmer l'envoi de cet email à tous les utilisateurs ?"
+      : `Confirmer l'envoi de cet email à : ${filterLabel} ?`
     const confirmed = window.confirm(confirmationMessage)
     if (!confirmed) return
 
@@ -56,6 +69,7 @@ export default function AdminEmailsPage() {
           subject: subject.trim(),
           message: message.trim(),
           sendToAdminOnly,
+          filter,
         }),
       })
 
@@ -115,11 +129,25 @@ export default function AdminEmailsPage() {
           <CardHeader>
             <CardTitle>Email global</CardTitle>
             <CardDescription>
-              Rédigez un email qui sera envoyé à tous les utilisateurs (rôle USER).
+              Rédigez un email et choisissez les destinataires.
             </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="email-filter">Destinataires</Label>
+                <select
+                  id="email-filter"
+                  value={filter}
+                  onChange={(event) => setFilter(event.target.value as RecipientFilter)}
+                  className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs outline-none transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]"
+                >
+                  {(Object.entries(FILTER_LABELS) as [RecipientFilter, string][]).map(([value, label]) => (
+                    <option key={value} value={value}>{label}</option>
+                  ))}
+                </select>
+              </div>
+
               <div className="flex flex-col gap-2">
                 <Label htmlFor="email-subject">Sujet</Label>
                 <Input
@@ -151,7 +179,7 @@ export default function AdminEmailsPage() {
 
               <div className="flex items-center gap-3">
                 <Button type="submit" disabled={isSending}>
-                  {isSending ? "Envoi en cours..." : "Envoyer à tous les utilisateurs"}
+                  {isSending ? "Envoi en cours..." : `Envoyer à : ${FILTER_LABELS[filter].toLowerCase()}`}
                 </Button>
                 <Button type="button" variant="outline" disabled={isSending} onClick={() => submitEmail(true)}>
                   {isSending ? "Envoi en cours..." : "Envoyer un test à mon email admin"}
