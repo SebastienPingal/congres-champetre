@@ -6,7 +6,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { TimeSlotManager } from "@/components/admin/timeslot-manager"
 import { ConferenceManager } from "@/components/admin/conference-manager"
 import { Users, UserCheck, CalendarRange } from "lucide-react"
-import { UsersTable } from "@/components/admin/users-table"
 import { EditionManager } from "@/components/admin/edition-manager"
 
 interface TimeSlot {
@@ -283,22 +282,6 @@ export default function AdminPage() {
           </Card>
         </div>
 
-        {/* Utilisateurs */}
-        <div className="grid gap-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                Utilisateurs
-              </CardTitle>
-              <CardDescription>
-                Liste des inscrits et leurs informations
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <UsersTable />
-            </CardContent>
-          </Card>
-        </div>
       </div>
     </div>
   )

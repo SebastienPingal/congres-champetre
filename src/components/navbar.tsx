@@ -65,6 +65,13 @@ export function Navbar() {
                   </NavigationMenuItem>
                   <NavigationMenuItem>
                     <NavigationMenuLink asChild>
+                      <Link href="/admin/users" className="text-sm">
+                        Utilisateurs
+                      </Link>
+                    </NavigationMenuLink>
+                  </NavigationMenuItem>
+                  <NavigationMenuItem>
+                    <NavigationMenuLink asChild>
                       <Link href="/admin/emails" className="text-sm">
                         Email global
                       </Link>
@@ -113,6 +120,9 @@ export function Navbar() {
                         <>
                           <Link href="/admin" className="text-base hover:text-green-600 transition-colors">
                             Administration
+                          </Link>
+                          <Link href="/admin/users" className="text-base hover:text-green-600 transition-colors">
+                            Utilisateurs
                           </Link>
                           <Link href="/admin/emails" className="text-base hover:text-green-600 transition-colors">
                             Email global

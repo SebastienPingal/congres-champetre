@@ -46,14 +46,25 @@ export function UsersTable() {
   const [mealSlots, setMealSlots] = useState<MealSlot[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [searchQuery, setSearchQuery] = useState("")
-  const [filterParticipation, setFilterParticipation] = useState<"ALL" | "YES" | "NO">("ALL")
-  const [filterSleep, setFilterSleep] = useState<"ALL" | "YES" | "NO">("ALL")
-  const [filterPaid, setFilterPaid] = useState<"ALL" | "YES" | "NO">("ALL")
-  const [filterCash, setFilterCash] = useState<"ALL" | "YES" | "NO">("ALL")
-  const [filterDays, setFilterDays] = useState<"ALL" | AttendanceDays>("ALL")
-  const [sortKey, setSortKey] = useState<keyof AdminUserRow | "">("")
-  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc")
+  const STORAGE_KEY = "admin-users-filters"
+
+  const loadFilters = () => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY)
+      if (saved) return JSON.parse(saved)
+    } catch { /* ignore */ }
+    return null
+  }
+
+  const saved = loadFilters()
+  const [searchQuery, setSearchQuery] = useState(saved?.searchQuery ?? "")
+  const [filterParticipation, setFilterParticipation] = useState<"ALL" | "YES" | "NO">(saved?.filterParticipation ?? "ALL")
+  const [filterSleep, setFilterSleep] = useState<"ALL" | "YES" | "NO">(saved?.filterSleep ?? "ALL")
+  const [filterPaid, setFilterPaid] = useState<"ALL" | "YES" | "NO">(saved?.filterPaid ?? "ALL")
+  const [filterCash, setFilterCash] = useState<"ALL" | "YES" | "NO">(saved?.filterCash ?? "ALL")
+  const [filterDays, setFilterDays] = useState<"ALL" | AttendanceDays>(saved?.filterDays ?? "ALL")
+  const [sortKey, setSortKey] = useState<keyof AdminUserRow | "">(saved?.sortKey ?? "")
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">(saved?.sortDirection ?? "asc")
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -71,6 +82,14 @@ export function UsersTable() {
     }
     fetchUsers()
   }, [])
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        searchQuery, filterParticipation, filterSleep, filterPaid, filterCash, filterDays, sortKey, sortDirection,
+      }))
+    } catch { /* ignore */ }
+  }, [searchQuery, filterParticipation, filterSleep, filterPaid, filterCash, filterDays, sortKey, sortDirection])
 
   const resetFilters = () => {
     setSearchQuery("")
