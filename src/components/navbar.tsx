@@ -13,7 +13,7 @@ import {
 import { Sheet, SheetTrigger, SheetContent } from "@/components/ui/sheet"
 import Link from "next/link"
 import type { User } from "next-auth"
-import { MenuIcon } from "lucide-react"
+import { MenuIcon, MessageCircle } from "lucide-react"
 
 export function Navbar() {
   const { data: session } = useSession()
@@ -74,6 +74,17 @@ export function Navbar() {
               )}
             </NavigationMenuList>
           </NavigationMenu>
+          <a
+            href="https://chat.whatsapp.com/DJSVxLFkb7J6svyoBsenQu?mode=gi_t"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hidden md:inline-flex"
+          >
+            <Button size="sm" className="bg-[#25D366] hover:bg-[#1fb855] text-white animate-whatsapp-pulse">
+              <MessageCircle className="h-4 w-4 mr-1" />
+              WhatsApp
+            </Button>
+          </a>
           <div className="md:hidden">
             <Sheet>
               <SheetTrigger asChild>
@@ -108,6 +119,15 @@ export function Navbar() {
                           </Link>
                         </>
                       )}
+                      <a
+                        href="https://chat.whatsapp.com/DJSVxLFkb7J6svyoBsenQu?mode=gi_t"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2 rounded-lg bg-[#25D366] px-4 py-3 text-base font-semibold text-white animate-whatsapp-pulse"
+                      >
+                        <MessageCircle className="h-5 w-5" />
+                        Rejoindre le WhatsApp
+                      </a>
                     </div>
                   </div>
                   <div className="flex flex-col gap-3">
