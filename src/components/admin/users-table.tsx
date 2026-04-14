@@ -7,7 +7,15 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Check, X } from "lucide-react"
+import { Check, X, Trash2 } from "lucide-react"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 
 type AttendanceDays = "NONE" | "DAY1" | "DAY2" | "BOTH"
 
@@ -65,6 +73,8 @@ export function UsersTable() {
   const [filterDays, setFilterDays] = useState<"ALL" | AttendanceDays>(saved?.filterDays ?? "ALL")
   const [sortKey, setSortKey] = useState<keyof AdminUserRow | "">(saved?.sortKey ?? "")
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">(saved?.sortDirection ?? "asc")
+  const [deleteTarget, setDeleteTarget] = useState<AdminUserRow | null>(null)
+  const [deleting, setDeleting] = useState(false)
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -98,6 +108,29 @@ export function UsersTable() {
     setFilterDays("ALL")
     setFilterPaid("ALL")
     setFilterCash("ALL")
+  }
+
+  const handleDeleteParticipation = async () => {
+    if (!deleteTarget) return
+    setDeleting(true)
+    try {
+      const res = await fetch("/api/admin/users", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: deleteTarget.id }),
+      })
+      if (!res.ok) throw new Error("Delete failed")
+      setUsers(prev => prev.map(u =>
+        u.id === deleteTarget.id
+          ? { ...u, isAttending: false, attendanceDays: "NONE" as AttendanceDays, sleepsOnSite: false, hasPaid: false, willPayInCash: false, mealStatuses: {}, mealTotal: 0 }
+          : u
+      ))
+    } catch {
+      setError("Erreur lors de la suppression")
+    } finally {
+      setDeleting(false)
+      setDeleteTarget(null)
+    }
   }
 
   const filteredAndSortedUsers = useMemo(() => {
@@ -314,6 +347,7 @@ export function UsersTable() {
               </TableHead>
             ))}
             <TableHead><SortHeader label="Total" column="mealTotal" /></TableHead>
+            <TableHead className="text-center">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -423,10 +457,44 @@ export function UsersTable() {
                   <span className="text-gray-400">—</span>
                 )}
               </TableCell>
+              <TableCell className="text-center">
+                {u.isAttending && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                    onClick={() => setDeleteTarget(u)}
+                    title="Supprimer la participation"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                )}
+              </TableCell>
             </TableRow>
           ))}
         </TableBody>
       </Table>
+
+      <Dialog open={!!deleteTarget} onOpenChange={(open) => { if (!open) setDeleteTarget(null) }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Supprimer la participation</DialogTitle>
+            <DialogDescription>
+              Êtes-vous sûr de vouloir supprimer la participation de{" "}
+              <strong>{deleteTarget?.name ?? deleteTarget?.email}</strong> ?
+              Cette action supprimera également ses conférences proposées et ses inscriptions aux repas pour cette édition.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteTarget(null)} disabled={deleting}>
+              Annuler
+            </Button>
+            <Button variant="destructive" onClick={handleDeleteParticipation} disabled={deleting}>
+              {deleting ? "Suppression…" : "Supprimer"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

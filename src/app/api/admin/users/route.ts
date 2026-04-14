@@ -81,6 +81,65 @@ export async function GET() {
   }
 }
 
+export async function DELETE(req: Request) {
+  try {
+    const session = await auth()
+    if (!session?.user) {
+      return NextResponse.json({ error: "🔒 Non authentifié" }, { status: 401 })
+    }
+
+    const me = await prisma.user.findUnique({ where: { id: session.user.id } })
+    if (me?.role !== "ADMIN") {
+      return NextResponse.json({ error: "⚠️ Accès refusé - Admin requis" }, { status: 403 })
+    }
+
+    const { userId } = await req.json()
+    if (!userId || typeof userId !== "string") {
+      return NextResponse.json({ error: "userId manquant" }, { status: 400 })
+    }
+
+    const activeEdition = await getActiveEdition()
+    const editionId = activeEdition.id
+
+    // Retrieve conferences by this user for this edition to unlink their time slots
+    const conferences = await prisma.conference.findMany({
+      where: { speakerId: userId, editionId },
+      select: { id: true, timeSlotId: true },
+    })
+
+    await prisma.$transaction([
+      // Delete meal registrations for this edition
+      prisma.mealRegistration.deleteMany({
+        where: {
+          userId,
+          timeSlot: { editionId },
+        },
+      }),
+      // Delete conferences proposed by this user for this edition
+      prisma.conference.deleteMany({
+        where: { speakerId: userId, editionId },
+      }),
+      // Delete edition participation
+      prisma.editionParticipation.deleteMany({
+        where: { userId, editionId },
+      }),
+    ])
+
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { name: true, email: true },
+    })
+
+    return NextResponse.json({
+      message: `Participation de ${user?.name ?? user?.email} supprimée`,
+      deletedConferences: conferences.length,
+    })
+  } catch (error) {
+    console.error("🚨 Erreur lors de la suppression de la participation:", error)
+    return NextResponse.json({ error: "❌ Erreur serveur" }, { status: 500 })
+  }
+}
+
 export async function PATCH(req: Request) {
   try {
     const session = await auth()
