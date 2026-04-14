@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label"
 import { ConferenceForm } from "@/components/conference-form"
 import { ConferenceEditForm } from "@/components/conference-edit-form"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { CalendarDays, CheckCircle2, CircleDot, ClipboardCopy, Download, MapPin, Users, UtensilsCrossed } from "lucide-react"
+import { AlertTriangle, CalendarDays, CheckCircle2, CircleDot, ClipboardCopy, Download, MapPin, Users, UtensilsCrossed } from "lucide-react"
 import { WeekendProgram } from "@/components/weekend-program"
 import { ConferenceDeleteButton } from "@/components/conference-delete-button"
 
@@ -339,6 +339,68 @@ export default function Dashboard() {
           </p>
         </div>
 
+        {(needsPresenceAction || needsMealAction || needsConferenceAction) && (
+          <div className="mb-6 rounded-xl border border-amber-300 bg-amber-50 p-4 shadow-sm animate-fade-in">
+            <div className="flex items-start gap-3">
+              <div className="rounded-full bg-amber-100 p-2 text-amber-600 shrink-0">
+                <AlertTriangle className="h-5 w-5" />
+              </div>
+              <div className="flex flex-col gap-2">
+                <p className="font-semibold text-amber-900">
+                  Il reste des informations à compléter
+                </p>
+                <ul className="flex flex-col gap-1.5">
+                  {needsPresenceAction && (
+                    <li>
+                      <a
+                        href="#section-presence"
+                        className="inline-flex items-center gap-1.5 text-sm text-amber-800 underline underline-offset-2 hover:text-amber-950 transition-colors"
+                        onClick={(e) => {
+                          e.preventDefault()
+                          document.getElementById("section-presence")?.scrollIntoView({ behavior: "smooth", block: "center" })
+                        }}
+                      >
+                        <CircleDot className="h-3.5 w-3.5 text-green-600" />
+                        Confirmez votre présence au weekend
+                      </a>
+                    </li>
+                  )}
+                  {needsMealAction && (
+                    <li>
+                      <a
+                        href="#section-repas"
+                        className="inline-flex items-center gap-1.5 text-sm text-amber-800 underline underline-offset-2 hover:text-amber-950 transition-colors"
+                        onClick={(e) => {
+                          e.preventDefault()
+                          document.getElementById("section-repas")?.scrollIntoView({ behavior: "smooth", block: "center" })
+                        }}
+                      >
+                        <CircleDot className="h-3.5 w-3.5 text-amber-600" />
+                        Indiquez votre présence aux repas
+                      </a>
+                    </li>
+                  )}
+                  {needsConferenceAction && (
+                    <li>
+                      <a
+                        href="#section-conferences"
+                        className="inline-flex items-center gap-1.5 text-sm text-amber-800 underline underline-offset-2 hover:text-amber-950 transition-colors"
+                        onClick={(e) => {
+                          e.preventDefault()
+                          document.getElementById("section-conferences")?.scrollIntoView({ behavior: "smooth", block: "center" })
+                        }}
+                      >
+                        <CircleDot className="h-3.5 w-3.5 text-violet-600" />
+                        Proposez votre conférence
+                      </a>
+                    </li>
+                  )}
+                </ul>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="grid gap-6 md:grid-cols-2">
 
           <WeekendProgram className="md:col-span-2" />
@@ -389,7 +451,7 @@ export default function Dashboard() {
           </Card>
 
           {/* RSVP / Présence */}
-          <Card className={needsPresenceAction ? "animate-border-rotate animate-border-rotate-green shadow-md" : "border-l-4 border-l-green-300"}>
+          <Card id="section-presence" className={needsPresenceAction ? "animate-border-rotate animate-border-rotate-green shadow-md" : "border-l-4 border-l-green-300"}>
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle className="flex items-center gap-2">
@@ -512,7 +574,7 @@ export default function Dashboard() {
 
           {/* Repas */}
           {user.isAttending && meals.length > 0 && (
-            <Card className={needsMealAction ? "animate-border-rotate animate-border-rotate-amber shadow-md" : "border-l-4 border-l-amber-300"}>
+            <Card id="section-repas" className={needsMealAction ? "animate-border-rotate animate-border-rotate-amber shadow-md" : "border-l-4 border-l-amber-300"}>
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <CardTitle className="flex items-center gap-2">
@@ -667,7 +729,7 @@ export default function Dashboard() {
 
           {/* Participation aux conférences */}
           {user.isAttending && (
-            <Card className={needsConferenceAction ? "animate-border-rotate animate-border-rotate-violet shadow-md" : "border-l-4 border-l-violet-300"}>
+            <Card id="section-conferences" className={needsConferenceAction ? "animate-border-rotate animate-border-rotate-violet shadow-md" : "border-l-4 border-l-violet-300"}>
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <CardTitle className="flex items-center gap-2">
