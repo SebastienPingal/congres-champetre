@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 
 type Speaker = {
@@ -122,10 +121,7 @@ export function WeekendProgram({ className }: { className?: string }) {
           <div className="grid gap-6 md:grid-cols-2">
             {byDay.map(day => (
               <div key={day.key} className="flex flex-col gap-4">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold capitalize">{day.label}</h3>
-                  <Badge variant="secondary">{day.slots.length} créneau{day.slots.length > 1 ? "x" : ""}</Badge>
-                </div>
+                <h3 className="text-lg font-semibold capitalize">{day.label}</h3>
 
                 <div className="flex flex-col gap-3">
                   {day.slots.map(slot => (
