@@ -157,16 +157,51 @@ export async function PATCH(req: Request) {
       return NextResponse.json({ error: "Requête invalide" }, { status: 400 })
     }
 
-    const { userId, hasPaid, willPayInCash } = body as {
+    const { userId, hasPaid, willPayInCash, mealStatusUpdate } = body as {
       userId?: string
       hasPaid?: boolean
       willPayInCash?: boolean
+      mealStatusUpdate?: { timeSlotId: string; status: "PRESENT" | "ABSENT" | null }
     }
 
     if (!userId || typeof userId !== "string") {
       return NextResponse.json({ error: "userId manquant" }, { status: 400 })
     }
 
+    const activeEdition = await getActiveEdition()
+
+    // Handle meal status update
+    if (mealStatusUpdate) {
+      const { timeSlotId, status } = mealStatusUpdate
+      if (!timeSlotId) {
+        return NextResponse.json({ error: "timeSlotId manquant" }, { status: 400 })
+      }
+
+      // Verify the time slot belongs to the active edition and is a MEAL
+      const slot = await prisma.timeSlot.findFirst({
+        where: { id: timeSlotId, editionId: activeEdition.id, kind: "MEAL" },
+      })
+      if (!slot) {
+        return NextResponse.json({ error: "Créneau repas introuvable" }, { status: 404 })
+      }
+
+      if (status === null) {
+        // Remove the registration
+        await prisma.mealRegistration.deleteMany({
+          where: { userId, timeSlotId },
+        })
+      } else {
+        await prisma.mealRegistration.upsert({
+          where: { userId_timeSlotId: { userId, timeSlotId } },
+          create: { userId, timeSlotId, status },
+          update: { status },
+        })
+      }
+
+      return NextResponse.json({ ok: true })
+    }
+
+    // Handle participation field updates
     const data: Record<string, boolean> = {}
     if (typeof hasPaid === "boolean") data.hasPaid = hasPaid
     if (typeof willPayInCash === "boolean") data.willPayInCash = willPayInCash
@@ -174,8 +209,6 @@ export async function PATCH(req: Request) {
     if (Object.keys(data).length === 0) {
       return NextResponse.json({ error: "Aucun champ à mettre à jour" }, { status: 400 })
     }
-
-    const activeEdition = await getActiveEdition()
 
     const updated = await prisma.editionParticipation.upsert({
       where: {

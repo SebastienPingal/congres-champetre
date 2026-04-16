@@ -204,6 +204,68 @@ export function UsersTable() {
     return counts
   }, [mealSlots, filteredAndSortedUsers])
 
+  const budgetTotal = useMemo(() => {
+    return filteredAndSortedUsers.reduce((sum, u) => sum + u.mealTotal, 0)
+  }, [filteredAndSortedUsers])
+
+  const toggleMealStatus = async (userId: string, slotId: string, currentStatus: string | undefined) => {
+    // Cycle: undefined → PRESENT → ABSENT → undefined
+    let nextStatus: "PRESENT" | "ABSENT" | null
+    if (!currentStatus) {
+      nextStatus = "PRESENT"
+    } else if (currentStatus === "PRESENT") {
+      nextStatus = "ABSENT"
+    } else {
+      nextStatus = null
+    }
+
+    // Optimistic update
+    setUsers(prev => prev.map(u => {
+      if (u.id !== userId) return u
+      const newStatuses = { ...u.mealStatuses }
+      if (nextStatus === null) {
+        delete newStatuses[slotId]
+      } else {
+        newStatuses[slotId] = nextStatus
+      }
+      // Recalculate meal total
+      let newTotal = 0
+      for (const s of mealSlots) {
+        if (newStatuses[s.id] === "PRESENT") {
+          newTotal += s.price ?? 0
+        }
+      }
+      return { ...u, mealStatuses: newStatuses, mealTotal: newTotal }
+    }))
+
+    try {
+      const res = await fetch("/api/admin/users", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, mealStatusUpdate: { timeSlotId: slotId, status: nextStatus } }),
+      })
+      if (!res.ok) throw new Error("Update failed")
+    } catch {
+      // Revert on failure
+      setUsers(prev => prev.map(u => {
+        if (u.id !== userId) return u
+        const newStatuses = { ...u.mealStatuses }
+        if (currentStatus) {
+          newStatuses[slotId] = currentStatus
+        } else {
+          delete newStatuses[slotId]
+        }
+        let newTotal = 0
+        for (const s of mealSlots) {
+          if (newStatuses[s.id] === "PRESENT") {
+            newTotal += s.price ?? 0
+          }
+        }
+        return { ...u, mealStatuses: newStatuses, mealTotal: newTotal }
+      }))
+    }
+  }
+
   if (loading) {
     return (
       <div className="text-sm text-gray-600">⏳ Chargement des utilisateurs…</div>
@@ -440,13 +502,20 @@ export function UsersTable() {
                 const status = u.mealStatuses[slot.id]
                 return (
                   <TableCell key={slot.id} className="text-center px-2">
-                    {status === "PRESENT" ? (
-                      <Check className="h-4 w-4 text-emerald-600 mx-auto" />
-                    ) : status === "ABSENT" ? (
-                      <X className="h-4 w-4 text-red-400 mx-auto" />
-                    ) : (
-                      <span className="text-gray-300">—</span>
-                    )}
+                    <button
+                      type="button"
+                      className="w-full flex justify-center items-center cursor-pointer hover:bg-gray-100 rounded p-1 transition-colors"
+                      title={status === "PRESENT" ? "Présent → Absent" : status === "ABSENT" ? "Absent → Non renseigné" : "Non renseigné → Présent"}
+                      onClick={() => toggleMealStatus(u.id, slot.id, status)}
+                    >
+                      {status === "PRESENT" ? (
+                        <Check className="h-4 w-4 text-emerald-600" />
+                      ) : status === "ABSENT" ? (
+                        <X className="h-4 w-4 text-red-400" />
+                      ) : (
+                        <span className="text-gray-300">—</span>
+                      )}
+                    </button>
                   </TableCell>
                 )
               })}
@@ -474,6 +543,16 @@ export function UsersTable() {
           ))}
         </TableBody>
       </Table>
+
+      <div className="flex justify-end">
+        <div className="rounded-lg border bg-card px-4 py-3 text-sm">
+          <span className="text-muted-foreground">Budget total{filteredAndSortedUsers.length !== users.length ? " (filtré)" : ""} :</span>{" "}
+          <span className="font-semibold text-lg">{budgetTotal} €</span>
+          <span className="text-muted-foreground ml-2">
+            ({filteredAndSortedUsers.filter(u => u.mealTotal > 0).length} personnes)
+          </span>
+        </div>
+      </div>
 
       <Dialog open={!!deleteTarget} onOpenChange={(open) => { if (!open) setDeleteTarget(null) }}>
         <DialogContent>
