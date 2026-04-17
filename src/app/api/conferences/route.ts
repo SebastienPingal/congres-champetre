@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const { title, description, timeSlotId } = await request.json()
+    const { title, description, timeSlotId, speakerId } = await request.json()
 
     if (!title) {
       return NextResponse.json(
@@ -56,9 +56,38 @@ export async function POST(request: NextRequest) {
 
     const activeEdition = await getActiveEdition()
 
+    const actor = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { role: true },
+    })
+    const isAdmin = actor?.role === "ADMIN"
+
+    if (!isAdmin && speakerId && speakerId !== session.user.id) {
+      return NextResponse.json(
+        { error: "⚠️ Vous ne pouvez créer que votre propre conférence" },
+        { status: 403 }
+      )
+    }
+
+    const targetSpeakerId = isAdmin && speakerId ? speakerId : session.user.id
+
+    if (isAdmin && speakerId) {
+      const speaker = await prisma.user.findUnique({
+        where: { id: speakerId },
+        select: { id: true },
+      })
+
+      if (!speaker) {
+        return NextResponse.json(
+          { error: "👤 Conférencier introuvable" },
+          { status: 404 }
+        )
+      }
+    }
+
     const existingConference = await prisma.conference.findFirst({
       where: {
-        speakerId: session.user.id,
+        speakerId: targetSpeakerId,
         editionId: activeEdition.id,
       },
     })
@@ -95,7 +124,7 @@ export async function POST(request: NextRequest) {
       data: {
         title,
         description,
-        speakerId: session.user.id,
+        speakerId: targetSpeakerId,
         editionId: activeEdition.id,
         timeSlotId: timeSlotId || null,
       },
@@ -112,7 +141,7 @@ export async function POST(request: NextRequest) {
     })
 
     await prisma.user.update({
-      where: { id: session.user.id },
+      where: { id: targetSpeakerId },
       data: { wantsToSpeak: true },
     })
 

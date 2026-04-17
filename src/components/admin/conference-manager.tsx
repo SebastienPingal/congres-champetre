@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { formatDateTimeRange } from "@/lib/helper"
 import { ConferenceEditForm } from "@/components/conference-edit-form"
 import { ConferenceDeleteButton } from "@/components/conference-delete-button"
+import { ConferenceCreateDialog } from "@/components/admin/conference-create-dialog"
 
 interface Conference {
   id: string
@@ -38,6 +39,9 @@ export function ConferenceManager({ conferences, onConferenceUpdated }: Conferen
 
   return (
     <div className="flex flex-col gap-4">
+      <div className="flex items-center justify-end">
+        <ConferenceCreateDialog conferences={conferences} onConferenceCreated={onConferenceUpdated} />
+      </div>
       {conferences.length === 0 ? (
         <div className="text-center py-8 text-gray-500">
           <div className="text-4xl">•</div>
