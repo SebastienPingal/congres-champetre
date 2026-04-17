@@ -223,7 +223,7 @@ export default function AdminEmailsPage() {
               <div className="flex flex-col gap-2">
                 <Label htmlFor="email-image">Image (optionnelle)</Label>
                 <p className="text-xs text-gray-600">
-                  L&apos;image sera affichée en haut de l&apos;email et jointe en pièce jointe. Formats: png, jpeg, gif, webp. Taille max: 5 Mo.
+                  L&apos;image sera jointe en pièce jointe à l&apos;email. Formats: png, jpeg, gif, webp. Taille max: 5 Mo.
                 </p>
                 <input
                   ref={fileInputRef}

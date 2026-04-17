@@ -165,19 +165,14 @@ export async function sendBroadcastEmail(input: BroadcastEmailInput): Promise<Br
   let sent = 0
   const errors: Array<{ email: string; error: string }> = []
 
-  const attachment = input.attachment
-  const inlineCid = attachment ? `image-${Date.now()}@congres-champetre` : null
-  const inlineImageHtml = inlineCid
-    ? `<p><img src="cid:${inlineCid}" alt="${escapeHtml(attachment!.filename)}" style="max-width:100%;height:auto;" /></p>`
-    : ""
-  const safeHtmlBody = inlineImageHtml + markdownToSafeHtml(input.message)
+  const safeHtmlBody = markdownToSafeHtml(input.message)
 
-  const mailAttachments = attachment && inlineCid
+  const attachment = input.attachment
+  const mailAttachments = attachment
     ? [{
         filename: attachment.filename,
         content: attachment.content,
         contentType: attachment.contentType,
-        cid: inlineCid,
       }]
     : undefined
 
