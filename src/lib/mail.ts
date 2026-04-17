@@ -9,10 +9,17 @@ type MailConfig = {
   from: string
 }
 
+type BroadcastAttachment = {
+  filename: string
+  content: Buffer
+  contentType: string
+}
+
 type BroadcastEmailInput = {
   subject: string
   message: string
   recipients: string[]
+  attachment?: BroadcastAttachment
 }
 
 export type BroadcastEmailResult = {
@@ -158,7 +165,21 @@ export async function sendBroadcastEmail(input: BroadcastEmailInput): Promise<Br
   let sent = 0
   const errors: Array<{ email: string; error: string }> = []
 
-  const safeHtmlBody = markdownToSafeHtml(input.message)
+  const attachment = input.attachment
+  const inlineCid = attachment ? `image-${Date.now()}@congres-champetre` : null
+  const inlineImageHtml = inlineCid
+    ? `<p><img src="cid:${inlineCid}" alt="${escapeHtml(attachment!.filename)}" style="max-width:100%;height:auto;" /></p>`
+    : ""
+  const safeHtmlBody = inlineImageHtml + markdownToSafeHtml(input.message)
+
+  const mailAttachments = attachment && inlineCid
+    ? [{
+        filename: attachment.filename,
+        content: attachment.content,
+        contentType: attachment.contentType,
+        cid: inlineCid,
+      }]
+    : undefined
 
   for (const email of dedupedRecipients) {
     try {
@@ -168,6 +189,7 @@ export async function sendBroadcastEmail(input: BroadcastEmailInput): Promise<Br
         subject: input.subject,
         text: input.message,
         html: safeHtmlBody,
+        attachments: mailAttachments,
       })
       sent += 1
     } catch (error) {

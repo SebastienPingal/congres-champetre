@@ -4,6 +4,15 @@ import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { sendBroadcastEmail } from "@/lib/mail"
 
+const MAX_ATTACHMENT_BYTES = 5 * 1024 * 1024
+const ALLOWED_IMAGE_TYPES = new Set([
+  "image/png",
+  "image/jpeg",
+  "image/jpg",
+  "image/gif",
+  "image/webp",
+])
+
 const recipientFilter = z.enum([
   "all",
   "participants",
@@ -20,6 +29,60 @@ const payloadSchema = z.object({
   filter: recipientFilter.optional().default("all"),
 })
 
+type ParsedRequest = {
+  subject: string
+  message: string
+  sendToAdminOnly: boolean
+  filter: z.infer<typeof recipientFilter>
+  attachment?: {
+    filename: string
+    content: Buffer
+    contentType: string
+  }
+}
+
+async function parseRequest(req: Request): Promise<{ ok: true; data: ParsedRequest } | { ok: false; error: string; status: number }> {
+  const contentType = req.headers.get("content-type") ?? ""
+
+  if (contentType.includes("multipart/form-data")) {
+    const form = await req.formData()
+    const parsed = payloadSchema.safeParse({
+      subject: form.get("subject"),
+      message: form.get("message"),
+      sendToAdminOnly: form.get("sendToAdminOnly") === "true",
+      filter: form.get("filter") ?? undefined,
+    })
+    if (!parsed.success) {
+      return { ok: false, error: "⚠️ Requête invalide", status: 400 }
+    }
+
+    const data: ParsedRequest = { ...parsed.data }
+    const image = form.get("image")
+    if (image instanceof File && image.size > 0) {
+      if (image.size > MAX_ATTACHMENT_BYTES) {
+        return { ok: false, error: "⚠️ Image trop volumineuse (5 Mo maximum)", status: 400 }
+      }
+      if (!ALLOWED_IMAGE_TYPES.has(image.type)) {
+        return { ok: false, error: "⚠️ Format d'image non supporté (png, jpeg, gif, webp)", status: 400 }
+      }
+      const buffer = Buffer.from(await image.arrayBuffer())
+      data.attachment = {
+        filename: image.name || "image",
+        content: buffer,
+        contentType: image.type,
+      }
+    }
+    return { ok: true, data }
+  }
+
+  const rawBody = await req.json().catch(() => null)
+  const parsed = payloadSchema.safeParse(rawBody)
+  if (!parsed.success) {
+    return { ok: false, error: "⚠️ Requête invalide", status: 400 }
+  }
+  return { ok: true, data: { ...parsed.data } }
+}
+
 export async function POST(req: Request) {
   try {
     const session = await auth()
@@ -32,17 +95,9 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "⚠️ Accès refusé - Admin requis" }, { status: 403 })
     }
 
-    const rawBody = await req.json().catch(() => null)
-    const parsed = payloadSchema.safeParse(rawBody)
-
-    if (!parsed.success) {
-      return NextResponse.json(
-        {
-          error: "⚠️ Requête invalide",
-          details: parsed.error.flatten(),
-        },
-        { status: 400 }
-      )
+    const parsed = await parseRequest(req)
+    if (!parsed.ok) {
+      return NextResponse.json({ error: parsed.error }, { status: parsed.status })
     }
 
     let recipients: string[] = []
@@ -110,6 +165,7 @@ export async function POST(req: Request) {
       subject: parsed.data.subject,
       message: parsed.data.message,
       recipients,
+      attachment: parsed.data.attachment,
     })
 
     return NextResponse.json({

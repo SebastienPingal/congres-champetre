@@ -1,6 +1,6 @@
 "use client"
 
-import { FormEvent, useState } from "react"
+import { ChangeEvent, FormEvent, useEffect, useRef, useState } from "react"
 import { useSession } from "next-auth/react"
 import type { User } from "next-auth"
 import { Navbar } from "@/components/navbar"
@@ -28,16 +28,57 @@ type SendResponse = {
   errors?: Array<{ email: string; error: string }>
 }
 
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024
+const ACCEPTED_IMAGE_TYPES = ["image/png", "image/jpeg", "image/jpg", "image/gif", "image/webp"]
+
 export default function AdminEmailsPage() {
   const { data: session, status } = useSession()
   const [subject, setSubject] = useState("")
   const [message, setMessage] = useState("")
   const [filter, setFilter] = useState<RecipientFilter>("all")
+  const [image, setImage] = useState<File | null>(null)
+  const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [isSending, setIsSending] = useState(false)
   const [result, setResult] = useState<SendResponse | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const isAdmin = (session?.user as User | undefined)?.role === "ADMIN"
+
+  useEffect(() => {
+    if (!image) {
+      setImagePreview(null)
+      return
+    }
+    const url = URL.createObjectURL(image)
+    setImagePreview(url)
+    return () => URL.revokeObjectURL(url)
+  }, [image])
+
+  const handleImageChange = (event: ChangeEvent<HTMLInputElement>) => {
+    setError(null)
+    const file = event.target.files?.[0] ?? null
+    if (!file) {
+      setImage(null)
+      return
+    }
+    if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
+      setError("⚠️ Format d'image non supporté (png, jpeg, gif, webp).")
+      event.target.value = ""
+      return
+    }
+    if (file.size > MAX_IMAGE_BYTES) {
+      setError("⚠️ Image trop volumineuse (5 Mo maximum).")
+      event.target.value = ""
+      return
+    }
+    setImage(file)
+  }
+
+  const clearImage = () => {
+    setImage(null)
+    if (fileInputRef.current) fileInputRef.current.value = ""
+  }
 
   const submitEmail = async (sendToAdminOnly: boolean) => {
     setError(null)
@@ -62,15 +103,16 @@ export default function AdminEmailsPage() {
 
     try {
       setIsSending(true)
+      const formData = new FormData()
+      formData.append("subject", subject.trim())
+      formData.append("message", message.trim())
+      formData.append("sendToAdminOnly", String(sendToAdminOnly))
+      formData.append("filter", filter)
+      if (image) formData.append("image", image)
+
       const response = await fetch("/api/admin/emails", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          subject: subject.trim(),
-          message: message.trim(),
-          sendToAdminOnly,
-          filter,
-        }),
+        body: formData,
       })
 
       const data = await response.json()
@@ -83,6 +125,7 @@ export default function AdminEmailsPage() {
       if (!sendToAdminOnly) {
         setSubject("")
         setMessage("")
+        clearImage()
       }
     } catch (submitError) {
       console.error("📧🚨 Erreur lors de l'envoi depuis la page admin:", submitError)
@@ -175,6 +218,38 @@ export default function AdminEmailsPage() {
                   required
                   className="w-full min-h-40 rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs outline-none transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]"
                 />
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="email-image">Image (optionnelle)</Label>
+                <p className="text-xs text-gray-600">
+                  L&apos;image sera affichée en haut de l&apos;email et jointe en pièce jointe. Formats: png, jpeg, gif, webp. Taille max: 5 Mo.
+                </p>
+                <input
+                  ref={fileInputRef}
+                  id="email-image"
+                  type="file"
+                  accept={ACCEPTED_IMAGE_TYPES.join(",")}
+                  onChange={handleImageChange}
+                  className="text-sm"
+                />
+                {image && imagePreview && (
+                  <div className="flex items-start gap-3 mt-1">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={imagePreview}
+                      alt="Aperçu"
+                      className="max-h-40 rounded-md border border-input object-contain"
+                    />
+                    <div className="flex flex-col gap-1 text-xs text-gray-600">
+                      <span className="font-medium">{image.name}</span>
+                      <span>{(image.size / 1024).toFixed(1)} Ko</span>
+                      <Button type="button" variant="outline" size="sm" onClick={clearImage} disabled={isSending}>
+                        Retirer
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="flex items-center gap-3">
