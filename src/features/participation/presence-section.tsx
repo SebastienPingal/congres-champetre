@@ -15,7 +15,7 @@ interface PresenceSectionProps {
 }
 
 function buildGoogleCalendarUrl(
-  selection: Exclude<AttendanceDays, 'NONE'>,
+  selection: Exclude<AttendanceDays, 'NONE' | 'UNKNOWN'>,
   edition: UserProfile['edition']
 ): string | null {
   if (!edition.startDate || !edition.endDate) return null
@@ -42,7 +42,7 @@ function buildGoogleCalendarUrl(
 export function PresenceSection({ user }: PresenceSectionProps) {
   const { mutate: updateProfile, isPending } = useUpdateProfile()
   const [pendingDays, setPendingDays] = useState<AttendanceDays | null>(null)
-  const needsAction = !user.isAttending
+  const needsAction = user.isAttending !== true
 
   const handleAttendingChange = (checked: boolean) => {
     const payload: Parameters<typeof updateProfile>[0] = { isAttending: checked }
@@ -61,7 +61,7 @@ export function PresenceSection({ user }: PresenceSectionProps) {
 
   const handleGoogleCalendar = () => {
     const sel = user.attendanceDays
-    if (sel === 'NONE') return
+    if (sel === 'NONE' || sel === 'UNKNOWN') return
     const url = buildGoogleCalendarUrl(sel, user.edition)
     if (url) window.open(url, '_blank', 'noopener,noreferrer')
   }
@@ -93,14 +93,14 @@ export function PresenceSection({ user }: PresenceSectionProps) {
           <div className="flex items-center gap-3">
             <Checkbox
               id="isAttending"
-              checked={user.isAttending}
+              checked={user.isAttending === true}
               onCheckedChange={(v) => handleAttendingChange(Boolean(v))}
               disabled={isPending}
             />
             <label htmlFor="isAttending" className="text-sm font-medium">Je serai présent</label>
           </div>
 
-          {user.isAttending && (
+          {user.isAttending === true && (
             <div className="flex flex-col gap-3">
               <div className="flex items-center justify-between">
                 <Label id="attendanceDaysLabel" className="text-sm font-medium">Jours de présence</Label>
@@ -124,7 +124,7 @@ export function PresenceSection({ user }: PresenceSectionProps) {
               <div className="flex items-center gap-3">
                 <Checkbox
                   id="sleepsOnSite"
-                  checked={user.sleepsOnSite}
+                  checked={user.sleepsOnSite === true}
                   onCheckedChange={(v) => handleSleepChange(Boolean(v))}
                   disabled={isPending}
                 />

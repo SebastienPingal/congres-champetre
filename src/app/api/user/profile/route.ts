@@ -55,12 +55,12 @@ export async function GET() {
       name: user.name,
       email: user.email,
       role: user.role,
-      wantsToSpeak: user.wantsToSpeak,
+      wantsToSpeak: user.wantsToSpeak ?? null,
       createdAt: user.createdAt,
       conferences: user.conferences,
-      isAttending: participation?.isAttending ?? false,
+      isAttending: participation?.isAttending ?? null,
       attendanceDays: participation?.attendanceDays ?? "NONE",
-      sleepsOnSite: participation?.sleepsOnSite ?? false,
+      sleepsOnSite: participation?.sleepsOnSite ?? null,
       willPayInCash: participation?.willPayInCash ?? false,
       hasPaid: participation?.hasPaid ?? false,
       onboardingCompletedAt: participation?.onboardingCompletedAt ?? null,
@@ -96,7 +96,7 @@ export async function PATCH(request: NextRequest) {
     const activeEdition = await getActiveEdition()
 
     const userUpdateData: Record<string, unknown> = {}
-    if (typeof body.wantsToSpeak === "boolean") {
+    if (typeof body.wantsToSpeak === "boolean" || body.wantsToSpeak === null) {
       userUpdateData.wantsToSpeak = body.wantsToSpeak
       if (body.wantsToSpeak === false) {
         await prisma.conference.deleteMany({
@@ -115,17 +115,20 @@ export async function PATCH(request: NextRequest) {
     const participationData: Record<string, unknown> = {}
     let needsParticipationUpdate = false
 
-    if (typeof body.isAttending === "boolean") {
+    if (typeof body.isAttending === "boolean" || body.isAttending === null) {
       participationData.isAttending = body.isAttending
       needsParticipationUpdate = true
       if (body.isAttending === false) {
         participationData.attendanceDays = "NONE"
-        participationData.sleepsOnSite = false
+        participationData.sleepsOnSite = null
+      } else if (body.isAttending === null) {
+        participationData.attendanceDays = "NONE"
+        participationData.sleepsOnSite = null
       }
     }
 
     if (typeof body.attendanceDays === "string") {
-      const allowed = ["NONE", "DAY1", "DAY2", "BOTH"]
+      const allowed = ["NONE", "DAY1", "DAY2", "BOTH", "UNKNOWN"]
       if (!allowed.includes(body.attendanceDays)) {
         return NextResponse.json(
           { error: "📝 Valeur attendanceDays invalide" },
@@ -134,12 +137,12 @@ export async function PATCH(request: NextRequest) {
       }
       participationData.attendanceDays = body.attendanceDays
       needsParticipationUpdate = true
-      if (body.attendanceDays !== "NONE") {
+      if (body.attendanceDays !== "NONE" && body.attendanceDays !== "UNKNOWN") {
         participationData.isAttending = true
       }
     }
 
-    if (typeof body.sleepsOnSite === "boolean") {
+    if (typeof body.sleepsOnSite === "boolean" || body.sleepsOnSite === null) {
       participationData.sleepsOnSite = body.sleepsOnSite
       needsParticipationUpdate = true
     }
@@ -160,9 +163,9 @@ export async function PATCH(request: NextRequest) {
       })
 
       const finalIsAttending =
-        typeof participationData.isAttending === "boolean"
-          ? (participationData.isAttending as boolean)
-          : (existing?.isAttending ?? false)
+        "isAttending" in participationData
+          ? (participationData.isAttending as boolean | null)
+          : (existing?.isAttending ?? null)
 
       if (body.sleepsOnSite === true && !finalIsAttending) {
         return NextResponse.json(
@@ -186,10 +189,10 @@ export async function PATCH(request: NextRequest) {
         create: {
           userId: session.user.id,
           editionId: activeEdition.id,
-          isAttending: (participationData.isAttending as boolean) ?? false,
+          isAttending: (participationData.isAttending as boolean | null) ?? null,
           attendanceDays:
             (participationData.attendanceDays as AttendanceDays) ?? "NONE",
-          sleepsOnSite: (participationData.sleepsOnSite as boolean) ?? false,
+          sleepsOnSite: (participationData.sleepsOnSite as boolean | null) ?? null,
         },
         update: participationData,
       })
@@ -227,11 +230,11 @@ export async function PATCH(request: NextRequest) {
         name: user?.name,
         email: user?.email,
         role: user?.role,
-        wantsToSpeak: user?.wantsToSpeak,
+        wantsToSpeak: user?.wantsToSpeak ?? null,
         conferences: user?.conferences,
-        isAttending: participation?.isAttending ?? false,
+        isAttending: participation?.isAttending ?? null,
         attendanceDays: participation?.attendanceDays ?? "NONE",
-        sleepsOnSite: participation?.sleepsOnSite ?? false,
+        sleepsOnSite: participation?.sleepsOnSite ?? null,
         willPayInCash: participation?.willPayInCash ?? false,
         hasPaid: participation?.hasPaid ?? false,
         onboardingCompletedAt: participation?.onboardingCompletedAt ?? null,

@@ -17,7 +17,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 
-type AttendanceDays = "NONE" | "DAY1" | "DAY2" | "BOTH"
+type AttendanceDays = "NONE" | "DAY1" | "DAY2" | "BOTH" | "UNKNOWN"
 
 interface MealSlot {
   id: string
@@ -30,10 +30,10 @@ interface AdminUserRow {
   name: string | null
   email: string
   role: "USER" | "ADMIN"
-  wantsToSpeak: boolean
-  isAttending: boolean
+  wantsToSpeak: boolean | null
+  isAttending: boolean | null
   attendanceDays: AttendanceDays
-  sleepsOnSite: boolean
+  sleepsOnSite: boolean | null
   hasPaid: boolean
   willPayInCash: boolean
   mealStatuses: Record<string, string>
@@ -47,6 +47,7 @@ const attendanceOrder: Record<AttendanceDays, number> = {
   DAY1: 1,
   DAY2: 2,
   BOTH: 3,
+  UNKNOWN: 4,
 }
 
 export function UsersTable() {
@@ -122,7 +123,7 @@ export function UsersTable() {
       if (!res.ok) throw new Error("Delete failed")
       setUsers(prev => prev.map(u =>
         u.id === deleteTarget.id
-          ? { ...u, isAttending: false, attendanceDays: "NONE" as AttendanceDays, sleepsOnSite: false, hasPaid: false, willPayInCash: false, mealStatuses: {}, mealTotal: 0 }
+          ? { ...u, isAttending: null, attendanceDays: "NONE" as AttendanceDays, sleepsOnSite: null, hasPaid: false, willPayInCash: false, mealStatuses: {}, mealTotal: 0 }
           : u
       ))
     } catch {
@@ -140,8 +141,8 @@ export function UsersTable() {
         (u.name?.toLowerCase().includes(normalizedQuery) ?? false) ||
         u.email.toLowerCase().includes(normalizedQuery)
 
-      const matchesParticipation = filterParticipation === "ALL" || (filterParticipation === "YES" ? u.isAttending : !u.isAttending)
-      const matchesSleep = filterSleep === "ALL" || (filterSleep === "YES" ? u.sleepsOnSite : !u.sleepsOnSite)
+      const matchesParticipation = filterParticipation === "ALL" || (filterParticipation === "YES" ? u.isAttending === true : u.isAttending !== true)
+      const matchesSleep = filterSleep === "ALL" || (filterSleep === "YES" ? u.sleepsOnSite === true : u.sleepsOnSite !== true)
       const matchesDays = filterDays === "ALL" || u.attendanceDays === filterDays
       const matchesPaid = filterPaid === "ALL" || (filterPaid === "YES" ? u.hasPaid : !u.hasPaid)
       const matchesCash = filterCash === "ALL" || (filterCash === "YES" ? u.willPayInCash : !u.willPayInCash)
@@ -418,17 +419,21 @@ export function UsersTable() {
               <TableCell className="font-medium">{u.name ?? "—"}</TableCell>
               <TableCell>{u.email}</TableCell>
               <TableCell>
-                {u.wantsToSpeak ? (
+                {u.wantsToSpeak === true ? (
                   <Badge className="bg-amber-100 text-amber-700">Oui</Badge>
-                ) : (
+                ) : u.wantsToSpeak === false ? (
                   <Badge variant="outline">Non</Badge>
+                ) : (
+                  <Badge className="bg-gray-100 text-gray-500">?</Badge>
                 )}
               </TableCell>
               <TableCell>
-                {u.isAttending ? (
+                {u.isAttending === true ? (
                   <Badge className="bg-emerald-100 text-emerald-700">Oui</Badge>
-                ) : (
+                ) : u.isAttending === false ? (
                   <Badge className="bg-gray-100 text-gray-700">Non</Badge>
+                ) : (
+                  <Badge className="bg-gray-100 text-gray-500">?</Badge>
                 )}
               </TableCell>
               <TableCell>
@@ -444,15 +449,20 @@ export function UsersTable() {
                 {u.attendanceDays === "BOTH" && (
                   <Badge className="bg-emerald-100 text-emerald-700">Les deux</Badge>
                 )}
-              </TableCell>
-              <TableCell>
-                {u.sleepsOnSite ? (
-                  <Badge className="bg-purple-100 text-purple-700">Oui</Badge>
-                ) : (
-                  <Badge variant="outline">Non</Badge>
+                {u.attendanceDays === "UNKNOWN" && (
+                  <Badge className="bg-gray-100 text-gray-500">?</Badge>
                 )}
               </TableCell>
-              <TableCell className={u.isAttending && !u.hasPaid ? "bg-red-200" : undefined}>
+              <TableCell>
+                {u.sleepsOnSite === true ? (
+                  <Badge className="bg-purple-100 text-purple-700">Oui</Badge>
+                ) : u.sleepsOnSite === false ? (
+                  <Badge variant="outline">Non</Badge>
+                ) : (
+                  <Badge className="bg-gray-100 text-gray-500">?</Badge>
+                )}
+              </TableCell>
+              <TableCell className={u.isAttending === true && !u.hasPaid ? "bg-red-200" : undefined}>
                 <div className="flex items-center gap-2">
                   <Checkbox
                     aria-label="A payé"
@@ -527,7 +537,7 @@ export function UsersTable() {
                 )}
               </TableCell>
               <TableCell className="text-center">
-                {u.isAttending && (
+                {u.isAttending === true && (
                   <Button
                     variant="ghost"
                     size="sm"

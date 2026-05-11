@@ -54,7 +54,7 @@ model User {
   image         String?
   password      String?
   role          Role      @default(USER)
-  wantsToSpeak  Boolean   @default(false)
+  wantsToSpeak  Boolean?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
@@ -87,9 +87,9 @@ model EditionParticipation {
   id                    String         @id @default(cuid())
   userId                String
   editionId             String
-  isAttending           Boolean        @default(false)
+  isAttending           Boolean?
   attendanceDays        AttendanceDays @default(NONE)
-  sleepsOnSite          Boolean        @default(false)
+  sleepsOnSite          Boolean?
   hasPaid               Boolean        @default(false)
   willPayInCash         Boolean        @default(false)
   onboardingCompletedAt DateTime?
@@ -179,6 +179,7 @@ enum AttendanceDays {
   DAY1
   DAY2
   BOTH
+  UNKNOWN
 }
 
 enum MealStatus {

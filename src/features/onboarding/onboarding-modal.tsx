@@ -128,7 +128,7 @@ export function OnboardingModal() {
   const hasMeals = meals.length > 0
   const visibleSteps: Step[] = [
     'attending',
-    ...(answers.isAttending
+    ...(answers.isAttending === true
       ? ['days' as Step, 'sleeping' as Step, ...(hasMeals ? ['meals' as Step] : [])]
       : []),
     'speaking',
@@ -141,28 +141,28 @@ export function OnboardingModal() {
 
   const finalComplete = (updatedAnswers: OnboardingState) => {
     completeOnboarding({
-      isAttending: updatedAnswers.isAttending ?? false,
+      isAttending: updatedAnswers.isAttending,
       attendanceDays: updatedAnswers.attendanceDays ?? 'NONE',
-      sleepsOnSite: updatedAnswers.sleepsOnSite ?? false,
-      wantsToSpeak: updatedAnswers.wantsToSpeak ?? false,
+      sleepsOnSite: updatedAnswers.sleepsOnSite,
+      wantsToSpeak: updatedAnswers.wantsToSpeak,
     })
   }
 
   const handleAttending = (value: 'yes' | 'no' | 'unknown') => {
-    const isAttending = value === 'yes'
-    const attendanceDays: AttendanceDays = isAttending ? 'BOTH' : 'NONE'
-    const updated: OnboardingState = { ...answers, isAttending, attendanceDays }
-    setAnswers(updated)
-
     if (value === 'unknown') {
-      const skipped: OnboardingState = { isAttending: false, attendanceDays: 'NONE', sleepsOnSite: false, wantsToSpeak: null }
+      const skipped: OnboardingState = { isAttending: null, attendanceDays: 'NONE', sleepsOnSite: null, wantsToSpeak: null }
       setAnswers(skipped)
+      updateProfile({ isAttending: null, attendanceDays: 'NONE', sleepsOnSite: null })
       setCurrentStep('speaking')
-    } else if (isAttending) {
+    } else if (value === 'yes') {
+      const updated: OnboardingState = { ...answers, isAttending: true, attendanceDays: 'BOTH' }
+      setAnswers(updated)
       updateProfile({ isAttending: true, attendanceDays: 'BOTH' })
       setCurrentStep('days')
     } else {
-      updateProfile({ isAttending: false, attendanceDays: 'NONE', sleepsOnSite: false })
+      const updated: OnboardingState = { ...answers, isAttending: false, attendanceDays: 'NONE', sleepsOnSite: null }
+      setAnswers(updated)
+      updateProfile({ isAttending: false, attendanceDays: 'NONE', sleepsOnSite: null })
       setCurrentStep('speaking')
     }
   }
@@ -175,10 +175,9 @@ export function OnboardingModal() {
   }
 
   const handleSleeping = (value: boolean | null) => {
-    const sleepsOnSite = value ?? false
-    const updated: OnboardingState = { ...answers, sleepsOnSite }
+    const updated: OnboardingState = { ...answers, sleepsOnSite: value }
     setAnswers(updated)
-    updateProfile({ sleepsOnSite })
+    updateProfile({ sleepsOnSite: value })
     setCurrentStep(hasMeals ? 'meals' : 'speaking')
   }
 
@@ -193,8 +192,7 @@ export function OnboardingModal() {
   }
 
   const handleSpeaking = (value: boolean | null) => {
-    const wantsToSpeak = value ?? false
-    const updated: OnboardingState = { ...answers, wantsToSpeak }
+    const updated: OnboardingState = { ...answers, wantsToSpeak: value }
     setAnswers(updated)
     if (wantsToSpeak) {
       setCurrentStep('conference')
@@ -223,10 +221,10 @@ export function OnboardingModal() {
 
   const handleLater = () => {
     completeOnboarding({
-      isAttending: answers.isAttending ?? false,
+      isAttending: answers.isAttending,
       attendanceDays: answers.attendanceDays ?? 'NONE',
-      sleepsOnSite: answers.sleepsOnSite ?? false,
-      wantsToSpeak: answers.wantsToSpeak ?? false,
+      sleepsOnSite: answers.sleepsOnSite,
+      wantsToSpeak: answers.wantsToSpeak,
     })
   }
 
