@@ -46,6 +46,7 @@ export default function AdminPage() {
   const [conferences, setConferences] = useState<Conference[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [stats, setStats] = useState<{ totalUsers: number; attendingUsers: number; attendingRate: number } | null>(null)
+  const [activeEditionDays, setActiveEditionDays] = useState<Date[]>([])
 
   useEffect(() => {
     // 🛡️ Middleware ensures we're authenticated and have admin role
@@ -54,10 +55,11 @@ export default function AdminPage() {
 
   const fetchData = async () => {
     try {
-      const [slotsResponse, conferencesResponse, statsResponse] = await Promise.all([
+      const [slotsResponse, conferencesResponse, statsResponse, editionsResponse] = await Promise.all([
         fetch("/api/timeslots"),
         fetch("/api/conferences"),
-        fetch("/api/admin/stats")
+        fetch("/api/admin/stats"),
+        fetch("/api/editions")
       ])
 
       if (slotsResponse.ok) {
@@ -73,6 +75,23 @@ export default function AdminPage() {
       if (statsResponse.ok) {
         const s = await statsResponse.json()
         setStats(s)
+      }
+
+      if (editionsResponse.ok) {
+        const editions = await editionsResponse.json()
+        const active = editions.find((e: { isActive: boolean; startDate: string | null; endDate: string | null }) => e.isActive)
+        if (active?.startDate && active?.endDate) {
+          const days: Date[] = []
+          const cur = new Date(active.startDate)
+          cur.setHours(0, 0, 0, 0)
+          const end = new Date(active.endDate)
+          end.setHours(0, 0, 0, 0)
+          while (cur <= end) {
+            days.push(new Date(cur))
+            cur.setDate(cur.getDate() + 1)
+          }
+          setActiveEditionDays(days)
+        }
       }
     } catch (error) {
       console.error("🚨 Erreur lors du chargement des données:", error)
@@ -259,6 +278,7 @@ export default function AdminPage() {
               <TimeSlotManager
                 timeSlots={timeSlots}
                 onTimeSlotCreated={handleTimeSlotCreated}
+                editionDays={activeEditionDays}
               />
             </CardContent>
           </Card>

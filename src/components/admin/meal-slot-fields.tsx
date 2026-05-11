@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/components/ui/button"
 import { DateTimePicker } from "@/components/ui/date-time-picker"
+import { DayTimePicker } from "@/components/ui/day-time-picker"
 
 export interface MealSlotData {
   title: string
@@ -25,9 +26,10 @@ interface MealSlotFieldsProps {
   onChange: (data: MealSlotData) => void
   onRemove: () => void
   disabled?: boolean
+  availableDays?: Date[]
 }
 
-export function MealSlotFields({ index, data, onChange, onRemove, disabled }: MealSlotFieldsProps) {
+export function MealSlotFields({ index, data, onChange, onRemove, disabled, availableDays }: MealSlotFieldsProps) {
   const update = (patch: Partial<MealSlotData>) => onChange({ ...data, ...patch })
 
   return (
@@ -52,22 +54,20 @@ export function MealSlotFields({ index, data, onChange, onRemove, disabled }: Me
 
       <div className="flex flex-col gap-2">
         <Label>Date et heure de début</Label>
-        <DateTimePicker
-          date={data.startTime}
-          setDate={(d) => update({ startTime: d })}
-          disabled={disabled}
-          placeholder="Choisir la date et l'heure de début"
-        />
+        {availableDays?.length ? (
+          <DayTimePicker days={availableDays} date={data.startTime} setDate={(d) => update({ startTime: d })} disabled={disabled} placeholder="Choisir le jour et l'heure de début" />
+        ) : (
+          <DateTimePicker date={data.startTime} setDate={(d) => update({ startTime: d })} disabled={disabled} placeholder="Choisir la date et l'heure de début" />
+        )}
       </div>
 
       <div className="flex flex-col gap-2">
         <Label>Date et heure de fin</Label>
-        <DateTimePicker
-          date={data.endTime}
-          setDate={(d) => update({ endTime: d })}
-          disabled={disabled}
-          placeholder="Choisir la date et l'heure de fin"
-        />
+        {availableDays?.length ? (
+          <DayTimePicker days={availableDays} date={data.endTime} setDate={(d) => update({ endTime: d })} disabled={disabled} placeholder="Choisir le jour et l'heure de fin" />
+        ) : (
+          <DateTimePicker date={data.endTime} setDate={(d) => update({ endTime: d })} disabled={disabled} placeholder="Choisir la date et l'heure de fin" />
+        )}
       </div>
 
       <div className="flex flex-col gap-2">

@@ -54,6 +54,20 @@ export function EditionManager({ onEditionChanged }: EditionManagerProps) {
 
   // Step 2 state
   const [mealSlots, setMealSlots] = useState<MealSlotData[]>([])
+
+  const wizardDays: Date[] = (() => {
+    if (!createStartDate || !createEndDate) return []
+    const days: Date[] = []
+    const cur = new Date(createStartDate)
+    cur.setHours(0, 0, 0, 0)
+    const end = new Date(createEndDate)
+    end.setHours(0, 0, 0, 0)
+    while (cur <= end) {
+      days.push(new Date(cur))
+      cur.setDate(cur.getDate() + 1)
+    }
+    return days
+  })()
   const [savingMeals, setSavingMeals] = useState(false)
   const [mealsError, setMealsError] = useState("")
 
@@ -121,7 +135,7 @@ export function EditionManager({ onEditionChanged }: EditionManagerProps) {
       })
       const result = await res.json()
       if (res.ok) {
-        setCreatedEditionId(result.id)
+        setCreatedEditionId(result.edition?.id ?? result.id)
         setWizardStep('meals')
         fetchEditions()
         onEditionChanged?.()
@@ -346,6 +360,7 @@ export function EditionManager({ onEditionChanged }: EditionManagerProps) {
                           setMealSlots((prev) => prev.filter((_, idx) => idx !== i))
                         }
                         disabled={savingMeals}
+                        availableDays={wizardDays}
                       />
                     ))}
                   </div>

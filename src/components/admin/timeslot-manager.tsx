@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { DateTimePicker } from "@/components/ui/date-time-picker"
+import { DayTimePicker } from "@/components/ui/day-time-picker"
 import { ConferenceEditForm } from "@/components/conference-edit-form"
 import { type MealSlotData } from "@/components/admin/meal-slot-fields"
 
@@ -33,9 +34,10 @@ interface TimeSlot {
 interface TimeSlotManagerProps {
   timeSlots: TimeSlot[]
   onTimeSlotCreated: () => void
+  editionDays?: Date[]
 }
 
-export function TimeSlotManager({ timeSlots, onTimeSlotCreated }: TimeSlotManagerProps) {
+export function TimeSlotManager({ timeSlots, onTimeSlotCreated, editionDays }: TimeSlotManagerProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [title, setTitle] = useState("")
   const [startDateTime, setStartDateTime] = useState<Date>()
@@ -273,21 +275,19 @@ export function TimeSlotManager({ timeSlots, onTimeSlotCreated }: TimeSlotManage
               </div>
               <div className="flex flex-col gap-2">
                 <Label>Date et heure de début</Label>
-                <DateTimePicker
-                  date={startDateTime}
-                  setDate={setStartDateTime}
-                  disabled={isLoading}
-                  placeholder="Choisir la date et l'heure de début"
-                />
+                {editionDays?.length ? (
+                  <DayTimePicker days={editionDays} date={startDateTime} setDate={setStartDateTime} disabled={isLoading} placeholder="Choisir le jour et l'heure de début" />
+                ) : (
+                  <DateTimePicker date={startDateTime} setDate={setStartDateTime} disabled={isLoading} placeholder="Choisir la date et l'heure de début" />
+                )}
               </div>
               <div className="flex flex-col gap-2">
                 <Label>Date et heure de fin</Label>
-                <DateTimePicker
-                  date={endDateTime}
-                  setDate={setEndDateTime}
-                  disabled={isLoading}
-                  placeholder="Choisir la date et l'heure de fin"
-                />
+                {editionDays?.length ? (
+                  <DayTimePicker days={editionDays} date={endDateTime} setDate={setEndDateTime} disabled={isLoading} placeholder="Choisir le jour et l'heure de fin" />
+                ) : (
+                  <DateTimePicker date={endDateTime} setDate={setEndDateTime} disabled={isLoading} placeholder="Choisir la date et l'heure de fin" />
+                )}
               </div>
               <div className="flex flex-col gap-2">
                 <Label>Type de créneau</Label>
@@ -453,21 +453,19 @@ export function TimeSlotManager({ timeSlots, onTimeSlotCreated }: TimeSlotManage
             </div>
             <div className="flex flex-col gap-2">
               <Label>Date et heure de début</Label>
-              <DateTimePicker
-                date={editStartDateTime}
-                setDate={setEditStartDateTime}
-                disabled={editIsLoading}
-                placeholder="Choisir la date et l'heure de début"
-              />
+              {editionDays?.length ? (
+                <DayTimePicker days={editionDays} date={editStartDateTime} setDate={setEditStartDateTime} disabled={editIsLoading} placeholder="Choisir le jour et l'heure de début" />
+              ) : (
+                <DateTimePicker date={editStartDateTime} setDate={setEditStartDateTime} disabled={editIsLoading} placeholder="Choisir la date et l'heure de début" />
+              )}
             </div>
             <div className="flex flex-col gap-2">
               <Label>Date et heure de fin</Label>
-              <DateTimePicker
-                date={editEndDateTime}
-                setDate={setEditEndDateTime}
-                disabled={editIsLoading}
-                placeholder="Choisir la date et l'heure de fin"
-              />
+              {editionDays?.length ? (
+                <DayTimePicker days={editionDays} date={editEndDateTime} setDate={setEditEndDateTime} disabled={editIsLoading} placeholder="Choisir le jour et l'heure de fin" />
+              ) : (
+                <DateTimePicker date={editEndDateTime} setDate={setEditEndDateTime} disabled={editIsLoading} placeholder="Choisir la date et l'heure de fin" />
+              )}
             </div>
             <div className="flex flex-col gap-2">
               <Label>Type de créneau</Label>
