@@ -3,7 +3,6 @@
 import { useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { CircleDot } from "lucide-react"
@@ -39,16 +38,38 @@ export function ConferencesSection({ user }: ConferencesSectionProps) {
         <CardDescription>Indiquez si vous souhaitez présenter une conférence</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="flex items-center gap-3">
-          <Checkbox
-            id="wantsToSpeak"
-            checked={user.wantsToSpeak ?? false}
-            onCheckedChange={(v) => updateProfile({ wantsToSpeak: Boolean(v) })}
-            disabled={isPending}
-          />
-          <label htmlFor="wantsToSpeak" className="text-sm font-medium">
-            Je souhaite faire une présentation
-          </label>
+        <div className="flex flex-col gap-2">
+          <p className="text-sm font-medium">Souhaitez-vous proposer une conférence ?</p>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              type="button"
+              variant={user.wantsToSpeak === true ? "default" : "outline"}
+              size="sm"
+              onClick={() => updateProfile({ wantsToSpeak: true })}
+              disabled={isPending}
+            >
+              Oui
+            </Button>
+            <Button
+              type="button"
+              variant={user.wantsToSpeak === false ? "default" : "outline"}
+              size="sm"
+              onClick={() => updateProfile({ wantsToSpeak: false })}
+              disabled={isPending}
+            >
+              Non
+            </Button>
+            <Button
+              type="button"
+              variant={user.wantsToSpeak === null ? "secondary" : "ghost"}
+              size="sm"
+              className="text-gray-500"
+              onClick={() => updateProfile({ wantsToSpeak: null })}
+              disabled={isPending}
+            >
+              Je ne sais pas encore
+            </Button>
+          </div>
         </div>
 
         {user.wantsToSpeak && (

@@ -2,7 +2,6 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { CheckCircle2, CircleDot } from "lucide-react"
@@ -44,9 +43,9 @@ export function PresenceSection({ user }: PresenceSectionProps) {
   const [pendingDays, setPendingDays] = useState<AttendanceDays | null>(null)
   const needsAction = user.isAttending !== true
 
-  const handleAttendingChange = (checked: boolean) => {
-    const payload: Parameters<typeof updateProfile>[0] = { isAttending: checked }
-    if (checked && user.attendanceDays === 'NONE') payload.attendanceDays = 'BOTH'
+  const handleAttendingChange = (value: boolean | null) => {
+    const payload: Parameters<typeof updateProfile>[0] = { isAttending: value }
+    if (value === true && user.attendanceDays === 'NONE') payload.attendanceDays = 'BOTH'
     updateProfile(payload)
   }
 
@@ -55,8 +54,8 @@ export function PresenceSection({ user }: PresenceSectionProps) {
     updateProfile({ attendanceDays: value }, { onSettled: () => setPendingDays(null) })
   }
 
-  const handleSleepChange = (checked: boolean) => {
-    updateProfile({ sleepsOnSite: checked })
+  const handleSleepChange = (value: boolean | null) => {
+    updateProfile({ sleepsOnSite: value })
   }
 
   const handleGoogleCalendar = () => {
@@ -90,14 +89,38 @@ export function PresenceSection({ user }: PresenceSectionProps) {
       </CardHeader>
       <CardContent>
         <div className="flex flex-col gap-4">
-          <div className="flex items-center gap-3">
-            <Checkbox
-              id="isAttending"
-              checked={user.isAttending === true}
-              onCheckedChange={(v) => handleAttendingChange(Boolean(v))}
-              disabled={isPending}
-            />
-            <label htmlFor="isAttending" className="text-sm font-medium">Je serai présent</label>
+          <div className="flex flex-col gap-2">
+            <p className="text-sm font-medium">Serez-vous présent(e) au weekend ?</p>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                type="button"
+                variant={user.isAttending === true ? "default" : "outline"}
+                size="sm"
+                onClick={() => handleAttendingChange(true)}
+                disabled={isPending}
+              >
+                Oui, je viens !
+              </Button>
+              <Button
+                type="button"
+                variant={user.isAttending === false ? "default" : "outline"}
+                size="sm"
+                onClick={() => handleAttendingChange(false)}
+                disabled={isPending}
+              >
+                Non
+              </Button>
+              <Button
+                type="button"
+                variant={user.isAttending === null ? "secondary" : "ghost"}
+                size="sm"
+                className="text-gray-500"
+                onClick={() => handleAttendingChange(null)}
+                disabled={isPending}
+              >
+                Je ne sais pas encore
+              </Button>
+            </div>
           </div>
 
           {user.isAttending === true && (
@@ -113,22 +136,59 @@ export function PresenceSection({ user }: PresenceSectionProps) {
                     role="radio"
                     aria-checked={selectedDays === val}
                     variant={selectedDays === val ? "default" : "outline"}
+                    size="sm"
                     onClick={() => handleDaysChange(val)}
                     disabled={isPending}
                   >
                     {val === "BOTH" ? "Les deux jours" : val === "DAY1" ? "Seulement le samedi" : "Seulement le dimanche"}
                   </Button>
                 ))}
+                <Button
+                  type="button"
+                  role="radio"
+                  aria-checked={selectedDays === "UNKNOWN"}
+                  variant={selectedDays === "UNKNOWN" ? "secondary" : "ghost"}
+                  size="sm"
+                  className="text-gray-500"
+                  onClick={() => handleDaysChange("UNKNOWN")}
+                  disabled={isPending}
+                >
+                  Je ne sais pas encore
+                </Button>
               </div>
 
-              <div className="flex items-center gap-3">
-                <Checkbox
-                  id="sleepsOnSite"
-                  checked={user.sleepsOnSite === true}
-                  onCheckedChange={(v) => handleSleepChange(Boolean(v))}
-                  disabled={isPending}
-                />
-                <label htmlFor="sleepsOnSite" className="text-sm font-medium">Je dors sur place</label>
+              <div className="flex flex-col gap-2">
+                <p className="text-sm font-medium">Hébergement sur place ?</p>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    type="button"
+                    variant={user.sleepsOnSite === true ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => handleSleepChange(true)}
+                    disabled={isPending}
+                  >
+                    Oui, je dors sur place
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={user.sleepsOnSite === false ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => handleSleepChange(false)}
+                    disabled={isPending}
+                  >
+                    Non, je rentre
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={user.sleepsOnSite === null ? "secondary" : "ghost"}
+                    size="sm"
+                    className="text-gray-500"
+                    onClick={() => handleSleepChange(null)}
+                    disabled={isPending}
+                  >
+                    Je ne sais pas encore
+                  </Button>
+                </div>
               </div>
 
               {user.edition.startDate && user.edition.endDate && (
