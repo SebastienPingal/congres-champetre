@@ -361,8 +361,6 @@ export function EditionManager({ onEditionChanged }: EditionManagerProps) {
                         }
                         disabled={savingMeals}
                         availableDays={wizardDays}
-                        startHour={10}
-                        endHour={20}
                       />
                     ))}
                   </div>

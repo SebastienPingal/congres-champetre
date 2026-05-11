@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/components/ui/button"
 import { DateTimePicker } from "@/components/ui/date-time-picker"
-import { SlotGrid } from "@/components/admin/slot-grid"
+import { DayTimePicker } from "@/components/ui/day-time-picker"
 
 export interface MealSlotData {
   title: string
@@ -28,12 +28,9 @@ interface MealSlotFieldsProps {
   onRemove: () => void
   disabled?: boolean
   availableDays?: Date[]
-  startHour?: number
-  endHour?: number
-  existingSlots?: { startTime: string | Date; endTime: string | Date }[]
 }
 
-export function MealSlotFields({ index, data, onChange, onRemove, disabled, availableDays, startHour = 10, endHour = 20, existingSlots = [] }: MealSlotFieldsProps) {
+export function MealSlotFields({ index, data, onChange, onRemove, disabled, availableDays }: MealSlotFieldsProps) {
   const update = (patch: Partial<MealSlotData>) => onChange({ ...data, ...patch })
   const [duration, setDuration] = useState(2)
   const useGrid = availableDays && availableDays.length > 0
@@ -66,38 +63,21 @@ export function MealSlotFields({ index, data, onChange, onRemove, disabled, avai
 
       {/* Duration */}
       <div className="flex flex-col gap-2">
-        <Label>Durée</Label>
-        <div className="flex gap-2">
-          {[1, 2, 3, 4].map((h) => (
-            <Button key={h} type="button" size="sm"
-              variant={duration === h ? 'secondary' : 'outline'}
-              onClick={() => { setDuration(h); update({ startTime: undefined, endTime: undefined }) }}
-              disabled={disabled}
-            >
-              {h}h
-            </Button>
-          ))}
-        </div>
+        <Label>Date et heure de début</Label>
+        {availableDays?.length ? (
+          <DayTimePicker days={availableDays} date={data.startTime} setDate={(d) => update({ startTime: d })} disabled={disabled} placeholder="Choisir le jour et l'heure de début" />
+        ) : (
+          <DateTimePicker date={data.startTime} setDate={(d) => update({ startTime: d })} disabled={disabled} placeholder="Choisir la date et l'heure de début" />
+        )}
       </div>
 
       {/* Slot selection */}
       <div className="flex flex-col gap-2">
-        <Label>Créneau</Label>
-        {useGrid ? (
-          <SlotGrid
-            days={availableDays}
-            startHour={startHour}
-            endHour={endHour}
-            duration={duration}
-            existingSlots={existingSlots}
-            selected={data.startTime ?? null}
-            onSelect={handleSlotSelect}
-          />
+        <Label>Date et heure de fin</Label>
+        {availableDays?.length ? (
+          <DayTimePicker days={availableDays} date={data.endTime} setDate={(d) => update({ endTime: d })} disabled={disabled} placeholder="Choisir le jour et l'heure de fin" />
         ) : (
-          <>
-            <DateTimePicker date={data.startTime} setDate={(d) => update({ startTime: d })} disabled={disabled} placeholder="Début" />
-            <DateTimePicker date={data.endTime} setDate={(d) => update({ endTime: d })} disabled={disabled} placeholder="Fin" />
-          </>
+          <DateTimePicker date={data.endTime} setDate={(d) => update({ endTime: d })} disabled={disabled} placeholder="Choisir la date et l'heure de fin" />
         )}
       </div>
 
