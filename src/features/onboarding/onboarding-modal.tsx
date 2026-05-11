@@ -194,7 +194,7 @@ export function OnboardingModal() {
   const handleSpeaking = (value: boolean | null) => {
     const updated: OnboardingState = { ...answers, wantsToSpeak: value }
     setAnswers(updated)
-    if (wantsToSpeak) {
+    if (value === true) {
       setCurrentStep('conference')
     } else {
       finalComplete(updated)
