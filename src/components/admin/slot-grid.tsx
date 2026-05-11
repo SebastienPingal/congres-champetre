@@ -53,11 +53,11 @@ export function SlotGrid({ days, startHour, endHour, duration, existingSlots = [
   }
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-1.5">
       {/* Hour header */}
-      <div className="flex gap-1 pl-24">
+      <div className="flex gap-0.5 pl-20">
         {availableStartHours.map((h) => (
-          <div key={h} className="w-10 text-center text-xs text-gray-400 font-medium">
+          <div key={h} className="w-8 text-center text-xs text-gray-400 font-medium">
             {h}h
           </div>
         ))}
@@ -65,8 +65,8 @@ export function SlotGrid({ days, startHour, endHour, duration, existingSlots = [
 
       {/* Day rows */}
       {days.map((day) => (
-        <div key={day.toISOString()} className="flex items-center gap-1">
-          <span className="w-24 shrink-0 text-xs font-medium text-gray-600 capitalize">
+        <div key={day.toISOString()} className="flex items-center gap-0.5">
+          <span className="w-20 shrink-0 text-xs font-medium text-gray-600 capitalize">
             {format(day, "EEE dd MMM", { locale: fr })}
           </span>
           {availableStartHours.map((hour) => {
@@ -78,7 +78,7 @@ export function SlotGrid({ days, startHour, endHour, duration, existingSlots = [
                 key={hour}
                 type="button"
                 size="sm"
-                className="w-10 h-8 p-0 text-xs"
+                className="w-8 h-7 p-0 text-xs"
                 variant={isSelected ? "default" : occupied ? "ghost" : "outline"}
                 disabled={occupied}
                 onClick={() => {
@@ -87,7 +87,7 @@ export function SlotGrid({ days, startHour, endHour, duration, existingSlots = [
                   onSelect(start)
                 }}
               >
-                {occupied ? "·" : `${hour}h`}
+                {occupied ? "·" : `${hour}`}
               </Button>
             )
           })}
