@@ -39,10 +39,10 @@ export function DaysStep({ onAnswer, isSubmitting }: DaysStepProps) {
         <Button
           variant="ghost"
           className="w-full h-12 text-sm text-gray-500"
-          onClick={() => onAnswer('BOTH')}
+          onClick={() => onAnswer('UNKNOWN')}
           disabled={isSubmitting}
         >
-          Je ne sais pas encore (les deux par défaut)
+          Je ne sais pas encore
         </Button>
       </div>
     </div>

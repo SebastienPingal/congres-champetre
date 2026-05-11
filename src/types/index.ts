@@ -1,4 +1,4 @@
-export type AttendanceDays = 'NONE' | 'DAY1' | 'DAY2' | 'BOTH'
+export type AttendanceDays = 'NONE' | 'DAY1' | 'DAY2' | 'BOTH' | 'UNKNOWN'
 export type MealStatus = 'PRESENT' | 'ABSENT' | null
 export type SlotKind = 'CONFERENCE' | 'MEAL' | 'BREAK' | 'OTHER'
 export type Role = 'USER' | 'ADMIN'
@@ -28,10 +28,10 @@ export interface UserProfile {
   name: string
   email: string
   role: Role
-  wantsToSpeak: boolean
-  isAttending: boolean
+  wantsToSpeak: boolean | null
+  isAttending: boolean | null
   attendanceDays: AttendanceDays
-  sleepsOnSite: boolean
+  sleepsOnSite: boolean | null
   willPayInCash: boolean
   hasPaid: boolean
   onboardingCompletedAt: string | null

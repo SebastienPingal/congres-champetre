@@ -18,25 +18,28 @@ export async function POST(request: NextRequest) {
       onboardingCompletedAt: new Date(),
     }
 
-    if (typeof body.isAttending === "boolean") {
+    if (typeof body.isAttending === "boolean" || body.isAttending === null) {
       participationData.isAttending = body.isAttending
-      if (!body.isAttending) {
+      if (body.isAttending === false) {
         participationData.attendanceDays = "NONE"
-        participationData.sleepsOnSite = false
+        participationData.sleepsOnSite = null
+      } else if (body.isAttending === null) {
+        participationData.attendanceDays = "NONE"
+        participationData.sleepsOnSite = null
       }
     }
 
     if (typeof body.attendanceDays === "string") {
-      const allowed = ["NONE", "DAY1", "DAY2", "BOTH"]
+      const allowed = ["NONE", "DAY1", "DAY2", "BOTH", "UNKNOWN"]
       if (allowed.includes(body.attendanceDays)) {
         participationData.attendanceDays = body.attendanceDays
-        if (body.attendanceDays !== "NONE") {
+        if (body.attendanceDays !== "NONE" && body.attendanceDays !== "UNKNOWN") {
           participationData.isAttending = true
         }
       }
     }
 
-    if (typeof body.sleepsOnSite === "boolean") {
+    if (typeof body.sleepsOnSite === "boolean" || body.sleepsOnSite === null) {
       participationData.sleepsOnSite = body.sleepsOnSite
     }
 
@@ -50,15 +53,15 @@ export async function POST(request: NextRequest) {
       create: {
         userId: session.user.id,
         editionId: activeEdition.id,
-        isAttending: (participationData.isAttending as boolean) ?? false,
+        isAttending: (participationData.isAttending as boolean | null) ?? null,
         attendanceDays: (participationData.attendanceDays as AttendanceDays) ?? "NONE",
-        sleepsOnSite: (participationData.sleepsOnSite as boolean) ?? false,
+        sleepsOnSite: (participationData.sleepsOnSite as boolean | null) ?? null,
         onboardingCompletedAt: participationData.onboardingCompletedAt as Date,
       },
       update: participationData,
     })
 
-    if (typeof body.wantsToSpeak === "boolean") {
+    if (typeof body.wantsToSpeak === "boolean" || body.wantsToSpeak === null) {
       await prisma.user.update({
         where: { id: session.user.id },
         data: { wantsToSpeak: body.wantsToSpeak },
