@@ -68,7 +68,6 @@ export function OnboardingModal() {
     wantsToSpeak: null,
   })
   const [isSavingMeals, setIsSavingMeals] = useState(false)
-  const [isSavingConference, setIsSavingConference] = useState(false)
 
   // Restore progress from localStorage once user id is known
   useEffect(() => {
@@ -137,7 +136,7 @@ export function OnboardingModal() {
 
   const currentIndex = visibleSteps.indexOf(currentStep)
   const totalSteps = visibleSteps.length
-  const isSubmitting = isCompleting || isSavingMeals || isSavingConference
+  const isSubmitting = isCompleting || isSavingMeals
 
   const finalComplete = (updatedAnswers: OnboardingState) => {
     completeOnboarding({
@@ -203,21 +202,8 @@ export function OnboardingModal() {
     }
   }
 
-  const handleConference = async (data: { title: string; description: string }) => {
-    setIsSavingConference(true)
-    try {
-      await fetch("/api/conferences", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title: data.title, description: data.description || null }),
-      })
-    } finally {
-      setIsSavingConference(false)
-    }
-    finalComplete({ ...answers, wantsToSpeak: true })
-  }
-
-  const handleSkipConference = () => {
+  // Called after conference creation (via ConferenceForm) or when user skips the step
+  const handleConferenceDone = () => {
     finalComplete({ ...answers, wantsToSpeak: true })
   }
 
@@ -278,11 +264,7 @@ export function OnboardingModal() {
           <SpeakingStep onAnswer={handleSpeaking} isSubmitting={isSubmitting} />
         )}
         {currentStep === 'conference' && (
-          <ConferenceStep
-            onSubmit={handleConference}
-            onSkip={handleSkipConference}
-            isSubmitting={isSubmitting}
-          />
+          <ConferenceStep onCreated={handleConferenceDone} onSkip={handleConferenceDone} />
         )}
 
         <p className="text-xs text-gray-400 text-center mt-3">
