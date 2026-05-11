@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { queryKeys } from "@/lib/query-keys"
@@ -11,9 +11,10 @@ import { DaysStep } from "./steps/days-step"
 import { SleepingStep } from "./steps/sleeping-step"
 import { SpeakingStep } from "./steps/speaking-step"
 import { MealsStep } from "./steps/meals-step"
+import { ConferenceStep } from "./steps/conference-step"
 import type { AttendanceDays, MealStatus } from "@/types"
 
-type Step = 'attending' | 'days' | 'sleeping' | 'meals' | 'speaking'
+type Step = 'attending' | 'days' | 'sleeping' | 'meals' | 'speaking' | 'conference'
 
 interface OnboardingState {
   isAttending: boolean | null
@@ -22,12 +23,22 @@ interface OnboardingState {
   wantsToSpeak: boolean | null
 }
 
+interface PersistedProgress {
+  currentStep: Step
+  answers: OnboardingState
+}
+
 const STEP_LABELS: Record<Step, string> = {
   attending: 'Venez-vous au weekend ?',
   days: 'Quels jours ?',
   sleeping: 'Hébergement',
   meals: 'Les repas',
   speaking: 'Conférence',
+  conference: 'Votre conférence',
+}
+
+function storageKey(userId: string) {
+  return `onboarding_progress_${userId}`
 }
 
 async function saveMealSelections(selections: Record<string, MealStatus>) {
@@ -57,6 +68,42 @@ export function OnboardingModal() {
     wantsToSpeak: null,
   })
   const [isSavingMeals, setIsSavingMeals] = useState(false)
+  const [isSavingConference, setIsSavingConference] = useState(false)
+
+  // Restore progress from localStorage once user id is known
+  useEffect(() => {
+    if (!user?.id) return
+    try {
+      const raw = localStorage.getItem(storageKey(user.id))
+      if (raw) {
+        const saved: PersistedProgress = JSON.parse(raw)
+        setCurrentStep(saved.currentStep)
+        setAnswers(saved.answers)
+      }
+    } catch {
+      // ignore malformed data
+    }
+  }, [user?.id])
+
+  // Persist progress on every state change
+  useEffect(() => {
+    if (!user?.id) return
+    try {
+      const progress: PersistedProgress = { currentStep, answers }
+      localStorage.setItem(storageKey(user.id), JSON.stringify(progress))
+    } catch {
+      // ignore storage errors
+    }
+  }, [currentStep, answers, user?.id])
+
+  const clearPersistedProgress = () => {
+    if (!user?.id) return
+    try {
+      localStorage.removeItem(storageKey(user.id))
+    } catch {
+      // ignore
+    }
+  }
 
   const { mutate: completeOnboarding, isPending: isCompleting } = useMutation({
     mutationFn: async (payload: Record<string, unknown>) => {
@@ -69,6 +116,7 @@ export function OnboardingModal() {
       return res.json()
     },
     onSuccess: () => {
+      clearPersistedProgress()
       qc.invalidateQueries({ queryKey: queryKeys.userProfile })
       qc.invalidateQueries({ queryKey: queryKeys.meals })
     },
@@ -84,11 +132,12 @@ export function OnboardingModal() {
       ? ['days' as Step, 'sleeping' as Step, ...(hasMeals ? ['meals' as Step] : [])]
       : []),
     'speaking',
+    ...(answers.wantsToSpeak === true ? ['conference' as Step] : []),
   ]
 
   const currentIndex = visibleSteps.indexOf(currentStep)
   const totalSteps = visibleSteps.length
-  const isSubmitting = isCompleting || isSavingMeals
+  const isSubmitting = isCompleting || isSavingMeals || isSavingConference
 
   const finalComplete = (updatedAnswers: OnboardingState) => {
     completeOnboarding({
@@ -147,7 +196,29 @@ export function OnboardingModal() {
     const wantsToSpeak = value ?? false
     const updated: OnboardingState = { ...answers, wantsToSpeak }
     setAnswers(updated)
-    finalComplete(updated)
+    if (wantsToSpeak) {
+      setCurrentStep('conference')
+    } else {
+      finalComplete(updated)
+    }
+  }
+
+  const handleConference = async (data: { title: string; description: string }) => {
+    setIsSavingConference(true)
+    try {
+      await fetch("/api/conferences", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: data.title, description: data.description || null }),
+      })
+    } finally {
+      setIsSavingConference(false)
+    }
+    finalComplete({ ...answers, wantsToSpeak: true })
+  }
+
+  const handleSkipConference = () => {
+    finalComplete({ ...answers, wantsToSpeak: true })
   }
 
   const handleLater = () => {
@@ -206,10 +277,21 @@ export function OnboardingModal() {
         {currentStep === 'speaking' && (
           <SpeakingStep onAnswer={handleSpeaking} isSubmitting={isSubmitting} />
         )}
+        {currentStep === 'conference' && (
+          <ConferenceStep
+            onSubmit={handleConference}
+            onSkip={handleSkipConference}
+            isSubmitting={isSubmitting}
+          />
+        )}
+
+        <p className="text-xs text-gray-400 text-center mt-3">
+          Ces choix pourront être modifiés facilement depuis votre tableau de bord.
+        </p>
 
         <button
           type="button"
-          className="mt-2 text-xs text-gray-400 hover:text-gray-600 underline underline-offset-2 text-center w-full transition-colors"
+          className="mt-1 text-xs text-gray-400 hover:text-gray-600 underline underline-offset-2 text-center w-full transition-colors"
           onClick={handleLater}
           disabled={isSubmitting}
         >
