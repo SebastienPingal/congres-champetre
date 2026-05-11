@@ -62,6 +62,8 @@ export async function GET() {
       attendanceDays: participation?.attendanceDays ?? "NONE",
       sleepsOnSite: participation?.sleepsOnSite ?? false,
       willPayInCash: participation?.willPayInCash ?? false,
+      hasPaid: participation?.hasPaid ?? false,
+      onboardingCompletedAt: participation?.onboardingCompletedAt ?? null,
       edition: {
         id: activeEdition.id,
         name: activeEdition.name,
@@ -231,6 +233,8 @@ export async function PATCH(request: NextRequest) {
         attendanceDays: participation?.attendanceDays ?? "NONE",
         sleepsOnSite: participation?.sleepsOnSite ?? false,
         willPayInCash: participation?.willPayInCash ?? false,
+        hasPaid: participation?.hasPaid ?? false,
+        onboardingCompletedAt: participation?.onboardingCompletedAt ?? null,
         edition: {
           id: activeEdition.id,
           name: activeEdition.name,
