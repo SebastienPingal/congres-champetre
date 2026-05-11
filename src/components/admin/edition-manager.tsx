@@ -14,6 +14,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { DateTimePicker } from "@/components/ui/date-time-picker"
+import { MealSlotFields, MealSlotData, emptyMealSlot } from "@/components/admin/meal-slot-fields"
 
 interface Edition {
   id: string
@@ -29,6 +30,8 @@ interface Edition {
   }
 }
 
+type WizardStep = 'info' | 'meals'
+
 interface EditionManagerProps {
   onEditionChanged?: () => void
 }
@@ -39,11 +42,20 @@ export function EditionManager({ onEditionChanged }: EditionManagerProps) {
   const [error, setError] = useState<string | null>(null)
 
   const [isCreateOpen, setIsCreateOpen] = useState(false)
+  const [wizardStep, setWizardStep] = useState<WizardStep>('info')
+  const [createdEditionId, setCreatedEditionId] = useState<string | null>(null)
+
+  // Step 1 state
   const [createName, setCreateName] = useState("")
-  const [createStartDate, setCreateStartDate] = useState<Date>()
-  const [createEndDate, setCreateEndDate] = useState<Date>()
+  const [createStartDate, setCreateStartDate] = useState<Date | undefined>()
+  const [createEndDate, setCreateEndDate] = useState<Date | undefined>()
   const [createLoading, setCreateLoading] = useState(false)
   const [createError, setCreateError] = useState("")
+
+  // Step 2 state
+  const [mealSlots, setMealSlots] = useState<MealSlotData[]>([])
+  const [savingMeals, setSavingMeals] = useState(false)
+  const [mealsError, setMealsError] = useState("")
 
   const [actionLoading, setActionLoading] = useState<string | null>(null)
 
@@ -64,10 +76,34 @@ export function EditionManager({ onEditionChanged }: EditionManagerProps) {
     }
   }
 
-  const handleCreate = async (e: React.FormEvent) => {
+  const resetWizard = () => {
+    setWizardStep('info')
+    setCreatedEditionId(null)
+    setCreateName("")
+    setCreateStartDate(undefined)
+    setCreateEndDate(undefined)
+    setCreateError("")
+    setMealSlots([])
+    setMealsError("")
+  }
+
+  const handleDialogOpenChange = (open: boolean) => {
+    setIsCreateOpen(open)
+    if (!open) resetWizard()
+  }
+
+  const handleCreateEdition = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!createName.trim()) {
       setCreateError("Le nom est requis")
+      return
+    }
+    if (!createStartDate || !createEndDate) {
+      setCreateError("Les dates de début et de fin sont requises")
+      return
+    }
+    if (createEndDate <= createStartDate) {
+      setCreateError("La date de fin doit être après la date de début")
       return
     }
     setCreateLoading(true)
@@ -79,16 +115,14 @@ export function EditionManager({ onEditionChanged }: EditionManagerProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: createName.trim(),
-          startDate: createStartDate?.toISOString() ?? null,
-          endDate: createEndDate?.toISOString() ?? null,
+          startDate: createStartDate.toISOString(),
+          endDate: createEndDate.toISOString(),
         }),
       })
       const result = await res.json()
       if (res.ok) {
-        setCreateName("")
-        setCreateStartDate(undefined)
-        setCreateEndDate(undefined)
-        setIsCreateOpen(false)
+        setCreatedEditionId(result.id)
+        setWizardStep('meals')
         fetchEditions()
         onEditionChanged?.()
       } else {
@@ -98,6 +132,57 @@ export function EditionManager({ onEditionChanged }: EditionManagerProps) {
       setCreateError("Erreur lors de la création")
     } finally {
       setCreateLoading(false)
+    }
+  }
+
+  const handleFinish = async () => {
+    if (!createdEditionId) {
+      setIsCreateOpen(false)
+      resetWizard()
+      return
+    }
+
+    const validSlots = mealSlots.filter((s) => s.title.trim() && s.startTime && s.endTime)
+
+    if (validSlots.length === 0) {
+      setIsCreateOpen(false)
+      resetWizard()
+      return
+    }
+
+    setSavingMeals(true)
+    setMealsError("")
+
+    try {
+      for (const slot of validSlots) {
+        if (!slot.startTime || !slot.endTime) continue
+        const res = await fetch("/api/timeslots", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            title: slot.title.trim(),
+            startTime: slot.startTime.toISOString(),
+            endTime: slot.endTime.toISOString(),
+            kind: "MEAL",
+            description: slot.description.trim() || null,
+            price: slot.price ? Number(slot.price) : null,
+            showInRegistration: slot.showInRegistration,
+            editionId: createdEditionId,
+          }),
+        })
+        if (!res.ok) {
+          const result = await res.json().catch(() => ({}))
+          throw new Error(result.error || `Erreur sur le repas "${slot.title}"`)
+        }
+      }
+      setIsCreateOpen(false)
+      resetWizard()
+      fetchEditions()
+      onEditionChanged?.()
+    } catch (err) {
+      setMealsError(err instanceof Error ? err.message : "Erreur lors de la création des repas")
+    } finally {
+      setSavingMeals(false)
     }
   }
 
@@ -161,65 +246,148 @@ export function EditionManager({ onEditionChanged }: EditionManagerProps) {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-end">
-        <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+        <Dialog open={isCreateOpen} onOpenChange={handleDialogOpenChange}>
           <DialogTrigger asChild>
             <Button>Nouvelle édition</Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Créer une nouvelle édition</DialogTitle>
+              <DialogTitle>
+                {wizardStep === 'info' ? 'Créer une nouvelle édition' : 'Repas du weekend'}
+              </DialogTitle>
               <DialogDescription>
-                Définissez le nom et les dates de la nouvelle édition
+                {wizardStep === 'info'
+                  ? 'Étape 1 sur 2 — Informations générales'
+                  : 'Étape 2 sur 2 — Créneaux repas (optionnel)'}
               </DialogDescription>
             </DialogHeader>
-            <form onSubmit={handleCreate} className="flex flex-col gap-4">
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="edition-name">Nom de l&apos;édition</Label>
-                <Input
-                  id="edition-name"
-                  type="text"
-                  placeholder="ex: Édition 2026"
-                  value={createName}
-                  onChange={(e) => setCreateName(e.target.value)}
-                  required
-                  disabled={createLoading}
-                />
-              </div>
-              <div className="flex flex-col gap-2">
-                <Label>Date de début (optionnel)</Label>
-                <DateTimePicker
-                  date={createStartDate}
-                  setDate={setCreateStartDate}
-                  disabled={createLoading}
-                  placeholder="Choisir la date de début"
-                />
-              </div>
-              <div className="flex flex-col gap-2">
-                <Label>Date de fin (optionnel)</Label>
-                <DateTimePicker
-                  date={createEndDate}
-                  setDate={setCreateEndDate}
-                  disabled={createLoading}
-                  placeholder="Choisir la date de fin"
-                />
-              </div>
-              {createError && (
-                <div className="text-sm text-red-600">{createError}</div>
-              )}
-              <div className="flex gap-2">
-                <Button type="submit" disabled={createLoading} className="flex-1">
-                  {createLoading ? "Création..." : "Créer"}
-                </Button>
+
+            {/* Progress bar */}
+            <div className="flex gap-1.5 mb-2">
+              <div className={`h-1.5 flex-1 rounded-full transition-colors ${wizardStep === 'info' || wizardStep === 'meals' ? 'bg-green-500' : 'bg-gray-200'}`} />
+              <div className={`h-1.5 flex-1 rounded-full transition-colors ${wizardStep === 'meals' ? 'bg-green-500' : 'bg-gray-200'}`} />
+            </div>
+
+            {wizardStep === 'info' && (
+              <form onSubmit={handleCreateEdition} className="flex flex-col gap-4">
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor="edition-name">Nom de l&apos;édition</Label>
+                  <Input
+                    id="edition-name"
+                    type="text"
+                    placeholder="ex: Édition 2026"
+                    value={createName}
+                    onChange={(e) => setCreateName(e.target.value)}
+                    required
+                    disabled={createLoading}
+                  />
+                </div>
+                <div className="flex flex-col gap-2">
+                  <Label>Début du weekend</Label>
+                  <DateTimePicker
+                    date={createStartDate}
+                    setDate={(d) => {
+                      setCreateStartDate(d)
+                      if (d && !createEndDate) {
+                        const next = new Date(d)
+                        next.setDate(next.getDate() + 1)
+                        setCreateEndDate(next)
+                      }
+                    }}
+                    disabled={createLoading}
+                    placeholder="Choisir la date de début"
+                  />
+                </div>
+                <div className="flex flex-col gap-2">
+                  <Label>Fin du weekend</Label>
+                  <DateTimePicker
+                    date={createEndDate}
+                    setDate={setCreateEndDate}
+                    disabled={createLoading}
+                    placeholder="Choisir la date de fin"
+                  />
+                </div>
+                {createError && (
+                  <div className="text-sm text-red-600">{createError}</div>
+                )}
+                <div className="flex gap-2">
+                  <Button type="submit" disabled={createLoading} className="flex-1">
+                    {createLoading ? "Création..." : "Créer l'édition →"}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setIsCreateOpen(false)}
+                    disabled={createLoading}
+                  >
+                    Annuler
+                  </Button>
+                </div>
+              </form>
+            )}
+
+            {wizardStep === 'meals' && (
+              <div className="flex flex-col gap-4">
+                <p className="text-sm text-gray-600">
+                  Ajoutez les créneaux repas du weekend. Vous pourrez en ajouter d&apos;autres plus tard via le gestionnaire de créneaux.
+                </p>
+
+                {mealSlots.length > 0 && (
+                  <div className="flex flex-col gap-3">
+                    {mealSlots.map((slot, i) => (
+                      <MealSlotFields
+                        key={i}
+                        index={i}
+                        data={slot}
+                        onChange={(updated) =>
+                          setMealSlots((prev) => prev.map((s, idx) => (idx === i ? updated : s)))
+                        }
+                        onRemove={() =>
+                          setMealSlots((prev) => prev.filter((_, idx) => idx !== i))
+                        }
+                        disabled={savingMeals}
+                      />
+                    ))}
+                  </div>
+                )}
+
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => setIsCreateOpen(false)}
-                  disabled={createLoading}
+                  onClick={() => setMealSlots((prev) => [...prev, emptyMealSlot()])}
+                  disabled={savingMeals}
                 >
-                  Annuler
+                  + Ajouter un repas
                 </Button>
+
+                {mealsError && (
+                  <div className="text-sm text-red-600">{mealsError}</div>
+                )}
+
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    onClick={handleFinish}
+                    disabled={savingMeals}
+                    className="flex-1"
+                  >
+                    {savingMeals
+                      ? "Enregistrement..."
+                      : mealSlots.filter((s) => s.title.trim()).length === 0
+                      ? "Terminer sans repas"
+                      : `Terminer (${mealSlots.filter((s) => s.title.trim()).length} repas)`}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setWizardStep('info')}
+                    disabled={savingMeals}
+                  >
+                    Retour
+                  </Button>
+                </div>
               </div>
-            </form>
+            )}
           </DialogContent>
         </Dialog>
       </div>
