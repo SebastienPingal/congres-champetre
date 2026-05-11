@@ -47,6 +47,8 @@ export default function AdminPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [stats, setStats] = useState<{ totalUsers: number; attendingUsers: number; attendingRate: number } | null>(null)
   const [activeEditionDays, setActiveEditionDays] = useState<Date[]>([])
+  const [activeEditionStartHour, setActiveEditionStartHour] = useState(10)
+  const [activeEditionEndHour, setActiveEditionEndHour] = useState(20)
 
   useEffect(() => {
     // 🛡️ Middleware ensures we're authenticated and have admin role
@@ -79,7 +81,11 @@ export default function AdminPage() {
 
       if (editionsResponse.ok) {
         const editions = await editionsResponse.json()
-        const active = editions.find((e: { isActive: boolean; startDate: string | null; endDate: string | null }) => e.isActive)
+        const active = editions.find((e: { isActive: boolean; startDate: string | null; endDate: string | null; startHour?: number; endHour?: number }) => e.isActive)
+        if (active) {
+          setActiveEditionStartHour(active.startHour ?? 10)
+          setActiveEditionEndHour(active.endHour ?? 20)
+        }
         if (active?.startDate && active?.endDate) {
           const days: Date[] = []
           const cur = new Date(active.startDate)
@@ -279,6 +285,8 @@ export default function AdminPage() {
                 timeSlots={timeSlots}
                 onTimeSlotCreated={handleTimeSlotCreated}
                 editionDays={activeEditionDays}
+                editionStartHour={activeEditionStartHour}
+                editionEndHour={activeEditionEndHour}
               />
             </CardContent>
           </Card>

@@ -1,11 +1,12 @@
 "use client"
 
+import { useState } from "react"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/components/ui/button"
 import { DateTimePicker } from "@/components/ui/date-time-picker"
-import { DayTimePicker } from "@/components/ui/day-time-picker"
+import { SlotGrid } from "@/components/admin/slot-grid"
 
 export interface MealSlotData {
   title: string
@@ -27,10 +28,21 @@ interface MealSlotFieldsProps {
   onRemove: () => void
   disabled?: boolean
   availableDays?: Date[]
+  startHour?: number
+  endHour?: number
+  existingSlots?: { startTime: string | Date; endTime: string | Date }[]
 }
 
-export function MealSlotFields({ index, data, onChange, onRemove, disabled, availableDays }: MealSlotFieldsProps) {
+export function MealSlotFields({ index, data, onChange, onRemove, disabled, availableDays, startHour = 10, endHour = 20, existingSlots = [] }: MealSlotFieldsProps) {
   const update = (patch: Partial<MealSlotData>) => onChange({ ...data, ...patch })
+  const [duration, setDuration] = useState(2)
+  const useGrid = availableDays && availableDays.length > 0
+
+  const handleSlotSelect = (start: Date) => {
+    const end = new Date(start)
+    end.setHours(start.getHours() + duration, 0, 0, 0)
+    update({ startTime: start, endTime: end })
+  }
 
   return (
     <div className="border rounded-lg p-4 flex flex-col gap-3">
@@ -52,21 +64,40 @@ export function MealSlotFields({ index, data, onChange, onRemove, disabled, avai
         />
       </div>
 
+      {/* Duration */}
       <div className="flex flex-col gap-2">
-        <Label>Date et heure de début</Label>
-        {availableDays?.length ? (
-          <DayTimePicker days={availableDays} date={data.startTime} setDate={(d) => update({ startTime: d })} disabled={disabled} placeholder="Choisir le jour et l'heure de début" />
-        ) : (
-          <DateTimePicker date={data.startTime} setDate={(d) => update({ startTime: d })} disabled={disabled} placeholder="Choisir la date et l'heure de début" />
-        )}
+        <Label>Durée</Label>
+        <div className="flex gap-2">
+          {[1, 2, 3, 4].map((h) => (
+            <Button key={h} type="button" size="sm"
+              variant={duration === h ? 'secondary' : 'outline'}
+              onClick={() => { setDuration(h); update({ startTime: undefined, endTime: undefined }) }}
+              disabled={disabled}
+            >
+              {h}h
+            </Button>
+          ))}
+        </div>
       </div>
 
+      {/* Slot selection */}
       <div className="flex flex-col gap-2">
-        <Label>Date et heure de fin</Label>
-        {availableDays?.length ? (
-          <DayTimePicker days={availableDays} date={data.endTime} setDate={(d) => update({ endTime: d })} disabled={disabled} placeholder="Choisir le jour et l'heure de fin" />
+        <Label>Créneau</Label>
+        {useGrid ? (
+          <SlotGrid
+            days={availableDays}
+            startHour={startHour}
+            endHour={endHour}
+            duration={duration}
+            existingSlots={existingSlots}
+            selected={data.startTime ?? null}
+            onSelect={handleSlotSelect}
+          />
         ) : (
-          <DateTimePicker date={data.endTime} setDate={(d) => update({ endTime: d })} disabled={disabled} placeholder="Choisir la date et l'heure de fin" />
+          <>
+            <DateTimePicker date={data.startTime} setDate={(d) => update({ startTime: d })} disabled={disabled} placeholder="Début" />
+            <DateTimePicker date={data.endTime} setDate={(d) => update({ endTime: d })} disabled={disabled} placeholder="Fin" />
+          </>
         )}
       </div>
 
@@ -83,14 +114,8 @@ export function MealSlotFields({ index, data, onChange, onRemove, disabled, avai
 
       <div className="flex flex-col gap-2">
         <Label>Prix (euros, optionnel)</Label>
-        <Input
-          type="number"
-          min="0"
-          step="0.5"
-          placeholder="ex: 5"
-          value={data.price}
-          onChange={(e) => update({ price: e.target.value })}
-          disabled={disabled}
+        <Input type="number" min="0" step="0.5" placeholder="ex: 5"
+          value={data.price} onChange={(e) => update({ price: e.target.value })} disabled={disabled}
         />
       </div>
 
