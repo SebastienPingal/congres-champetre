@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -31,6 +32,14 @@ interface MealSlotFieldsProps {
 
 export function MealSlotFields({ index, data, onChange, onRemove, disabled, availableDays }: MealSlotFieldsProps) {
   const update = (patch: Partial<MealSlotData>) => onChange({ ...data, ...patch })
+  const [duration, setDuration] = useState(2)
+  const useGrid = availableDays && availableDays.length > 0
+
+  const handleSlotSelect = (start: Date) => {
+    const end = new Date(start)
+    end.setHours(start.getHours() + duration, 0, 0, 0)
+    update({ startTime: start, endTime: end })
+  }
 
   return (
     <div className="border rounded-lg p-4 flex flex-col gap-3">
@@ -52,6 +61,7 @@ export function MealSlotFields({ index, data, onChange, onRemove, disabled, avai
         />
       </div>
 
+      {/* Duration */}
       <div className="flex flex-col gap-2">
         <Label>Date et heure de début</Label>
         {availableDays?.length ? (
@@ -61,6 +71,7 @@ export function MealSlotFields({ index, data, onChange, onRemove, disabled, avai
         )}
       </div>
 
+      {/* Slot selection */}
       <div className="flex flex-col gap-2">
         <Label>Date et heure de fin</Label>
         {availableDays?.length ? (
@@ -83,14 +94,8 @@ export function MealSlotFields({ index, data, onChange, onRemove, disabled, avai
 
       <div className="flex flex-col gap-2">
         <Label>Prix (euros, optionnel)</Label>
-        <Input
-          type="number"
-          min="0"
-          step="0.5"
-          placeholder="ex: 5"
-          value={data.price}
-          onChange={(e) => update({ price: e.target.value })}
-          disabled={disabled}
+        <Input type="number" min="0" step="0.5" placeholder="ex: 5"
+          value={data.price} onChange={(e) => update({ price: e.target.value })} disabled={disabled}
         />
       </div>
 

@@ -10,6 +10,7 @@ import { DateTimePicker } from "@/components/ui/date-time-picker"
 import { DayTimePicker } from "@/components/ui/day-time-picker"
 import { ConferenceEditForm } from "@/components/conference-edit-form"
 import { type MealSlotData } from "@/components/admin/meal-slot-fields"
+import { SlotGrid } from "@/components/admin/slot-grid"
 
 interface TimeSlot {
   id: string
@@ -40,12 +41,14 @@ interface TimeSlotManagerProps {
 export function TimeSlotManager({ timeSlots, onTimeSlotCreated, editionDays }: TimeSlotManagerProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [title, setTitle] = useState("")
-  const [startDateTime, setStartDateTime] = useState<Date>()
-  const [endDateTime, setEndDateTime] = useState<Date>()
+  const [startDateTime, setStartDateTime] = useState<Date | undefined>()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
   const [createKind, setCreateKind] = useState<'CONFERENCE' | 'MEAL' | 'BREAK' | 'OTHER'>('CONFERENCE')
+  const [createDuration, setCreateDuration] = useState<number>(1)
   const [createMealData, setCreateMealData] = useState<MealSlotData>({ title: "", startTime: undefined, endTime: undefined, description: "", price: "", showInRegistration: true })
+
+  const useGrid = editionDays && editionDays.length > 0
 
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [editingSlot, setEditingSlot] = useState<TimeSlot | null>(null)
@@ -65,17 +68,14 @@ export function TimeSlotManager({ timeSlots, onTimeSlotCreated, editionDays }: T
     setIsLoading(true)
     setError("")
 
-    if (!title.trim() || !startDateTime || !endDateTime) {
+    if (!title.trim() || !startDateTime) {
       setError("Tous les champs sont requis")
       setIsLoading(false)
       return
     }
 
-    if (endDateTime <= startDateTime) {
-      setError("L'heure de fin doit être après l'heure de début")
-      setIsLoading(false)
-      return
-    }
+    const endDateTime = new Date(startDateTime)
+    endDateTime.setHours(startDateTime.getHours() + createDuration, 0, 0, 0)
 
     try {
       const response = await fetch("/api/timeslots", {
@@ -101,8 +101,8 @@ export function TimeSlotManager({ timeSlots, onTimeSlotCreated, editionDays }: T
       if (response.ok) {
         setTitle("")
         setStartDateTime(undefined)
-        setEndDateTime(undefined)
         setCreateKind('CONFERENCE')
+        setCreateDuration(1)
         setCreateMealData({ title: "", startTime: undefined, endTime: undefined, description: "", price: "", showInRegistration: true })
         setIsDialogOpen(false)
         onTimeSlotCreated()
@@ -291,28 +291,71 @@ export function TimeSlotManager({ timeSlots, onTimeSlotCreated, editionDays }: T
               </div>
               <div className="flex flex-col gap-2">
                 <Label>Type de créneau</Label>
-                <div className="flex flex-wrap items-center gap-2">
+                <div className="flex flex-wrap gap-2">
                   {(['CONFERENCE','MEAL','BREAK','OTHER'] as const).map(k => (
-                    <Button
-                      key={k}
-                      type="button"
+                    <Button key={k} type="button" size="sm"
                       variant={createKind === k ? 'secondary' : 'outline'}
-                      onClick={() => setCreateKind(k)}
+                      onClick={() => { setCreateKind(k); setCreateDuration(k === 'CONFERENCE' ? 1 : createDuration); setStartDateTime(undefined) }}
                       disabled={isLoading}
-                      size="sm"
                     >
                       {k === 'CONFERENCE' ? 'Conférence' : k === 'MEAL' ? 'Repas' : k === 'BREAK' ? 'Pause' : 'Autre'}
                     </Button>
                   ))}
                 </div>
               </div>
+
+              {/* Step 2 — Duration (not for CONFERENCE, fixed at 1h) */}
+              {createKind !== 'CONFERENCE' && (
+                <div className="flex flex-col gap-2">
+                  <Label>Durée</Label>
+                  <div className="flex gap-2">
+                    {[1,2,3,4].map(h => (
+                      <Button key={h} type="button" size="sm"
+                        variant={createDuration === h ? 'secondary' : 'outline'}
+                        onClick={() => { setCreateDuration(h); setStartDateTime(undefined) }}
+                        disabled={isLoading}
+                      >
+                        {h}h
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Step 3 — Slot selection */}
+              <div className="flex flex-col gap-2">
+                <Label>Créneau</Label>
+                {useGrid ? (
+                  <SlotGrid
+                    days={editionDays!}
+                    startHour={editionStartHour}
+                    endHour={editionEndHour}
+                    duration={createKind === 'CONFERENCE' ? 1 : createDuration}
+                    existingSlots={timeSlots}
+                    selected={startDateTime ?? null}
+                    onSelect={setStartDateTime}
+                  />
+                ) : (
+                  <DateTimePicker date={startDateTime} setDate={setStartDateTime} disabled={isLoading} placeholder="Choisir la date et l'heure de début" />
+                )}
+              </div>
+
+              {/* Step 4 — Title + meal details */}
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="title">Titre</Label>
+                <Input id="title" type="text"
+                  placeholder={createKind === 'CONFERENCE' ? 'ex: Conférence matinale' : createKind === 'MEAL' ? 'ex: Dîner du samedi' : 'ex: Pause café'}
+                  value={title} onChange={(e) => setTitle(e.target.value)} required disabled={isLoading}
+                />
+              </div>
+
               {createKind === 'MEAL' && (
                 <>
                   <div className="flex flex-col gap-2">
                     <Label htmlFor="create-description">Description du menu</Label>
                     <textarea
                       id="create-description"
-                      className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      className="flex min-h-[60px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                       placeholder="ex: Barbecue, salades, fromages..."
                       value={createMealData.description}
                       onChange={(e) => setCreateMealData(d => ({ ...d, description: e.target.value }))}
@@ -321,43 +364,25 @@ export function TimeSlotManager({ timeSlots, onTimeSlotCreated, editionDays }: T
                   </div>
                   <div className="flex flex-col gap-2">
                     <Label htmlFor="create-price">Prix (euros)</Label>
-                    <Input
-                      id="create-price"
-                      type="number"
-                      min="0"
-                      step="0.5"
-                      placeholder="ex: 5"
-                      value={createMealData.price}
-                      onChange={(e) => setCreateMealData(d => ({ ...d, price: e.target.value }))}
-                      disabled={isLoading}
+                    <Input id="create-price" type="number" min="0" step="0.5" placeholder="ex: 5"
+                      value={createMealData.price} onChange={(e) => setCreateMealData(d => ({ ...d, price: e.target.value }))} disabled={isLoading}
                     />
                   </div>
                   <div className="flex items-center gap-2">
-                    <Checkbox
-                      id="create-showInRegistration"
-                      checked={createMealData.showInRegistration}
-                      onCheckedChange={(v) => setCreateMealData(d => ({ ...d, showInRegistration: Boolean(v) }))}
-                      disabled={isLoading}
+                    <Checkbox id="create-showInRegistration" checked={createMealData.showInRegistration}
+                      onCheckedChange={(v) => setCreateMealData(d => ({ ...d, showInRegistration: Boolean(v) }))} disabled={isLoading}
                     />
                     <Label htmlFor="create-showInRegistration">Proposer à l&apos;inscription</Label>
                   </div>
                 </>
               )}
-              {error && (
-                <div className="text-sm text-red-600">
-                  {error}
-                </div>
-              )}
+
+              {error && <div className="text-sm text-red-600">{error}</div>}
               <div className="flex gap-2">
                 <Button type="submit" disabled={isLoading} className="flex-1">
                   {isLoading ? "Création..." : "Créer le créneau"}
                 </Button>
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={() => setIsDialogOpen(false)}
-                  disabled={isLoading}
-                >
+                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)} disabled={isLoading}>
                   Annuler
                 </Button>
               </div>
