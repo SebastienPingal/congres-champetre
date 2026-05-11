@@ -42,7 +42,7 @@ export function ConferencesSection({ user }: ConferencesSectionProps) {
         <div className="flex items-center gap-3">
           <Checkbox
             id="wantsToSpeak"
-            checked={user.wantsToSpeak}
+            checked={user.wantsToSpeak ?? false}
             onCheckedChange={(v) => updateProfile({ wantsToSpeak: Boolean(v) })}
             disabled={isPending}
           />
