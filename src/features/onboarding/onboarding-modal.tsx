@@ -5,13 +5,15 @@ import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { queryKeys } from "@/lib/query-keys"
 import { useUserProfile, useUpdateProfile } from "@/hooks/use-user-profile"
+import { useMeals } from "@/hooks/use-meals"
 import { AttendingStep } from "./steps/attending-step"
 import { DaysStep } from "./steps/days-step"
 import { SleepingStep } from "./steps/sleeping-step"
 import { SpeakingStep } from "./steps/speaking-step"
-import type { AttendanceDays } from "@/types"
+import { MealsStep } from "./steps/meals-step"
+import type { AttendanceDays, MealStatus } from "@/types"
 
-type Step = 'attending' | 'days' | 'sleeping' | 'speaking'
+type Step = 'attending' | 'days' | 'sleeping' | 'meals' | 'speaking'
 
 interface OnboardingState {
   isAttending: boolean | null
@@ -24,11 +26,26 @@ const STEP_LABELS: Record<Step, string> = {
   attending: 'Venez-vous au weekend ?',
   days: 'Quels jours ?',
   sleeping: 'Hébergement',
+  meals: 'Les repas',
   speaking: 'Conférence',
+}
+
+async function saveMealSelections(selections: Record<string, MealStatus>) {
+  const entries = Object.entries(selections).filter(([, status]) => status !== null)
+  await Promise.all(
+    entries.map(([timeSlotId, status]) =>
+      fetch("/api/meals", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ timeSlotId, status }),
+      })
+    )
+  )
 }
 
 export function OnboardingModal() {
   const { data: user } = useUserProfile()
+  const { data: meals = [] } = useMeals()
   const { mutate: updateProfile } = useUpdateProfile()
   const qc = useQueryClient()
 
@@ -39,6 +56,7 @@ export function OnboardingModal() {
     sleepsOnSite: null,
     wantsToSpeak: null,
   })
+  const [isSavingMeals, setIsSavingMeals] = useState(false)
 
   const { mutate: completeOnboarding, isPending: isCompleting } = useMutation({
     mutationFn: async (payload: Record<string, unknown>) => {
@@ -52,30 +70,33 @@ export function OnboardingModal() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.userProfile })
+      qc.invalidateQueries({ queryKey: queryKeys.meals })
     },
   })
 
   if (!user || user.onboardingCompletedAt !== null) return null
 
-  const visibleSteps: Step[] = ['attending', ...(answers.isAttending ? ['days' as Step, 'sleeping' as Step] : []), 'speaking']
+  // Only show meals step if user is attending AND there are meals available
+  const hasMeals = meals.length > 0
+  const visibleSteps: Step[] = [
+    'attending',
+    ...(answers.isAttending
+      ? ['days' as Step, 'sleeping' as Step, ...(hasMeals ? ['meals' as Step] : [])]
+      : []),
+    'speaking',
+  ]
+
   const currentIndex = visibleSteps.indexOf(currentStep)
   const totalSteps = visibleSteps.length
+  const isSubmitting = isCompleting || isSavingMeals
 
-  const saveAndAdvance = (updatedAnswers: OnboardingState, nextStep: Step | null) => {
-    const patch: Record<string, unknown> = {}
-    if (updatedAnswers.isAttending !== null) patch.isAttending = updatedAnswers.isAttending
-    if (updatedAnswers.attendanceDays !== null) patch.attendanceDays = updatedAnswers.attendanceDays
-    if (updatedAnswers.sleepsOnSite !== null) patch.sleepsOnSite = updatedAnswers.sleepsOnSite
-    if (updatedAnswers.wantsToSpeak !== null) patch.wantsToSpeak = updatedAnswers.wantsToSpeak
-
-    if (nextStep === null) {
-      completeOnboarding(patch)
-    } else {
-      if (Object.keys(patch).length > 0) {
-        updateProfile(patch as Parameters<typeof updateProfile>[0])
-      }
-      setCurrentStep(nextStep)
-    }
+  const finalComplete = (updatedAnswers: OnboardingState) => {
+    completeOnboarding({
+      isAttending: updatedAnswers.isAttending ?? false,
+      attendanceDays: updatedAnswers.attendanceDays ?? 'NONE',
+      sleepsOnSite: updatedAnswers.sleepsOnSite ?? false,
+      wantsToSpeak: updatedAnswers.wantsToSpeak ?? false,
+    })
   }
 
   const handleAttending = (value: 'yes' | 'no' | 'unknown') => {
@@ -85,8 +106,8 @@ export function OnboardingModal() {
     setAnswers(updated)
 
     if (value === 'unknown') {
-      const finalAnswers: OnboardingState = { isAttending: false, attendanceDays: 'NONE', sleepsOnSite: false, wantsToSpeak: null }
-      setAnswers(finalAnswers)
+      const skipped: OnboardingState = { isAttending: false, attendanceDays: 'NONE', sleepsOnSite: false, wantsToSpeak: null }
+      setAnswers(skipped)
       setCurrentStep('speaking')
     } else if (isAttending) {
       updateProfile({ isAttending: true, attendanceDays: 'BOTH' })
@@ -108,14 +129,25 @@ export function OnboardingModal() {
     const sleepsOnSite = value ?? false
     const updated: OnboardingState = { ...answers, sleepsOnSite }
     setAnswers(updated)
-    saveAndAdvance(updated, 'speaking')
+    updateProfile({ sleepsOnSite })
+    setCurrentStep(hasMeals ? 'meals' : 'speaking')
+  }
+
+  const handleMeals = async (selections: Record<string, MealStatus>) => {
+    setIsSavingMeals(true)
+    try {
+      await saveMealSelections(selections)
+    } finally {
+      setIsSavingMeals(false)
+    }
+    setCurrentStep('speaking')
   }
 
   const handleSpeaking = (value: boolean | null) => {
     const wantsToSpeak = value ?? false
     const updated: OnboardingState = { ...answers, wantsToSpeak }
     setAnswers(updated)
-    saveAndAdvance(updated, null)
+    finalComplete(updated)
   }
 
   const handleLater = () => {
@@ -130,7 +162,7 @@ export function OnboardingModal() {
   return (
     <Dialog open={true} onOpenChange={() => {}}>
       <DialogContent
-        className="sm:max-w-md"
+        className="sm:max-w-md max-h-[90vh] overflow-y-auto"
         onPointerDownOutside={(e) => e.preventDefault()}
         onEscapeKeyDown={(e) => e.preventDefault()}
       >
@@ -160,23 +192,26 @@ export function OnboardingModal() {
         </h2>
 
         {currentStep === 'attending' && (
-          <AttendingStep onAnswer={handleAttending} isSubmitting={isCompleting} />
+          <AttendingStep onAnswer={handleAttending} isSubmitting={isSubmitting} />
         )}
         {currentStep === 'days' && (
-          <DaysStep onAnswer={handleDays} isSubmitting={isCompleting} />
+          <DaysStep onAnswer={handleDays} isSubmitting={isSubmitting} />
         )}
         {currentStep === 'sleeping' && (
-          <SleepingStep onAnswer={handleSleeping} isSubmitting={isCompleting} />
+          <SleepingStep onAnswer={handleSleeping} isSubmitting={isSubmitting} />
+        )}
+        {currentStep === 'meals' && (
+          <MealsStep meals={meals} onAnswer={handleMeals} isSubmitting={isSubmitting} />
         )}
         {currentStep === 'speaking' && (
-          <SpeakingStep onAnswer={handleSpeaking} isSubmitting={isCompleting} />
+          <SpeakingStep onAnswer={handleSpeaking} isSubmitting={isSubmitting} />
         )}
 
         <button
           type="button"
           className="mt-2 text-xs text-gray-400 hover:text-gray-600 underline underline-offset-2 text-center w-full transition-colors"
           onClick={handleLater}
-          disabled={isCompleting}
+          disabled={isSubmitting}
         >
           Répondre plus tard
         </button>

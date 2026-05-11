@@ -14,8 +14,10 @@ First-visit onboarding wizard shown as a non-dismissable Dialog.
 | `steps/speaking-step.tsx` | "Souhaitez-vous proposer une conférence ?" → true / false / null |
 
 **Step flow:**
-- attending=yes → days → sleeping → speaking → complete
-- attending=no/unknown → (skip days/sleeping) → speaking → complete
+- attending=yes → days → sleeping → meals (si repas disponibles) → speaking → complete
+- attending=no/unknown → (skip days/sleeping/meals) → speaking → complete
+
+The meals step is skipped entirely if there are no MEAL-type time slots in the active edition.
 
 **Save strategy:** Each answer immediately calls `useUpdateProfile()` for partial saves. Final step (speaking) calls `POST /api/onboarding` which sets `onboardingCompletedAt = now()` and invalidates the profile query — modal disappears.
 
