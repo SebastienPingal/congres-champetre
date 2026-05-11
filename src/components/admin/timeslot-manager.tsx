@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { DateTimePicker } from "@/components/ui/date-time-picker"
 import { ConferenceEditForm } from "@/components/conference-edit-form"
+import { type MealSlotData } from "@/components/admin/meal-slot-fields"
 
 interface TimeSlot {
   id: string
@@ -42,9 +43,7 @@ export function TimeSlotManager({ timeSlots, onTimeSlotCreated }: TimeSlotManage
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
   const [createKind, setCreateKind] = useState<'CONFERENCE' | 'MEAL' | 'BREAK' | 'OTHER'>('CONFERENCE')
-  const [createDescription, setCreateDescription] = useState("")
-  const [createPrice, setCreatePrice] = useState("")
-  const [createShowInRegistration, setCreateShowInRegistration] = useState(true)
+  const [createMealData, setCreateMealData] = useState<MealSlotData>({ title: "", startTime: undefined, endTime: undefined, description: "", price: "", showInRegistration: true })
 
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [editingSlot, setEditingSlot] = useState<TimeSlot | null>(null)
@@ -52,9 +51,7 @@ export function TimeSlotManager({ timeSlots, onTimeSlotCreated }: TimeSlotManage
   const [editStartDateTime, setEditStartDateTime] = useState<Date>()
   const [editEndDateTime, setEditEndDateTime] = useState<Date>()
   const [editKind, setEditKind] = useState<'CONFERENCE' | 'MEAL' | 'BREAK' | 'OTHER'>('CONFERENCE')
-  const [editDescription, setEditDescription] = useState("")
-  const [editPrice, setEditPrice] = useState("")
-  const [editShowInRegistration, setEditShowInRegistration] = useState(true)
+  const [editMealData, setEditMealData] = useState<MealSlotData>({ title: "", startTime: undefined, endTime: undefined, description: "", price: "", showInRegistration: true })
   const [editIsLoading, setEditIsLoading] = useState(false)
   const [editError, setEditError] = useState("")
 
@@ -90,9 +87,9 @@ export function TimeSlotManager({ timeSlots, onTimeSlotCreated }: TimeSlotManage
           endTime: endDateTime.toISOString(),
           kind: createKind,
           ...(createKind === 'MEAL' ? {
-            description: createDescription.trim() || null,
-            price: createPrice ? Number(createPrice) : null,
-            showInRegistration: createShowInRegistration,
+            description: createMealData.description.trim() || null,
+            price: createMealData.price ? Number(createMealData.price) : null,
+            showInRegistration: createMealData.showInRegistration,
           } : {}),
         }),
       })
@@ -104,9 +101,7 @@ export function TimeSlotManager({ timeSlots, onTimeSlotCreated }: TimeSlotManage
         setStartDateTime(undefined)
         setEndDateTime(undefined)
         setCreateKind('CONFERENCE')
-        setCreateDescription("")
-        setCreatePrice("")
-        setCreateShowInRegistration(true)
+        setCreateMealData({ title: "", startTime: undefined, endTime: undefined, description: "", price: "", showInRegistration: true })
         setIsDialogOpen(false)
         onTimeSlotCreated()
       } else {
@@ -137,9 +132,7 @@ export function TimeSlotManager({ timeSlots, onTimeSlotCreated }: TimeSlotManage
     setEditStartDateTime(new Date(slot.startTime))
     setEditEndDateTime(new Date(slot.endTime))
     setEditKind(slot.kind || 'CONFERENCE')
-    setEditDescription(slot.description || "")
-    setEditPrice(slot.price != null ? String(slot.price) : "")
-    setEditShowInRegistration(slot.showInRegistration !== false)
+    setEditMealData({ title: "", startTime: undefined, endTime: undefined, description: slot.description || "", price: slot.price != null ? String(slot.price) : "", showInRegistration: slot.showInRegistration !== false })
     setEditError("")
     setIsEditDialogOpen(true)
   }
@@ -174,9 +167,9 @@ export function TimeSlotManager({ timeSlots, onTimeSlotCreated }: TimeSlotManage
           startTime: editStartDateTime.toISOString(),
           endTime: editEndDateTime.toISOString(),
           kind: editKind,
-          description: editKind === 'MEAL' ? (editDescription.trim() || null) : null,
-          price: editKind === 'MEAL' && editPrice ? Number(editPrice) : null,
-          showInRegistration: editKind === 'MEAL' ? editShowInRegistration : true,
+          description: editKind === 'MEAL' ? (editMealData.description.trim() || null) : null,
+          price: editKind === 'MEAL' && editMealData.price ? Number(editMealData.price) : null,
+          showInRegistration: editKind === 'MEAL' ? editMealData.showInRegistration : true,
         })
       })
 
@@ -321,8 +314,8 @@ export function TimeSlotManager({ timeSlots, onTimeSlotCreated }: TimeSlotManage
                       id="create-description"
                       className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                       placeholder="ex: Barbecue, salades, fromages..."
-                      value={createDescription}
-                      onChange={(e) => setCreateDescription(e.target.value)}
+                      value={createMealData.description}
+                      onChange={(e) => setCreateMealData(d => ({ ...d, description: e.target.value }))}
                       disabled={isLoading}
                     />
                   </div>
@@ -334,16 +327,16 @@ export function TimeSlotManager({ timeSlots, onTimeSlotCreated }: TimeSlotManage
                       min="0"
                       step="0.5"
                       placeholder="ex: 5"
-                      value={createPrice}
-                      onChange={(e) => setCreatePrice(e.target.value)}
+                      value={createMealData.price}
+                      onChange={(e) => setCreateMealData(d => ({ ...d, price: e.target.value }))}
                       disabled={isLoading}
                     />
                   </div>
                   <div className="flex items-center gap-2">
                     <Checkbox
                       id="create-showInRegistration"
-                      checked={createShowInRegistration}
-                      onCheckedChange={(v) => setCreateShowInRegistration(Boolean(v))}
+                      checked={createMealData.showInRegistration}
+                      onCheckedChange={(v) => setCreateMealData(d => ({ ...d, showInRegistration: Boolean(v) }))}
                       disabled={isLoading}
                     />
                     <Label htmlFor="create-showInRegistration">Proposer à l&apos;inscription</Label>
@@ -501,8 +494,8 @@ export function TimeSlotManager({ timeSlots, onTimeSlotCreated }: TimeSlotManage
                     id="edit-description"
                     className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                     placeholder="ex: Barbecue, salades, fromages..."
-                    value={editDescription}
-                    onChange={(e) => setEditDescription(e.target.value)}
+                    value={editMealData.description}
+                    onChange={(e) => setEditMealData(d => ({ ...d, description: e.target.value }))}
                     disabled={editIsLoading}
                   />
                 </div>
@@ -514,16 +507,16 @@ export function TimeSlotManager({ timeSlots, onTimeSlotCreated }: TimeSlotManage
                     min="0"
                     step="0.5"
                     placeholder="ex: 5"
-                    value={editPrice}
-                    onChange={(e) => setEditPrice(e.target.value)}
+                    value={editMealData.price}
+                    onChange={(e) => setEditMealData(d => ({ ...d, price: e.target.value }))}
                     disabled={editIsLoading}
                   />
                 </div>
                 <div className="flex items-center gap-2">
                   <Checkbox
                     id="edit-showInRegistration"
-                    checked={editShowInRegistration}
-                    onCheckedChange={(v) => setEditShowInRegistration(Boolean(v))}
+                    checked={editMealData.showInRegistration}
+                    onCheckedChange={(v) => setEditMealData(d => ({ ...d, showInRegistration: Boolean(v) }))}
                     disabled={editIsLoading}
                   />
                   <Label htmlFor="edit-showInRegistration">Proposer à l&apos;inscription</Label>

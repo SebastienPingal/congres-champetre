@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const { title, startTime, endTime, kind, description, price, showInRegistration } = await request.json()
+    const { title, startTime, endTime, kind, description, price, showInRegistration, editionId: bodyEditionId } = await request.json()
 
     if (!title || !startTime || !endTime) {
       return NextResponse.json(
@@ -75,14 +75,24 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const activeEdition = await getActiveEdition()
+    let targetEditionId: string
+    if (bodyEditionId && typeof bodyEditionId === "string") {
+      const edition = await prisma.edition.findUnique({ where: { id: bodyEditionId } })
+      if (!edition) {
+        return NextResponse.json({ error: "Édition introuvable" }, { status: 400 })
+      }
+      targetEditionId = bodyEditionId
+    } else {
+      const activeEdition = await getActiveEdition()
+      targetEditionId = activeEdition.id
+    }
 
     const timeSlot = await prisma.timeSlot.create({
       data: {
         title,
         startTime: new Date(startTime),
         endTime: new Date(endTime),
-        editionId: activeEdition.id,
+        editionId: targetEditionId,
         ...(kind ? { kind } : {}),
         ...(description !== undefined ? { description } : {}),
         ...(price !== undefined ? { price: price !== null ? Number(price) : null } : {}),
