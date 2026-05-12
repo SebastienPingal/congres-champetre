@@ -9,6 +9,8 @@ export interface EditionInfo {
   startDate: string | null
   endDate: string | null
   participantCount: number
+  registrationDeadline: string | null
+  isRegistrationClosed: boolean
 }
 
 export interface ConferenceRecord {

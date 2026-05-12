@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
-import { getActiveEdition, NoActiveEditionError } from "@/lib/edition"
+import { getActiveEdition, NoActiveEditionError, isRegistrationClosed } from "@/lib/edition"
 
 export async function GET() {
   try {
@@ -79,6 +79,13 @@ export async function POST(request: NextRequest) {
     }
 
     const activeEdition = await getActiveEdition()
+
+    if (isRegistrationClosed(activeEdition)) {
+      return NextResponse.json(
+        { error: "🔒 Les inscriptions sont fermées" },
+        { status: 409 }
+      )
+    }
 
     const timeSlot = await prisma.timeSlot.findUnique({
       where: { id: timeSlotId },

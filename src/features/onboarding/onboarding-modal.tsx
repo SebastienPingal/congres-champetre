@@ -93,7 +93,7 @@ export function OnboardingModal() {
     },
   })
 
-  if (!user || user.onboardingCompletedAt !== null) return null
+  if (!user || user.onboardingCompletedAt !== null || user.edition.isRegistrationClosed) return null
 
   // Only show meals step if user is attending AND there are meals available
   const hasMeals = meals.length > 0

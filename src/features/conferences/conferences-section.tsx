@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { CircleDot } from "lucide-react"
+import { CircleDot, Lock } from "lucide-react"
 import { useUpdateProfile } from "@/hooks/use-user-profile"
 import { ConferenceForm } from "@/features/conferences/conference-form"
 import { ConferenceEditForm } from "./conference-edit-form"
@@ -19,7 +19,9 @@ interface ConferencesSectionProps {
 export function ConferencesSection({ user }: ConferencesSectionProps) {
   const [editingConferenceId, setEditingConferenceId] = useState<string | null>(null)
   const { mutate: updateProfile, isPending } = useUpdateProfile()
-  const needsAction = user.isAttending && user.wantsToSpeak && user.conferences.length === 0
+  const locked = user.edition.isRegistrationClosed
+  const needsAction = !locked && user.isAttending && user.wantsToSpeak && user.conferences.length === 0
+  const disabled = isPending || locked
 
   return (
     <Card
@@ -29,11 +31,15 @@ export function ConferencesSection({ user }: ConferencesSectionProps) {
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle>Participation aux conférences</CardTitle>
-          {needsAction && (
+          {locked ? (
+            <Badge className="bg-gray-100 text-gray-700 border-gray-300" variant="outline">
+              <Lock className="h-3 w-3 mr-1" />Inscriptions fermées
+            </Badge>
+          ) : needsAction ? (
             <Badge className="bg-violet-100 text-violet-800 hover:bg-violet-100 border-violet-300" variant="outline">
               <CircleDot className="h-3 w-3 mr-1" />À compléter
             </Badge>
-          )}
+          ) : null}
         </div>
         <CardDescription>Indiquez si vous souhaitez présenter une conférence</CardDescription>
       </CardHeader>
@@ -46,7 +52,7 @@ export function ConferencesSection({ user }: ConferencesSectionProps) {
               variant={user.wantsToSpeak === true ? "default" : "outline"}
               size="sm"
               onClick={() => updateProfile({ wantsToSpeak: true })}
-              disabled={isPending}
+              disabled={disabled}
             >
               Oui
             </Button>
@@ -55,7 +61,7 @@ export function ConferencesSection({ user }: ConferencesSectionProps) {
               variant={user.wantsToSpeak === false ? "default" : "outline"}
               size="sm"
               onClick={() => updateProfile({ wantsToSpeak: false })}
-              disabled={isPending}
+              disabled={disabled}
             >
               Non
             </Button>
@@ -65,7 +71,7 @@ export function ConferencesSection({ user }: ConferencesSectionProps) {
               size="sm"
               className="text-gray-500"
               onClick={() => updateProfile({ wantsToSpeak: null })}
-              disabled={isPending}
+              disabled={disabled}
             >
               Je ne sais pas encore
             </Button>
@@ -77,7 +83,13 @@ export function ConferencesSection({ user }: ConferencesSectionProps) {
             <Badge variant="secondary" className="mb-4">Conférencier inscrit</Badge>
 
             {user.conferences.length === 0 ? (
-              <ConferenceForm />
+              locked ? (
+                <p className="text-sm text-gray-600">
+                  Les inscriptions sont fermées. Contactez l&apos;organisateur si vous souhaitez proposer une conférence.
+                </p>
+              ) : (
+                <ConferenceForm />
+              )
             ) : (
               <div className="space-y-3">
                 <h4 className="text-sm font-semibold">Votre conférence :</h4>
@@ -101,7 +113,7 @@ export function ConferencesSection({ user }: ConferencesSectionProps) {
                       </Badge>
                     )}
 
-                    <div className="flex items-center gap-2 mt-3">
+                    {!locked && <div className="flex items-center gap-2 mt-3">
                       <Dialog
                         open={editingConferenceId === conference.id}
                         onOpenChange={(open) => setEditingConferenceId(open ? conference.id : null)}
@@ -129,7 +141,7 @@ export function ConferencesSection({ user }: ConferencesSectionProps) {
                         onDeleted={() => setEditingConferenceId(null)}
                         label="Supprimer"
                       />
-                    </div>
+                    </div>}
                   </div>
                 ))}
               </div>

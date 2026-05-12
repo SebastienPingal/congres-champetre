@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { requireUser } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { Prisma } from "@prisma/client"
+import { getActiveEdition, isRegistrationClosed } from "@/lib/edition"
 
 // PATCH - Mettre à jour une conférence (assignation de créneau)
 export async function PATCH(
@@ -36,6 +37,16 @@ export async function PATCH(
         { error: "⚠️ Accès refusé" },
         { status: 403 }
       )
+    }
+
+    if (!isAdmin) {
+      const activeEdition = await getActiveEdition()
+      if (isRegistrationClosed(activeEdition)) {
+        return NextResponse.json(
+          { error: "🔒 Les inscriptions sont fermées" },
+          { status: 409 }
+        )
+      }
     }
 
     const updateData: Prisma.ConferenceUpdateInput = {}
@@ -135,6 +146,16 @@ export async function DELETE(
         { error: "⚠️ Accès refusé" },
         { status: 403 }
       )
+    }
+
+    if (!isAdmin) {
+      const activeEdition = await getActiveEdition()
+      if (isRegistrationClosed(activeEdition)) {
+        return NextResponse.json(
+          { error: "🔒 Les inscriptions sont fermées" },
+          { status: 409 }
+        )
+      }
     }
 
     await prisma.conference.delete({

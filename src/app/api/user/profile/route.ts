@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { requireUser } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
-import { getActiveEdition, NoActiveEditionError } from "@/lib/edition"
+import { getActiveEdition, NoActiveEditionError, getRegistrationDeadline, isRegistrationClosed, RegistrationClosedError } from "@/lib/edition"
 import { buildParticipationUpdate, upsertParticipation } from "@/lib/participation"
 
 export async function GET() {
@@ -64,6 +64,8 @@ export async function GET() {
         startDate: activeEdition.startDate,
         endDate: activeEdition.endDate,
         participantCount,
+        registrationDeadline: getRegistrationDeadline(activeEdition),
+        isRegistrationClosed: isRegistrationClosed(activeEdition),
       },
     })
   } catch (error) {
@@ -85,6 +87,15 @@ export async function PATCH(request: NextRequest) {
 
     const body = await request.json()
     const activeEdition = await getActiveEdition()
+
+    const touchesParticipation =
+      "isAttending" in body ||
+      "attendanceDays" in body ||
+      "sleepsOnSite" in body ||
+      "wantsToSpeak" in body
+    if (touchesParticipation && isRegistrationClosed(activeEdition)) {
+      throw new RegistrationClosedError()
+    }
 
     // ⚠ Couplage explicite : `wantsToSpeak ⇔ conferences.length > 0`.
     // Passer `wantsToSpeak=false` supprime toutes les conférences de l'utilisateur pour
@@ -165,12 +176,17 @@ export async function PATCH(request: NextRequest) {
           startDate: activeEdition.startDate,
           endDate: activeEdition.endDate,
           participantCount,
+          registrationDeadline: getRegistrationDeadline(activeEdition),
+          isRegistrationClosed: isRegistrationClosed(activeEdition),
         },
       },
     })
   } catch (error) {
     if (error instanceof NoActiveEditionError) {
       return NextResponse.json({ error: "Aucune édition active" }, { status: 503 })
+    }
+    if (error instanceof RegistrationClosedError) {
+      return NextResponse.json({ error: "🔒 Les inscriptions sont fermées" }, { status: 409 })
     }
     console.error("🚨 Erreur lors de la mise à jour du profil:", error)
     return NextResponse.json(

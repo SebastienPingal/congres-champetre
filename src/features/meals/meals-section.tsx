@@ -1,13 +1,10 @@
 "use client"
 
-import { useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { CircleDot, ClipboardCopy, Download, UtensilsCrossed } from "lucide-react"
+import { CircleDot, Lock, UtensilsCrossed } from "lucide-react"
 import { useMeals, useUpdateMealStatus } from "@/hooks/use-meals"
-import { useUpdateProfile } from "@/hooks/use-user-profile"
-import { MealPaymentBlock } from "./meal-payment-block"
 import type { UserProfile } from "@/types"
 
 interface MealsSectionProps {
@@ -17,13 +14,9 @@ interface MealsSectionProps {
 export function MealsSection({ user }: MealsSectionProps) {
   const { data: meals = [] } = useMeals()
   const { mutate: updateMealStatus, isPending: isMealUpdating, variables: mealUpdatingVars } = useUpdateMealStatus()
-  const { mutate: updateProfile, isPending: isProfileUpdating } = useUpdateProfile()
-  const [ibanCopied, setIbanCopied] = useState(false)
 
-  const needsMealAction = meals.some((m) => m.status === null)
-  const total = meals
-    .filter((m) => m.status === "PRESENT" && m.price != null)
-    .reduce((sum, m) => sum + (m.price ?? 0), 0)
+  const locked = user.edition.isRegistrationClosed
+  const needsMealAction = !locked && meals.some((m) => m.status === null)
 
   return (
     <Card
@@ -36,11 +29,15 @@ export function MealsSection({ user }: MealsSectionProps) {
             <UtensilsCrossed className="h-5 w-5" />
             Repas sur place
           </CardTitle>
-          {needsMealAction && (
+          {locked ? (
+            <Badge className="bg-gray-100 text-gray-700 border-gray-300" variant="outline">
+              <Lock className="h-3 w-3 mr-1" />Inscriptions fermées
+            </Badge>
+          ) : needsMealAction ? (
             <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-100 border-amber-300" variant="outline">
               <CircleDot className="h-3 w-3 mr-1" />À compléter
             </Badge>
-          )}
+          ) : null}
         </div>
         <CardDescription>
           Nous nous chargeons de toute la nourriture et des boissons (y compris un peu d&apos;alcool).
@@ -85,7 +82,7 @@ export function MealsSection({ user }: MealsSectionProps) {
                     size="sm"
                     variant={meal.status === "PRESENT" ? "default" : "outline"}
                     onClick={() => updateMealStatus({ timeSlotId: meal.id, status: "PRESENT" })}
-                    disabled={isMealUpdating && mealUpdatingVars?.timeSlotId === meal.id}
+                    disabled={locked || (isMealUpdating && mealUpdatingVars?.timeSlotId === meal.id)}
                   >
                     Présent
                   </Button>
@@ -94,7 +91,7 @@ export function MealsSection({ user }: MealsSectionProps) {
                     size="sm"
                     variant={meal.status === "ABSENT" ? "default" : "outline"}
                     onClick={() => updateMealStatus({ timeSlotId: meal.id, status: "ABSENT" })}
-                    disabled={isMealUpdating && mealUpdatingVars?.timeSlotId === meal.id}
+                    disabled={locked || (isMealUpdating && mealUpdatingVars?.timeSlotId === meal.id)}
                   >
                     Absent
                   </Button>
@@ -102,64 +99,6 @@ export function MealsSection({ user }: MealsSectionProps) {
               </div>
             </div>
           ))}
-
-          {total > 0 && (
-            <div className="flex flex-col gap-3 pt-2 border-t">
-              <div className="flex justify-end">
-                <p className="font-medium">Total participation : {total} €</p>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium mr-1">Mode de paiement :</span>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant={user.willPayInCash ? "default" : "outline"}
-                  onClick={() => updateProfile({ willPayInCash: true })}
-                  disabled={isProfileUpdating}
-                >
-                  Liquide
-                </Button>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant={!user.willPayInCash ? "default" : "outline"}
-                  onClick={() => updateProfile({ willPayInCash: false })}
-                  disabled={isProfileUpdating}
-                >
-                  Virement
-                </Button>
-              </div>
-              {user.willPayInCash ? (
-                <div className="flex items-center gap-2">
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    onClick={() => {
-                      navigator.clipboard.writeText("FR7640618803500004034542988")
-                      setIbanCopied(true)
-                      setTimeout(() => setIbanCopied(false), 2000)
-                    }}
-                  >
-                    <ClipboardCopy className="h-4 w-4 mr-1" />
-                    {ibanCopied ? "Copié !" : "Copier l'IBAN de Seb"}
-                  </Button>
-                  <Button type="button" size="sm" variant="outline" asChild>
-                    <a href="/rib_boursobank-1736418249323.pdf" download>
-                      <Download className="h-4 w-4 mr-1" />
-                      Télécharger le RIB de Seb
-                    </a>
-                  </Button>
-                </div>
-              ) : (
-                <MealPaymentBlock
-                  total={total}
-                  hasPaid={user.hasPaid}
-                  willPayInCash={user.willPayInCash}
-                />
-              )}
-            </div>
-          )}
         </div>
       </CardContent>
     </Card>
