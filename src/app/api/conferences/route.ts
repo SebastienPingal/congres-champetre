@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
-import { getActiveEdition } from "@/lib/edition"
+import { getActiveEdition, NoActiveEditionError } from "@/lib/edition"
 
 export async function GET() {
   try {
@@ -26,6 +26,9 @@ export async function GET() {
 
     return NextResponse.json(conferences)
   } catch (error) {
+    if (error instanceof NoActiveEditionError) {
+      return NextResponse.json({ error: "Aucune édition active" }, { status: 503 })
+    }
     console.error("🚨 Erreur lors de la récupération des conférences:", error)
     return NextResponse.json(
       { error: "❌ Erreur lors de la récupération des conférences" },
@@ -153,6 +156,9 @@ export async function POST(request: NextRequest) {
       { status: 201 }
     )
   } catch (error) {
+    if (error instanceof NoActiveEditionError) {
+      return NextResponse.json({ error: "Aucune édition active" }, { status: 503 })
+    }
     console.error("🚨 Erreur lors de la création de la conférence:", error)
     return NextResponse.json(
       { error: "❌ Erreur lors de la création de la conférence" },

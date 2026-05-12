@@ -5,8 +5,8 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { formatDateTimeRange } from "@/lib/helper"
-import { ConferenceEditForm } from "@/components/conference-edit-form"
-import { ConferenceDeleteButton } from "@/components/conference-delete-button"
+import { ConferenceEditForm } from "@/features/conferences/conference-edit-form"
+import { ConferenceDeleteButton } from "@/features/conferences/conference-delete-button"
 import { ConferenceCreateDialog } from "@/components/admin/conference-create-dialog"
 
 interface Conference {

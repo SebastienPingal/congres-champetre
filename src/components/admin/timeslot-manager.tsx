@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { DateTimePicker } from "@/components/ui/date-time-picker"
 import { DayTimePicker } from "@/components/ui/day-time-picker"
-import { ConferenceEditForm } from "@/components/conference-edit-form"
+import { ConferenceEditForm } from "@/features/conferences/conference-edit-form"
 import { type MealSlotData } from "@/components/admin/meal-slot-fields"
 import { SlotGrid } from "@/components/admin/slot-grid"
 

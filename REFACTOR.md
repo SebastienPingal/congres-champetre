@@ -1,51 +1,28 @@
 # Inconsistances & opportunités de refactor
 
-Liste des frictions identifiées lors de l'audit pour la rédaction de `ARCHITECTURE.md`. Aucun changement de code n'a été fait — c'est une « todo list » pour plus tard, triée par sévérité approximative.
+Liste des frictions identifiées lors de l'audit pour la rédaction de `ARCHITECTURE.md`. Triée par sévérité approximative.
 
 > Chaque point indique : **(impact)** **emplacement** — description → **suggestion**.
+> Les points marqués ✅ ont été résolus.
 
 ## 🟥 Critiques (correctness, sécurité, données)
 
-### R1. Composants conférence dupliqués
-**`src/components/conference-{edit-form,delete-button}.tsx`** vs **`src/features/conferences/conference-{edit-form,delete-button}.tsx`**.
+### ✅ R1. Composants conférence dupliqués *(résolu)*
+`components/conference-{edit-form,delete-button}.tsx` supprimés. `conference-manager.tsx` et `timeslot-manager.tsx` pointent désormais vers `features/conferences/*` (versions React Query qui invalident le cache).
 
-Deux implémentations parallèles du même composant :
+### ✅ R2. CLAUDE.md de `features/conferences` mentait *(résolu)*
+`conference-form.tsx` déplacé de `src/components/` vers `src/features/conferences/`. Imports mis à jour dans `conferences-section.tsx` et `onboarding/steps/conference-step.tsx`.
 
-- La version `features/conferences/*` utilise les hooks React Query (`useUpdateConference`, `useDeleteConference`) → invalide proprement le cache.
-- La version `components/*` fait du `fetch` direct + `useState` → ne touche pas au cache React Query.
-
-L'admin consomme la version `components/*` (cf. `conference-manager.tsx`, `timeslot-manager.tsx`), le dashboard utilise la version `features/*`. Résultat : quand un admin modifie une conférence, le dashboard ouvert dans un autre onglet ne le voit pas.
-
-**→** Supprimer les versions `components/*` et faire pointer admin sur `features/conferences/*`. Le `ConferenceForm` (qui n'existe qu'en `components/`) peut soit rester là, soit migrer dans `features/conferences/`.
-
-### R2. CLAUDE.md de `features/conferences` ment
-Le fichier `src/features/conferences/CLAUDE.md` liste `conference-form.tsx` comme membre du dossier. Le fichier réel vit dans `src/components/conference-form.tsx`. Tous les imports actuels (`conferences-section.tsx`, `onboarding/steps/conference-step.tsx`) sont `@/components/conference-form`.
-
-**→** Soit déplacer le fichier et mettre à jour les imports, soit corriger le CLAUDE.md. La première option est cohérente avec le découpage feature-sliced revendiqué dans `src/features/CLAUDE.md`.
-
-### R3. Doc obsolète sur l'authentification email/password
-- `README.md` ligne 8 dit « Inscription et authentification sécurisée (email + OAuth) ».
-- `README.md` ligne 86-94 documente un seed qui crée un admin `admin@congres-champetre.com / admin123`.
-- `SETUP.md` lignes 76-81 idem.
-- `package.json` ligne 12 : `"db:seed": "tsx scripts/seed.ts" # Seed DB with admin user…`.
-
-Or :
-
-- `src/lib/auth.ts` ne configure **que** Google/GitHub/Discord — pas de CredentialsProvider.
-- `scripts/seed.ts` ligne 8 affiche explicitement « Pas de création d'admin automatique ».
-- `src/app/api/auth/register/` (mentionné dans l'ancien `CLAUDE.md` racine) n'existe pas.
-
-**→** Nettoyer README/SETUP/package.json. Indiquer la procédure réelle : créer un compte OAuth puis `UPDATE "User" SET role = 'ADMIN' WHERE email = …` (déjà documenté dans `PROD.md` §7).
+### ✅ R3. Doc obsolète sur l'authentification email/password *(résolu)*
+README.md et SETUP.md nettoyés : suppression des références email/password et admin seedé. La procédure réelle (OAuth + `UPDATE "User" SET role = 'ADMIN'`) est documentée.
 
 ### R4. Webhook Stripe ne gère pas les annulations / refunds
 `src/app/api/payments/webhook/route.ts` ne traite que `payment_intent.succeeded` et `payment_intent.payment_failed`. Un `payment_intent.canceled` ou un `charge.refunded` post-paiement laissera `hasPaid = true`.
 
 **→** Soit ajouter les events manquants, soit documenter explicitement que les refunds doivent être gérés à la main par l'admin via `PATCH /api/admin/users` (`hasPaid: false`).
 
-### R5. `getActiveEdition()` throw → 500 partout
-`src/lib/edition.ts` throw si aucune édition active. La plupart des routes catchent et renvoient 500 avec un message générique. UX dégradée pour le tout premier déploiement (pas d'édition seedée).
-
-**→** Soit retourner `null` et laisser chaque route choisir (UX message clair vs erreur silencieuse), soit ajouter une page d'onboarding admin « créer la première édition ».
+### ✅ R5. `getActiveEdition()` throw → 500 partout *(résolu)*
+`NoActiveEditionError` introduit dans `src/lib/edition.ts`. Toutes les routes API vérifient `instanceof NoActiveEditionError` dans leur catch et retournent un **503** explicite au lieu d'un 500 opaque.
 
 ## 🟧 Important (cohérence, dette)
 

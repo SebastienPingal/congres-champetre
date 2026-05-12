@@ -1,12 +1,19 @@
 import { prisma } from "@/lib/prisma";
 
+export class NoActiveEditionError extends Error {
+  constructor() {
+    super("Aucune édition active trouvée")
+    this.name = "NoActiveEditionError"
+  }
+}
+
 export async function getActiveEdition() {
   const edition = await prisma.edition.findFirst({
     where: { isActive: true },
   });
 
   if (!edition) {
-    throw new Error("Aucune édition active trouvée");
+    throw new NoActiveEditionError();
   }
 
   return edition;

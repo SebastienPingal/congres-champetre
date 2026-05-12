@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
-import { getActiveEdition } from "@/lib/edition"
+import { getActiveEdition, NoActiveEditionError } from "@/lib/edition"
 
 export async function GET() {
   try {
@@ -76,6 +76,9 @@ export async function GET() {
 
     return NextResponse.json({ mealSlots, users: result })
   } catch (error) {
+    if (error instanceof NoActiveEditionError) {
+      return NextResponse.json({ error: "Aucune édition active" }, { status: 503 })
+    }
     console.error("🚨 Erreur lors de la récupération des utilisateurs:", error)
     return NextResponse.json({ error: "❌ Erreur serveur" }, { status: 500 })
   }
@@ -135,6 +138,9 @@ export async function DELETE(req: Request) {
       deletedConferences: conferences.length,
     })
   } catch (error) {
+    if (error instanceof NoActiveEditionError) {
+      return NextResponse.json({ error: "Aucune édition active" }, { status: 503 })
+    }
     console.error("🚨 Erreur lors de la suppression de la participation:", error)
     return NextResponse.json({ error: "❌ Erreur serveur" }, { status: 500 })
   }
@@ -233,6 +239,9 @@ export async function PATCH(req: Request) {
 
     return NextResponse.json(updated)
   } catch (error) {
+    if (error instanceof NoActiveEditionError) {
+      return NextResponse.json({ error: "Aucune édition active" }, { status: 503 })
+    }
     console.error("🚨 Erreur lors de la mise à jour de l'utilisateur:", error)
     return NextResponse.json({ error: "❌ Erreur serveur" }, { status: 500 })
   }
