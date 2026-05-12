@@ -95,7 +95,7 @@ model EditionParticipation {
   onboardingCompletedAt DateTime?
   stripePaymentIntentId String?
   stripePaymentStatus   String?
-  paidAmount            Float?
+  paidAmount            Int?
   createdAt             DateTime       @default(now())
   updatedAt             DateTime       @updatedAt
 

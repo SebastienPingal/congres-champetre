@@ -1,6 +1,5 @@
 "use client"
 
-import { useEffect, useState } from "react"
 import { useSession, signOut } from "next-auth/react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -14,20 +13,12 @@ import { Sheet, SheetTrigger, SheetContent } from "@/components/ui/sheet"
 import Link from "next/link"
 import type { User } from "next-auth"
 import { MenuIcon, MessageCircle } from "lucide-react"
+import { useUserProfile } from "@/hooks/use-user-profile"
 
 export function Navbar() {
   const { data: session } = useSession()
-  const [editionName, setEditionName] = useState<string | null>(null)
-
-  useEffect(() => {
-    fetch("/api/editions")
-      .then((r) => r.ok ? r.json() : [])
-      .then((editions: Array<{ name: string; isActive: boolean }>) => {
-        const active = editions.find((e) => e.isActive)
-        if (active) setEditionName(active.name)
-      })
-      .catch(() => {})
-  }, [])
+  const { data: profile } = useUserProfile()
+  const editionName = profile?.edition?.name ?? null
 
   if (!session) return null
 

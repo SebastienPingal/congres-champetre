@@ -61,3 +61,23 @@ export interface TimeSlot {
     speaker: { id: string; name: string; email: string }
   }
 }
+
+export interface AdminTimeSlot extends Omit<TimeSlot, 'kind'> {
+  kind?: SlotKind
+  description?: string | null
+  price?: number | null
+  showInRegistration?: boolean
+}
+
+export interface Conference {
+  id: string
+  title: string
+  description?: string | null
+  speaker: { id: string; name: string; email: string }
+  timeSlot?: {
+    id: string
+    title: string
+    startTime: string
+    endTime: string
+  } | null
+}

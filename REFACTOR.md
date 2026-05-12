@@ -26,68 +26,32 @@ README.md et SETUP.md nettoyés : suppression des références email/password et
 
 ## 🟧 Important (cohérence, dette)
 
-### R6. Anti-pattern : vérification de rôle en DB sur chaque appel admin
-Pattern répété dans 10+ routes :
+### ✅ R6. Anti-pattern : vérification de rôle en DB sur chaque appel admin *(résolu)*
+`requireUser()` et `requireAdmin()` ajoutés dans `src/lib/auth.ts`, lisent `session.user.role` depuis le JWT. Les 10+ routes admin mises à jour — plus aucun `prisma.user.findUnique` pour la vérification de rôle.
 
-```ts
-const session = await auth()
-if (!session?.user) return 401
-const me = await prisma.user.findUnique({ where: { id: session.user.id } })
-if (me?.role !== "ADMIN") return 403
-```
+### ✅ R7. PATCH `/api/user/profile` géant *(résolu)*
+Service `src/lib/participation.ts` extrait : `buildParticipationUpdate()` (validation + règles métier) et `upsertParticipation()`. La route profile délègue et passe de ~257 à ~90 lignes.
 
-Le rôle est déjà dans `session.user.role` (cf. `src/lib/auth.ts` callback `session`). La DB est interrogée pour rien à chaque requête admin.
+### ✅ R8. Couplages magiques User ↔ Conference *(résolu)*
+Couplage assumé et documenté via commentaires dans les 3 points d'effet de bord : `POST /api/conferences`, `DELETE /api/conferences/[id]`, `PATCH /api/user/profile`.
 
-**→** Extraire `requireUser()` / `requireAdmin()` dans `src/lib/auth.ts` qui lisent depuis la session. Garder le re-fetch DB seulement si la défense en profondeur est explicitement souhaitée (mais alors le documenter).
+### ✅ R9. `/admin/page.tsx` n'utilise pas React Query *(résolu)*
+Page migrée vers `useTimeSlots`, `useConferences`, `useAdminStats`, `useEditions` (nouveaux hooks). Plus de fetch manuel ni de useState/useEffect pour les données serveur.
 
-### R7. PATCH `/api/user/profile` géant
-257 lignes, fait à la fois `User.update` (wantsToSpeak + side-effect: delete conferences) **et** `EditionParticipation.upsert` (avec règles métier conditionnelles : `sleepsOnSite=true` interdit si `!isAttending`, `isAttending=true` force `attendanceDays=BOTH` si nouvelle participation, etc.). Difficile à tester.
+### ✅ R10. `EditionManager` et `UsersTable` idem *(résolu)*
+`EditionManager` utilise `useEditions()` + `useMemo` pour `wizardDays` (remplace l'IIFE). `UsersTable` utilise `useAdminUsers()` + `patchCachedUsers` (setQueryData) pour les mises à jour optimistes.
 
-**→** Séparer en deux routes (`/api/user/profile` pour le `User`, `/api/user/participation` pour `EditionParticipation`) ou au minimum extraire un service `lib/participation.ts` testable.
+### ✅ R11. `Navbar` re-fetch `/api/editions` à chaque mount *(résolu)*
+`useEffect`/`fetch` supprimé. `editionName` lu depuis `useUserProfile().data?.edition?.name`.
 
-### R8. Couplages magiques User ↔ Conference
-- `POST /api/conferences` force `User.wantsToSpeak = true` automatiquement.
-- `DELETE /api/conferences/[id]` force `User.wantsToSpeak = false` — même si l'admin a supprimé une seule des conférences d'un user (en pratique il n'y en a qu'une, mais la contrainte n'est pas explicite).
-- `PATCH /api/user/profile` avec `wantsToSpeak=false` **supprime toutes les conférences** du user pour l'édition active.
+### ✅ R12. Types `TimeSlot` / `Conference` dupliqués *(résolu)*
+`AdminTimeSlot` et `Conference` ajoutés dans `src/types/index.ts`. Interfaces inline supprimées dans `admin/page.tsx`, `timeslot-manager.tsx` et `conference-manager.tsx`.
 
-Effets de bord cachés. Difficile à raisonner.
+### ✅ R13. `OnboardingModal` double-save *(résolu)*
+localStorage supprimé. La modal est non-fermable ; le risque de rechargement en cours d'onboarding est minoritaire. Chaque step continue d'écrire sur le serveur via `useUpdateProfile()`.
 
-**→** Soit assumer le couplage et le documenter en commentaire (« `wantsToSpeak` ⇔ `conferences.length > 0` »), soit virer le champ `wantsToSpeak` et le dériver de la présence d'une conférence.
-
-### R9. `/admin/page.tsx` n'utilise pas React Query
-La page admin principale (`src/app/admin/page.tsx`) fait du `fetch` + `useState` + `useEffect` manuel sur 4 endpoints en parallèle. Incohérent avec le dashboard user qui passe par React Query. Pas de cache, pas de revalidation.
-
-**→** Migrer vers des hooks `useAdminStats`, `useEditions`, `useTimeSlots` (existe déjà), `useConferences`.
-
-### R10. `EditionManager` et `UsersTable` idem
-`src/components/admin/edition-manager.tsx` (~474 lignes) et `src/components/admin/users-table.tsx` : `fetch` direct, état local lourd. `EditionManager` reduce manuellement les jours du weekend pour `wizardDays` à chaque render (IIFE dans le body).
-
-**→** Hooks dédiés + `useMemo` pour `wizardDays`.
-
-### R11. `Navbar` re-fetch `/api/editions` à chaque mount
-`src/components/navbar.tsx` ligne 22-30 : `useEffect` qui fetch toutes les éditions juste pour afficher le nom de l'active. C'est exactement la même donnée que `useUserProfile().edition.name`.
-
-**→** Lire depuis `useUserProfile()` (déjà invalidé proprement après changement d'édition).
-
-### R12. Types `TimeSlot` / `Conference` dupliqués
-Définitions inline dans plusieurs fichiers : `src/app/admin/page.tsx` (lignes 11-42), `src/components/admin/timeslot-manager.tsx` (lignes 15-33), `src/components/admin/conference-manager.tsx` (lignes 12-27), `src/components/conference-edit-form.tsx` (lignes 11-23). Variantes subtilement différentes (`description?: string` vs `string | null`).
-
-**→** Utiliser `src/types/index.ts` partout. Étendre si nécessaire (`AdminTimeSlot extends TimeSlot { description?: string | null; price?: number | null }`).
-
-### R13. `OnboardingModal` double-save
-À chaque step, l'app :
-
-1. écrit `localStorage` (persistance brouillon),
-2. appelle `useUpdateProfile()` (persistance serveur),
-
-… puis l'étape finale appelle `POST /api/onboarding` qui re-upsert les mêmes champs. Risque de race + complexité.
-
-**→** Soit le local storage seul puis flush au final step (une seule écriture serveur), soit retirer le local storage (la modal est non-fermable de toute façon, et le risque de fermer l'onglet est minoritaire).
-
-### R14. `paidAmount: Float`
-Stocker du montant en `Float` est un *anti-pattern* classique (erreurs de précision binaires). Le reste du flux Stripe utilise des cents (`Int amount` dans `PaymentIntent` model), ce qui est correct.
-
-**→** Passer `paidAmount` en `Int` (cents) ou `Decimal`. Migration nécessaire.
+### ✅ R14. `paidAmount: Float` *(résolu)*
+Migré en `Int` (centimes) dans `prisma/schema.prisma`. Migration SQL `20260512000000_paid_amount_float_to_int` fournie (conversion `ROUND(old * 100)`). Webhook Stripe adapté : stocke `intent.amount` directement sans diviser par 100.
 
 ## 🟨 Mineur (qualité de vie)
 
@@ -174,10 +138,10 @@ Le fichier `env.example.tmp` existe mais n'est pas synchronisé avec ce qui est 
 
 ## Méta : priorisation suggérée
 
-Si tu n'as qu'une heure :
+Toutes les catégories **Critique** et **Important** sont résolues (✅ R1–R14).
 
-1. **R3** (doc auth obsolète — confusion utilisateur immédiate)
-2. **R1** (composants dupliqués — bugs réels de désynchro UI admin/user)
-3. **R29** (`SMTP_PASS` vs `SMTP_PASSWORD` — déploiement cassé silencieusement)
+Points ouverts les plus impactants parmi les **Mineurs** :
 
-Si tu as une demi-journée, ajoute **R6** (helper `requireAdmin`) et **R12** (types dupliqués) — ce sont des gains de lisibilité immédiats sans changement comportemental.
+1. **R29** (`SMTP_PASS` vs `SMTP_PASSWORD` — déploiement cassé silencieusement)
+2. **R28** (pas de tests — routes Stripe et auth sans filet)
+3. **R15** (validation Zod sur `Conference.title/description` — injection potentielle de contenu volumineux)

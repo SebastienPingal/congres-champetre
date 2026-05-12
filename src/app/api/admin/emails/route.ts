@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { z } from "zod"
-import { auth } from "@/lib/auth"
+import { requireAdmin } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { sendBroadcastEmail } from "@/lib/mail"
 
@@ -85,15 +85,8 @@ async function parseRequest(req: Request): Promise<{ ok: true; data: ParsedReque
 
 export async function POST(req: Request) {
   try {
-    const session = await auth()
-    if (!session?.user) {
-      return NextResponse.json({ error: "🔒 Non authentifié" }, { status: 401 })
-    }
-
-    const me = await prisma.user.findUnique({ where: { id: session.user.id } })
-    if (me?.role !== "ADMIN") {
-      return NextResponse.json({ error: "⚠️ Accès refusé - Admin requis" }, { status: 403 })
-    }
+    const { user, error } = await requireAdmin()
+    if (error) return error
 
     const parsed = await parseRequest(req)
     if (!parsed.ok) {
@@ -103,7 +96,7 @@ export async function POST(req: Request) {
     let recipients: string[] = []
 
     if (parsed.data.sendToAdminOnly) {
-      const adminEmail = session.user.email?.trim()
+      const adminEmail = user.email?.trim()
       if (!adminEmail) {
         return NextResponse.json({ error: "📭 Email admin introuvable pour l'envoi test" }, { status: 400 })
       }

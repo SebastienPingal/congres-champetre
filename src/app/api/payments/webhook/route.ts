@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
         data: {
           hasPaid: true,
           stripePaymentStatus: "succeeded",
-          paidAmount: intent.amount / 100,
+          paidAmount: intent.amount,
         },
       })
 

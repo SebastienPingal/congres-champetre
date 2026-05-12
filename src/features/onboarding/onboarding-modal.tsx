@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { queryKeys } from "@/lib/query-keys"
@@ -23,11 +23,6 @@ interface OnboardingState {
   wantsToSpeak: boolean | null
 }
 
-interface PersistedProgress {
-  currentStep: Step
-  answers: OnboardingState
-}
-
 const STEP_LABELS: Record<Step, string> = {
   attending: 'Venez-vous au weekend ?',
   days: 'Quels jours ?',
@@ -35,10 +30,6 @@ const STEP_LABELS: Record<Step, string> = {
   meals: 'Les repas',
   speaking: 'Conférence',
   conference: 'Votre conférence',
-}
-
-function storageKey(userId: string) {
-  return `onboarding_progress_${userId}`
 }
 
 async function saveMealSelections(selections: Record<string, MealStatus>) {
@@ -69,41 +60,6 @@ export function OnboardingModal() {
   })
   const [isSavingMeals, setIsSavingMeals] = useState(false)
 
-  // Restore progress from localStorage once user id is known
-  useEffect(() => {
-    if (!user?.id) return
-    try {
-      const raw = localStorage.getItem(storageKey(user.id))
-      if (raw) {
-        const saved: PersistedProgress = JSON.parse(raw)
-        setCurrentStep(saved.currentStep)
-        setAnswers(saved.answers)
-      }
-    } catch {
-      // ignore malformed data
-    }
-  }, [user?.id])
-
-  // Persist progress on every state change
-  useEffect(() => {
-    if (!user?.id) return
-    try {
-      const progress: PersistedProgress = { currentStep, answers }
-      localStorage.setItem(storageKey(user.id), JSON.stringify(progress))
-    } catch {
-      // ignore storage errors
-    }
-  }, [currentStep, answers, user?.id])
-
-  const clearPersistedProgress = () => {
-    if (!user?.id) return
-    try {
-      localStorage.removeItem(storageKey(user.id))
-    } catch {
-      // ignore
-    }
-  }
-
   const { mutate: completeOnboarding, isPending: isCompleting } = useMutation({
     mutationFn: async (payload: Record<string, unknown>) => {
       const res = await fetch("/api/onboarding", {
@@ -115,7 +71,6 @@ export function OnboardingModal() {
       return res.json()
     },
     onSuccess: () => {
-      clearPersistedProgress()
       qc.invalidateQueries({ queryKey: queryKeys.userProfile })
       qc.invalidateQueries({ queryKey: queryKeys.meals })
     },
