@@ -38,6 +38,7 @@ export function OnboardingModal() {
   const { mutate: updateProfile } = useUpdateProfile()
   const qc = useQueryClient()
 
+  const [isDone, setIsDone] = useState(false)
   const [currentStep, setCurrentStep] = useState<Step>('attending')
   const [answersInitialized, setAnswersInitialized] = useState(false)
   const [answers, setAnswers] = useState<OnboardingState>({
@@ -88,12 +89,13 @@ export function OnboardingModal() {
       return res.json()
     },
     onSuccess: () => {
+      setIsDone(true)
       qc.invalidateQueries({ queryKey: queryKeys.userProfile })
       qc.invalidateQueries({ queryKey: queryKeys.meals })
     },
   })
 
-  if (!user || user.onboardingCompletedAt !== null) return null
+  if (!user || user.onboardingCompletedAt !== null || isDone) return null
 
   // Only show meals step if user is attending AND there are meals available
   const hasMeals = meals.length > 0
