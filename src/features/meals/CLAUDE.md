@@ -1,24 +1,24 @@
 # features/meals
 
-Components for meal registration and payment.
+Components for meal registration and payment validation.
 
 | File | Component | Purpose |
 |---|---|---|
-| `meals-section.tsx` | `MealsSection` | List of meal slots with PRESENT/ABSENT toggles + payment mode selector |
-| `meal-payment-block.tsx` | `MealPaymentBlock` | Stripe card payment button (hidden when `willPayInCash=true` or no Stripe key configured) |
+| `meals-section.tsx` | `MealsSection` | List of meal slots with PRESENT/ABSENT toggles. Read-only once registrations close. |
+| `payment-section.tsx` | `PaymentSection` | Dashboard validation panel: total breakdown, deadline countdown, Stripe "Payer maintenant" + "Payer plus tard". |
+
+**Stripe-only:** The cash / bank-transfer (IBAN) UX has been removed from the participant dashboard. All paid participations go through Stripe PaymentIntents. The admin can still flip `willPayInCash` manually from `/admin/users` for on-site cash payments.
 
 **Data:**
 - `useMeals()` / `useUpdateMealStatus()` from `src/hooks/use-meals.ts`
-- `useUpdateProfile()` for `willPayInCash` toggle
-- Payment total computed from PRESENT meals with `price != null`
+- Total is computed from PRESENT meals with `price != null`
+- `user.edition.isRegistrationClosed` toggles read-only state; `user.edition.registrationDeadline` is the cut-off date (7 days before the edition's `startDate`)
 
-**Stripe flow:**
-1. User picks "Virement" → `MealPaymentBlock` shows "Payer par carte" button
-2. Click → POST `/api/payments/intent` → gets `clientSecret`
-3. Stripe `Elements` + `PaymentElement` rendered in Dialog
-4. On success → invalidate `userProfile` query → `hasPaid` becomes `true`
-5. If `hasPaid=true` → shows green confirmation badge instead
+**Validation flow:**
+1. After onboarding completes, `PaymentSection` shows on the dashboard for attending users with at least one paid meal.
+2. Status badge: **Validée** (green, when `hasPaid=true`) or **Non validée** (amber).
+3. Click "Payer maintenant" → POST `/api/payments/intent` → Stripe Elements `Dialog`.
+4. On success → invalidate `userProfile` query → `hasPaid=true` and the section turns green.
+5. "Payer plus tard" only collapses the CTA; the participation stays unpaid until the user returns.
 
-**IBAN fallback:** When `willPayInCash=true`, shows IBAN copy button + RIB PDF download (bank transfer info).
-
-**Section ID:** `#section-repas`
+**Section IDs:** `#section-repas` (meals), `#section-validation` (payment).

@@ -7,6 +7,7 @@ import { AlertBanner } from "@/features/participation/alert-banner"
 import { EditionInfoCard } from "@/features/participation/edition-info-card"
 import { PresenceSection } from "@/features/participation/presence-section"
 import { MealsSection } from "@/features/meals/meals-section"
+import { PaymentSection } from "@/features/meals/payment-section"
 import { ConferencesSection } from "@/features/conferences/conferences-section"
 import { ProgramSection } from "@/features/program/program-section"
 import { OnboardingModal } from "@/features/onboarding/onboarding-modal"
@@ -56,6 +57,7 @@ export default function Dashboard() {
           <EditionInfoCard edition={user.edition} />
           <PresenceSection user={user} />
           {user.isAttending && meals.length > 0 && <MealsSection user={user} />}
+          {user.isAttending && user.onboardingCompletedAt && <PaymentSection user={user} />}
           {user.isAttending && <ConferencesSection user={user} />}
         </div>
       </div>

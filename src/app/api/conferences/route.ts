@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { requireUser } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
-import { getActiveEdition, NoActiveEditionError } from "@/lib/edition"
+import { getActiveEdition, NoActiveEditionError, isRegistrationClosed } from "@/lib/edition"
 
 export async function GET() {
   try {
@@ -54,6 +54,13 @@ export async function POST(request: NextRequest) {
     const activeEdition = await getActiveEdition()
 
     const isAdmin = user.role === "ADMIN"
+
+    if (!isAdmin && isRegistrationClosed(activeEdition)) {
+      return NextResponse.json(
+        { error: "🔒 Les inscriptions sont fermées" },
+        { status: 409 }
+      )
+    }
 
     if (!isAdmin && speakerId && speakerId !== user.id) {
       return NextResponse.json(

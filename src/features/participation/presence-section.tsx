@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
-import { CheckCircle2, CircleDot } from "lucide-react"
+import { CheckCircle2, CircleDot, Lock } from "lucide-react"
 import { useState } from "react"
 import { useUpdateProfile } from "@/hooks/use-user-profile"
 import type { UserProfile, AttendanceDays } from "@/types"
@@ -41,7 +41,9 @@ function buildGoogleCalendarUrl(
 export function PresenceSection({ user }: PresenceSectionProps) {
   const { mutate: updateProfile, isPending } = useUpdateProfile()
   const [pendingDays, setPendingDays] = useState<AttendanceDays | null>(null)
-  const needsAction = user.isAttending !== true
+  const locked = user.edition.isRegistrationClosed
+  const needsAction = !locked && user.isAttending !== true
+  const inputsDisabled = isPending || locked
 
   const handleAttendingChange = (value: boolean | null) => {
     const payload: Parameters<typeof updateProfile>[0] = { isAttending: value }
@@ -75,7 +77,11 @@ export function PresenceSection({ user }: PresenceSectionProps) {
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle>Présence au weekend</CardTitle>
-          {needsAction ? (
+          {locked ? (
+            <Badge className="bg-gray-100 text-gray-700 border-gray-300" variant="outline">
+              <Lock className="h-3 w-3 mr-1" />Inscriptions fermées
+            </Badge>
+          ) : needsAction ? (
             <Badge className="bg-green-100 text-green-800 hover:bg-green-100 border-green-300" variant="outline">
               <CircleDot className="h-3 w-3 mr-1" />À compléter
             </Badge>
@@ -97,7 +103,7 @@ export function PresenceSection({ user }: PresenceSectionProps) {
                 variant={user.isAttending === true ? "default" : "outline"}
                 size="sm"
                 onClick={() => handleAttendingChange(true)}
-                disabled={isPending}
+                disabled={inputsDisabled}
               >
                 Oui, je viens !
               </Button>
@@ -106,7 +112,7 @@ export function PresenceSection({ user }: PresenceSectionProps) {
                 variant={user.isAttending === false ? "default" : "outline"}
                 size="sm"
                 onClick={() => handleAttendingChange(false)}
-                disabled={isPending}
+                disabled={inputsDisabled}
               >
                 Non
               </Button>
@@ -116,7 +122,7 @@ export function PresenceSection({ user }: PresenceSectionProps) {
                 size="sm"
                 className="text-gray-500"
                 onClick={() => handleAttendingChange(null)}
-                disabled={isPending}
+                disabled={inputsDisabled}
               >
                 Je ne sais pas encore
               </Button>
@@ -138,7 +144,7 @@ export function PresenceSection({ user }: PresenceSectionProps) {
                     variant={selectedDays === val ? "default" : "outline"}
                     size="sm"
                     onClick={() => handleDaysChange(val)}
-                    disabled={isPending}
+                    disabled={inputsDisabled}
                   >
                     {val === "BOTH" ? "Les deux jours" : val === "DAY1" ? "Seulement le samedi" : "Seulement le dimanche"}
                   </Button>
@@ -151,7 +157,7 @@ export function PresenceSection({ user }: PresenceSectionProps) {
                   size="sm"
                   className="text-gray-500"
                   onClick={() => handleDaysChange("UNKNOWN")}
-                  disabled={isPending}
+                  disabled={inputsDisabled}
                 >
                   Je ne sais pas encore
                 </Button>
@@ -165,7 +171,7 @@ export function PresenceSection({ user }: PresenceSectionProps) {
                     variant={user.sleepsOnSite === true ? "default" : "outline"}
                     size="sm"
                     onClick={() => handleSleepChange(true)}
-                    disabled={isPending}
+                    disabled={inputsDisabled}
                   >
                     Oui, je dors sur place
                   </Button>
@@ -174,7 +180,7 @@ export function PresenceSection({ user }: PresenceSectionProps) {
                     variant={user.sleepsOnSite === false ? "default" : "outline"}
                     size="sm"
                     onClick={() => handleSleepChange(false)}
-                    disabled={isPending}
+                    disabled={inputsDisabled}
                   >
                     Non, je rentre
                   </Button>
@@ -184,7 +190,7 @@ export function PresenceSection({ user }: PresenceSectionProps) {
                     size="sm"
                     className="text-gray-500"
                     onClick={() => handleSleepChange(null)}
-                    disabled={isPending}
+                    disabled={inputsDisabled}
                   >
                     Je ne sais pas encore
                   </Button>

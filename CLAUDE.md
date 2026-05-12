@@ -41,7 +41,7 @@ src/app/
 
 src/features/               # UI feature-sliced — chaque dossier a un CLAUDE.md
 ├── participation/          # presence-section, edition-info-card, alert-banner
-├── meals/                  # meals-section, meal-payment-block (Stripe)
+├── meals/                  # meals-section, payment-section (Stripe-only)
 ├── conferences/            # conferences-section, conference-edit-form, conference-delete-button
 ├── onboarding/             # onboarding-modal + steps/ (attending/days/sleeping/meals/speaking/conference)
 └── program/                # program-section (lecture seule)
@@ -56,7 +56,7 @@ src/lib/
 ├── auth.ts                 # NextAuth config (JWT strategy, Google/GitHub/Discord)
 ├── prisma.ts               # singleton (globalThis en dev)
 ├── stripe.ts               # singleton lazy via getStripe()
-├── edition.ts              # getActiveEdition() / getActiveEditionId() — THROW si aucune active
+├── edition.ts              # getActiveEdition() / getActiveEditionId() / isRegistrationClosed() / getRegistrationDeadline() — THROW si aucune active
 ├── mail.ts                 # sendBroadcastEmail + markdown → HTML safe
 ├── query-keys.ts           # factory typée pour React Query
 ├── helper.ts               # formatDateTimeRange (fr-FR)
@@ -121,7 +121,7 @@ Voir `ARCHITECTURE.md §6` pour le tableau exhaustif. Quelques routes critiques 
 |---|---|---|
 | `/api/user/profile` | GET/PATCH | Le moteur central — fusionne updates User et EditionParticipation |
 | `/api/onboarding` | POST | Distinct de PATCH profile : pose `onboardingCompletedAt` |
-| `/api/payments/intent` | POST | Montant **toujours** recalculé en DB, jamais accepté du client |
+| `/api/payments/intent` | POST | Montant **toujours** recalculé en DB, jamais accepté du client. Reste ouvert après la fermeture des inscriptions. |
 | `/api/payments/webhook` | POST | **`request.text()` pour le body brut** — vital pour `constructEvent` |
 | `/api/editions/[id]` | PATCH | `isActive: true` désactive les autres dans une transaction |
 | `/api/admin/users` | DELETE | Supprime la **participation**, pas le User |
@@ -152,7 +152,9 @@ if (me?.role !== "ADMIN") return NextResponse.json({ error: "⚠️ Accès refus
 
 **Composant client/serveur** : tout ce qui consomme `useSession`, `useQuery`, ou un hook Radix doit être `"use client"`. Les pages `/dashboard` et `/admin/*` le sont déjà.
 
-**Stripe** : ne jamais accepter le montant depuis le client. Toujours recalculer côté serveur depuis `MealRegistration.status === "PRESENT"` et `TimeSlot.price`.
+**Stripe** : ne jamais accepter le montant depuis le client. Toujours recalculer côté serveur depuis `MealRegistration.status === "PRESENT"` et `TimeSlot.price`. Le dashboard utilise `PaymentSection` (`features/meals/payment-section.tsx`) — c'est le seul moyen de payer côté participant (pas de virement/IBAN/liquide dans l'UI). Le champ `willPayInCash` reste accessible uniquement depuis `/admin/users` pour marquer manuellement les paiements en espèces.
+
+**Fermeture des inscriptions** : par défaut 7 jours avant `edition.startDate`. Tout endpoint qui modifie la participation (`/api/user/profile` PATCH, `/api/meals` POST, `/api/onboarding` POST, `/api/conferences` POST + `[id]` PATCH/DELETE) renvoie `409` après ce délai pour les non-admins. L'UI passe en read-only et affiche un badge « Inscriptions fermées ». `/api/payments/intent` reste ouvert pour permettre aux utilisateurs déjà inscrits de payer en retard.
 
 **Email** : passer par `sendBroadcastEmail()`. Le markdown est converti via un parser maison (lignes, listes `-`/`*`, `**bold**`, `*italic*`, `[link](url)`, `` `code` ``) avec `escapeHtml` au préalable.
 
