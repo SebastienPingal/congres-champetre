@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { getStripe } from "@/lib/stripe"
-import { getActiveEdition } from "@/lib/edition"
+import { getActiveEdition, NoActiveEditionError } from "@/lib/edition"
 
 export async function POST() {
   try {
@@ -88,6 +88,9 @@ export async function POST() {
 
     return NextResponse.json({ clientSecret: intent.client_secret, amount: totalEuros })
   } catch (error) {
+    if (error instanceof NoActiveEditionError) {
+      return NextResponse.json({ error: "Aucune édition active" }, { status: 503 })
+    }
     console.error("🚨 Erreur création intent:", error)
     return NextResponse.json({ error: "❌ Erreur lors de la création du paiement" }, { status: 500 })
   }

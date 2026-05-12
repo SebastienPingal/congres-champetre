@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
-import { getActiveEdition } from "@/lib/edition"
+import { getActiveEdition, NoActiveEditionError } from "@/lib/edition"
 
 export async function GET() {
   try {
@@ -29,6 +29,9 @@ export async function GET() {
 
     return NextResponse.json(timeSlots)
   } catch (error) {
+    if (error instanceof NoActiveEditionError) {
+      return NextResponse.json({ error: "Aucune édition active" }, { status: 503 })
+    }
     console.error("🚨 Erreur lors de la récupération des créneaux:", error)
     return NextResponse.json(
       { error: "❌ Erreur lors de la récupération des créneaux" },
@@ -108,6 +111,9 @@ export async function POST(request: NextRequest) {
       { status: 201 }
     )
   } catch (error) {
+    if (error instanceof NoActiveEditionError) {
+      return NextResponse.json({ error: "Aucune édition active" }, { status: 503 })
+    }
     console.error("🚨 Erreur lors de la création du créneau:", error)
     return NextResponse.json(
       { error: "❌ Erreur lors de la création du créneau" },

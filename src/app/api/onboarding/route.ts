@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
-import { getActiveEdition } from "@/lib/edition"
+import { getActiveEdition, NoActiveEditionError } from "@/lib/edition"
 import type { AttendanceDays } from "@prisma/client"
 
 export async function POST(request: NextRequest) {
@@ -70,6 +70,9 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ message: "✅ Onboarding complété" })
   } catch (error) {
+    if (error instanceof NoActiveEditionError) {
+      return NextResponse.json({ error: "Aucune édition active" }, { status: 503 })
+    }
     console.error("🚨 Erreur onboarding:", error)
     return NextResponse.json({ error: "❌ Erreur lors de l'onboarding" }, { status: 500 })
   }

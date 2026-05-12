@@ -1,7 +1,7 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { ConferenceForm } from "@/components/conference-form"
+import { ConferenceForm } from "@/features/conferences/conference-form"
 
 interface ConferenceStepProps {
   onCreated: () => void

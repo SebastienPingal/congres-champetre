@@ -74,35 +74,17 @@ Callbacks URLs : `http://localhost:3000/api/auth/callback/{provider}`
 
 ## 6. Connexion admin
 
-Si vous avez exécuté le seed :
-- **Email** : `admin@congres-champetre.com`
-- **Mot de passe** : `admin123`
-
-⚠️ **Changez ce mot de passe immédiatement !**
+L'authentification se fait uniquement via OAuth. Pour promouvoir un compte en admin, connectez-vous d'abord via OAuth puis exécutez :
+```sql
+UPDATE "User" SET role = 'ADMIN' WHERE email = 'votre@email.com';
+```
 
 ## 7. Connexion utilisateur
 
-Les utilisateurs peuvent maintenant se connecter via :
-- 🔐 **Email/mot de passe** (classique)
+Les utilisateurs se connectent via OAuth :
 - 🌐 **Google** (si configuré)
-- 💬 **Discord** (si configuré) 
+- 💬 **Discord** (si configuré)
 - 🐙 **GitHub** (si configuré)
-
-## 8. Commit initial
-
-```bash
-git add .
-git commit -m "✨ feat: site complet de gestion de congrès champêtre avec OAuth
-
-🏛️ Fonctionnalités :
-- 🔐 Authentification NextAuth + Prisma + OAuth (Google/Discord/GitHub)
-- 👤 Dashboard utilisateur avec gestion conférences
-- ⚙️ Panel admin pour créneaux et assignations
-- 🎨 Interface minimaliste avec shadcn/ui
-- 📊 Base PostgreSQL complète
-- 🐳 Docker Compose pour développement
-- 🌐 Connexion multi-providers (email, Google, Discord, GitHub)"
-```
 
 ---
 

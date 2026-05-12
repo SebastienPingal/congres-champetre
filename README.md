@@ -5,8 +5,7 @@ Site minimaliste pour organiser un weekend de conférences dans un cadre champê
 ## ✨ Fonctionnalités
 
 ### 👤 Pour les participants
-- ✅ Inscription et authentification sécurisée (email + OAuth)
-- ✅ Connexion rapide avec Google, Discord ou GitHub
+- ✅ Connexion via OAuth (Google, Discord ou GitHub)
 - ✅ Indication du souhait de faire une conférence
 - ✅ Proposition de sujets de présentation
 - ✅ Sélection de créneaux préférés
@@ -84,16 +83,15 @@ pnpm db:generate
 ```
 
 ### 5. Seeding (optionnel)
-Pour créer un utilisateur admin et des créneaux d'exemple :
+Pour créer des créneaux d'exemple :
 ```bash
 pnpm db:seed
 ```
 
-Cela créera :
-- **Admin** : `admin@congres-champetre.com` / `admin123`
-- **Créneaux d'exemple** pour tester l'application
-
-⚠️ **Important** : Changez le mot de passe admin après la première connexion !
+Pour créer un admin, connectez-vous d'abord via OAuth puis exécutez :
+```sql
+UPDATE "User" SET role = 'ADMIN' WHERE email = 'votre@email.com';
+```
 
 ### 6. Configuration OAuth (optionnel)
 
