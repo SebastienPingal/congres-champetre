@@ -8,6 +8,13 @@ interface SpeakingStepProps {
 }
 
 export function SpeakingStep({ onAnswer, isSubmitting }: SpeakingStepProps) {
+  const [selected, setSelected] = useState<boolean | null | undefined>(undefined)
+
+  const handle = (value: boolean | null) => {
+    setSelected(value)
+    onAnswer(value)
+  }
+
   return (
     <div className="flex flex-col gap-4">
       <p className="text-gray-600 text-center">
@@ -16,7 +23,7 @@ export function SpeakingStep({ onAnswer, isSubmitting }: SpeakingStepProps) {
       <div className="flex flex-col gap-3">
         <Button
           className="w-full h-14 text-base"
-          onClick={() => onAnswer(true)}
+          onClick={() => handle(true)}
           disabled={isSubmitting}
         >
           Oui, j&apos;aimerais présenter quelque chose
@@ -24,18 +31,18 @@ export function SpeakingStep({ onAnswer, isSubmitting }: SpeakingStepProps) {
         <Button
           variant="outline"
           className="w-full h-14 text-base"
-          onClick={() => onAnswer(false)}
+          onClick={() => handle(false)}
           disabled={isSubmitting}
         >
-          Non, je viendrai juste écouter
+          {isSubmitting && selected === false ? "Chargement..." : "Non, je viendrai juste écouter"}
         </Button>
         <Button
           variant="ghost"
           className="w-full h-12 text-sm text-gray-500"
-          onClick={() => onAnswer(null)}
+          onClick={() => handle(null)}
           disabled={isSubmitting}
         >
-          Je ne sais pas encore
+          {isSubmitting && selected === null ? "Chargement..." : "Je ne sais pas encore"}
         </Button>
       </div>
     </div>
