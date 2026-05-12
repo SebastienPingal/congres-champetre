@@ -6,9 +6,10 @@ import { ConferenceForm } from "@/features/conferences/conference-form"
 interface ConferenceStepProps {
   onCreated: () => void
   onSkip: () => void
+  isCompleting: boolean
 }
 
-export function ConferenceStep({ onCreated, onSkip }: ConferenceStepProps) {
+export function ConferenceStep({ onCreated, onSkip, isCompleting }: ConferenceStepProps) {
   return (
     <div className="flex flex-col gap-4">
       <p className="text-gray-600 text-center text-sm">
@@ -20,8 +21,9 @@ export function ConferenceStep({ onCreated, onSkip }: ConferenceStepProps) {
         variant="ghost"
         className="w-full h-10 text-sm text-gray-500"
         onClick={onSkip}
+        disabled={isCompleting}
       >
-        Remplir plus tard
+        {isCompleting ? "Chargement..." : "Remplir plus tard"}
       </Button>
     </div>
   )

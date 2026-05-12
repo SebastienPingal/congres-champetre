@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { queryKeys } from "@/lib/query-keys"
@@ -32,19 +32,6 @@ const STEP_LABELS: Record<Step, string> = {
   conference: 'Votre conférence',
 }
 
-async function saveMealSelections(selections: Record<string, MealStatus>) {
-  const entries = Object.entries(selections).filter(([, status]) => status !== null)
-  await Promise.all(
-    entries.map(([timeSlotId, status]) =>
-      fetch("/api/meals", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ timeSlotId, status }),
-      })
-    )
-  )
-}
-
 export function OnboardingModal() {
   const { data: user } = useUserProfile()
   const { data: meals = [] } = useMeals()
@@ -52,13 +39,43 @@ export function OnboardingModal() {
   const qc = useQueryClient()
 
   const [currentStep, setCurrentStep] = useState<Step>('attending')
+  const [answersInitialized, setAnswersInitialized] = useState(false)
   const [answers, setAnswers] = useState<OnboardingState>({
     isAttending: null,
     attendanceDays: null,
     sleepsOnSite: null,
     wantsToSpeak: null,
   })
-  const [isSavingMeals, setIsSavingMeals] = useState(false)
+
+  useEffect(() => {
+    if (user && !answersInitialized) {
+      setAnswers({
+        isAttending: user.isAttending,
+        attendanceDays: user.isAttending ? user.attendanceDays : null,
+        sleepsOnSite: user.sleepsOnSite,
+        wantsToSpeak: user.wantsToSpeak,
+      })
+      setAnswersInitialized(true)
+    }
+  }, [user, answersInitialized])
+
+  const { mutateAsync: saveMeals, isPending: isSavingMeals } = useMutation({
+    mutationFn: async (selections: Record<string, MealStatus>) => {
+      const entries = Object.entries(selections).filter(([, status]) => status !== null)
+      await Promise.all(
+        entries.map(([timeSlotId, status]) =>
+          fetch("/api/meals", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ timeSlotId, status }),
+          })
+        )
+      )
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.meals })
+    },
+  })
 
   const { mutate: completeOnboarding, isPending: isCompleting } = useMutation({
     mutationFn: async (payload: Record<string, unknown>) => {
@@ -136,12 +153,7 @@ export function OnboardingModal() {
   }
 
   const handleMeals = async (selections: Record<string, MealStatus>) => {
-    setIsSavingMeals(true)
-    try {
-      await saveMealSelections(selections)
-    } finally {
-      setIsSavingMeals(false)
-    }
+    await saveMeals(selections)
     setCurrentStep('speaking')
   }
 
@@ -217,7 +229,7 @@ export function OnboardingModal() {
           <SpeakingStep onAnswer={handleSpeaking} isSubmitting={isSubmitting} />
         )}
         {currentStep === 'conference' && (
-          <ConferenceStep onCreated={handleConferenceDone} onSkip={handleConferenceDone} />
+          <ConferenceStep onCreated={handleConferenceDone} onSkip={handleConferenceDone} isCompleting={isCompleting} />
         )}
 
         <p className="text-xs text-gray-400 text-center mt-3">
