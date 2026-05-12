@@ -6,6 +6,7 @@ import { JWT } from "next-auth/jwt";
 import Google from "next-auth/providers/google"
 import GitHub from "next-auth/providers/github"
 import Discord from "next-auth/providers/discord"
+import { NextResponse } from "next/server"
 
 declare module "next-auth" {
   interface Session {
@@ -63,3 +64,31 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     signIn: "/auth/signin"
   }
 })
+
+export type SessionUser = {
+  id: string
+  email: string
+  name?: string | null
+  role: string
+}
+
+type AuthResult = { user: SessionUser; error?: never } | { error: NextResponse; user?: never }
+
+export async function requireUser(): Promise<AuthResult> {
+  const session = await auth()
+  if (!session?.user) {
+    return { error: NextResponse.json({ error: "🔒 Non authentifié" }, { status: 401 }) }
+  }
+  return { user: session.user as SessionUser }
+}
+
+export async function requireAdmin(): Promise<AuthResult> {
+  const session = await auth()
+  if (!session?.user) {
+    return { error: NextResponse.json({ error: "🔒 Non authentifié" }, { status: 401 }) }
+  }
+  if (session.user.role !== "ADMIN") {
+    return { error: NextResponse.json({ error: "⚠️ Accès refusé - Admin requis" }, { status: 403 }) }
+  }
+  return { user: session.user as SessionUser }
+}

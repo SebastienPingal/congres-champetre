@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
+import { useQueryClient } from "@tanstack/react-query"
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
@@ -16,31 +17,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-
-type AttendanceDays = "NONE" | "DAY1" | "DAY2" | "BOTH" | "UNKNOWN"
-
-interface MealSlot {
-  id: string
-  title: string
-  price: number | null
-}
-
-interface AdminUserRow {
-  id: string
-  name: string | null
-  email: string
-  role: "USER" | "ADMIN"
-  wantsToSpeak: boolean | null
-  isAttending: boolean | null
-  attendanceDays: AttendanceDays
-  sleepsOnSite: boolean | null
-  hasPaid: boolean
-  willPayInCash: boolean
-  mealStatuses: Record<string, string>
-  mealTotal: number
-  createdAt: string
-  updatedAt: string
-}
+import { useAdminUsers, type AdminUserRow, type AdminUsersPayload } from "@/hooks/use-admin-users"
+import { queryKeys } from "@/lib/query-keys"
+import type { AttendanceDays } from "@/types"
 
 const attendanceOrder: Record<AttendanceDays, number> = {
   NONE: 0,
@@ -51,11 +30,19 @@ const attendanceOrder: Record<AttendanceDays, number> = {
 }
 
 export function UsersTable() {
-  const [users, setUsers] = useState<AdminUserRow[]>([])
-  const [mealSlots, setMealSlots] = useState<MealSlot[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const qc = useQueryClient()
+  const { data, isLoading, error: queryError } = useAdminUsers()
+  const users = useMemo(() => data?.users ?? [], [data])
+  const mealSlots = useMemo(() => data?.mealSlots ?? [], [data])
+  const loading = isLoading
+  const [error, setError] = useState<string | null>(queryError ? "Impossible de charger les utilisateurs" : null)
   const STORAGE_KEY = "admin-users-filters"
+
+  const patchCachedUsers = (updater: (rows: AdminUserRow[]) => AdminUserRow[]) => {
+    qc.setQueryData<AdminUsersPayload>(queryKeys.adminUsers, (prev) =>
+      prev ? { ...prev, users: updater(prev.users) } : prev,
+    )
+  }
 
   const loadFilters = () => {
     try {
@@ -76,23 +63,6 @@ export function UsersTable() {
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">(saved?.sortDirection ?? "asc")
   const [deleteTarget, setDeleteTarget] = useState<AdminUserRow | null>(null)
   const [deleting, setDeleting] = useState(false)
-
-  useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const res = await fetch("/api/admin/users")
-        if (!res.ok) throw new Error("Failed to fetch users")
-        const data = await res.json()
-        setUsers(data.users)
-        setMealSlots(data.mealSlots)
-      } catch {
-        setError("Impossible de charger les utilisateurs")
-      } finally {
-        setLoading(false)
-      }
-    }
-    fetchUsers()
-  }, [])
 
   useEffect(() => {
     try {
@@ -121,7 +91,7 @@ export function UsersTable() {
         body: JSON.stringify({ userId: deleteTarget.id }),
       })
       if (!res.ok) throw new Error("Delete failed")
-      setUsers(prev => prev.map(u =>
+      patchCachedUsers(prev => prev.map(u =>
         u.id === deleteTarget.id
           ? { ...u, isAttending: null, attendanceDays: "NONE" as AttendanceDays, sleepsOnSite: null, hasPaid: false, willPayInCash: false, mealStatuses: {}, mealTotal: 0 }
           : u
@@ -221,7 +191,7 @@ export function UsersTable() {
     }
 
     // Optimistic update
-    setUsers(prev => prev.map(u => {
+    patchCachedUsers(prev => prev.map(u => {
       if (u.id !== userId) return u
       const newStatuses = { ...u.mealStatuses }
       if (nextStatus === null) {
@@ -248,7 +218,7 @@ export function UsersTable() {
       if (!res.ok) throw new Error("Update failed")
     } catch {
       // Revert on failure
-      setUsers(prev => prev.map(u => {
+      patchCachedUsers(prev => prev.map(u => {
         if (u.id !== userId) return u
         const newStatuses = { ...u.mealStatuses }
         if (currentStatus) {
@@ -470,7 +440,7 @@ export function UsersTable() {
                     onCheckedChange={async (value) => {
                       if (typeof value !== "boolean") return
                       const next = value
-                      setUsers(prev => prev.map(x => x.id === u.id ? { ...x, hasPaid: next } : x))
+                      patchCachedUsers(prev => prev.map(x => x.id === u.id ? { ...x, hasPaid: next } : x))
                       try {
                         const res = await fetch("/api/admin/users", {
                           method: "PATCH",
@@ -479,7 +449,7 @@ export function UsersTable() {
                         })
                         if (!res.ok) throw new Error("Update failed")
                       } catch {
-                        setUsers(prev => prev.map(x => x.id === u.id ? { ...x, hasPaid: !next } : x))
+                        patchCachedUsers(prev => prev.map(x => x.id === u.id ? { ...x, hasPaid: !next } : x))
                       }
                     }}
                   />
@@ -493,7 +463,7 @@ export function UsersTable() {
                     onCheckedChange={async (value) => {
                       if (typeof value !== "boolean") return
                       const next = value
-                      setUsers(prev => prev.map(x => x.id === u.id ? { ...x, willPayInCash: next } : x))
+                      patchCachedUsers(prev => prev.map(x => x.id === u.id ? { ...x, willPayInCash: next } : x))
                       try {
                         const res = await fetch("/api/admin/users", {
                           method: "PATCH",
@@ -502,7 +472,7 @@ export function UsersTable() {
                         })
                         if (!res.ok) throw new Error("Update failed")
                       } catch {
-                        setUsers(prev => prev.map(x => x.id === u.id ? { ...x, willPayInCash: !next } : x))
+                        patchCachedUsers(prev => prev.map(x => x.id === u.id ? { ...x, willPayInCash: !next } : x))
                       }
                     }}
                   />

@@ -1,6 +1,7 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useMemo, useState } from "react"
+import { useQueryClient } from "@tanstack/react-query"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -15,20 +16,8 @@ import {
 } from "@/components/ui/dialog"
 import { DateTimePicker } from "@/components/ui/date-time-picker"
 import { MealSlotFields, MealSlotData, emptyMealSlot } from "@/components/admin/meal-slot-fields"
-
-interface Edition {
-  id: string
-  name: string
-  startDate: string | null
-  endDate: string | null
-  isActive: boolean
-  createdAt: string
-  _count: {
-    participations: number
-    conferences: number
-    timeSlots: number
-  }
-}
+import { useEditions } from "@/hooks/use-editions"
+import { queryKeys } from "@/lib/query-keys"
 
 type WizardStep = 'info' | 'meals'
 
@@ -37,9 +26,9 @@ interface EditionManagerProps {
 }
 
 export function EditionManager({ onEditionChanged }: EditionManagerProps) {
-  const [editions, setEditions] = useState<Edition[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const qc = useQueryClient()
+  const { data: editions = [], isLoading: loading, error: queryError } = useEditions()
+  const error = queryError ? "Impossible de charger les éditions" : null
 
   const [isCreateOpen, setIsCreateOpen] = useState(false)
   const [wizardStep, setWizardStep] = useState<WizardStep>('info')
@@ -55,7 +44,7 @@ export function EditionManager({ onEditionChanged }: EditionManagerProps) {
   // Step 2 state
   const [mealSlots, setMealSlots] = useState<MealSlotData[]>([])
 
-  const wizardDays: Date[] = (() => {
+  const wizardDays = useMemo<Date[]>(() => {
     if (!createStartDate || !createEndDate) return []
     const days: Date[] = []
     const cur = new Date(createStartDate)
@@ -67,27 +56,14 @@ export function EditionManager({ onEditionChanged }: EditionManagerProps) {
       cur.setDate(cur.getDate() + 1)
     }
     return days
-  })()
+  }, [createStartDate, createEndDate])
   const [savingMeals, setSavingMeals] = useState(false)
   const [mealsError, setMealsError] = useState("")
 
   const [actionLoading, setActionLoading] = useState<string | null>(null)
 
-  useEffect(() => {
-    fetchEditions()
-  }, [])
-
-  const fetchEditions = async () => {
-    try {
-      const res = await fetch("/api/editions")
-      if (!res.ok) throw new Error("Failed to fetch")
-      const data = await res.json()
-      setEditions(data)
-    } catch {
-      setError("Impossible de charger les éditions")
-    } finally {
-      setLoading(false)
-    }
+  const invalidateEditions = () => {
+    qc.invalidateQueries({ queryKey: queryKeys.editions })
   }
 
   const resetWizard = () => {
@@ -137,7 +113,7 @@ export function EditionManager({ onEditionChanged }: EditionManagerProps) {
       if (res.ok) {
         setCreatedEditionId(result.edition?.id ?? result.id)
         setWizardStep('meals')
-        fetchEditions()
+        invalidateEditions()
         onEditionChanged?.()
       } else {
         setCreateError(result.error || "Erreur lors de la création")
@@ -191,7 +167,7 @@ export function EditionManager({ onEditionChanged }: EditionManagerProps) {
       }
       setIsCreateOpen(false)
       resetWizard()
-      fetchEditions()
+      invalidateEditions()
       onEditionChanged?.()
     } catch (err) {
       setMealsError(err instanceof Error ? err.message : "Erreur lors de la création des repas")
@@ -209,7 +185,7 @@ export function EditionManager({ onEditionChanged }: EditionManagerProps) {
         body: JSON.stringify({ isActive: true }),
       })
       if (res.ok) {
-        fetchEditions()
+        invalidateEditions()
         onEditionChanged?.()
       }
     } catch {
@@ -227,7 +203,7 @@ export function EditionManager({ onEditionChanged }: EditionManagerProps) {
       })
       const result = await res.json()
       if (res.ok) {
-        fetchEditions()
+        invalidateEditions()
         onEditionChanged?.()
       } else {
         alert(result.error || "Impossible de supprimer")
@@ -437,9 +413,9 @@ export function EditionManager({ onEditionChanged }: EditionManagerProps) {
                     {formatDate(edition.startDate)} → {formatDate(edition.endDate)}
                   </p>
                   <div className="flex items-center gap-3 text-xs text-gray-500">
-                    <span>{edition._count.participations} participant(s)</span>
-                    <span>{edition._count.conferences} conférence(s)</span>
-                    <span>{edition._count.timeSlots} créneau(x)</span>
+                    <span>{edition._count?.participations ?? 0} participant(s)</span>
+                    <span>{edition._count?.conferences ?? 0} conférence(s)</span>
+                    <span>{edition._count?.timeSlots ?? 0} créneau(x)</span>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { auth } from "@/lib/auth"
+import { requireUser } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { getActiveEdition, NoActiveEditionError } from "@/lib/edition"
 
@@ -39,14 +39,8 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await auth()
-
-    if (!session?.user) {
-      return NextResponse.json(
-        { error: "🔒 Non authentifié" },
-        { status: 401 }
-      )
-    }
+    const { user, error } = await requireUser()
+    if (error) return error
 
     const { title, description, timeSlotId, speakerId } = await request.json()
 
@@ -59,20 +53,16 @@ export async function POST(request: NextRequest) {
 
     const activeEdition = await getActiveEdition()
 
-    const actor = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      select: { role: true },
-    })
-    const isAdmin = actor?.role === "ADMIN"
+    const isAdmin = user.role === "ADMIN"
 
-    if (!isAdmin && speakerId && speakerId !== session.user.id) {
+    if (!isAdmin && speakerId && speakerId !== user.id) {
       return NextResponse.json(
         { error: "⚠️ Vous ne pouvez créer que votre propre conférence" },
         { status: 403 }
       )
     }
 
-    const targetSpeakerId = isAdmin && speakerId ? speakerId : session.user.id
+    const targetSpeakerId = isAdmin && speakerId ? speakerId : user.id
 
     if (isAdmin && speakerId) {
       const speaker = await prisma.user.findUnique({
@@ -143,6 +133,9 @@ export async function POST(request: NextRequest) {
       },
     })
 
+    // ⚠ Couplage : `wantsToSpeak ⇔ conferences.length > 0` pour l'édition active.
+    // Voir REFACTOR.md §R8 et `/api/user/profile` PATCH (qui supprime les conférences
+    // si wantsToSpeak passe à false).
     await prisma.user.update({
       where: { id: targetSpeakerId },
       data: { wantsToSpeak: true },

@@ -1,115 +1,55 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useMemo } from "react"
+import { useQueryClient } from "@tanstack/react-query"
 import { Navbar } from "@/components/navbar"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { TimeSlotManager } from "@/components/admin/timeslot-manager"
 import { ConferenceManager } from "@/components/admin/conference-manager"
 import { Users, UserCheck, CalendarRange } from "lucide-react"
 import { EditionManager } from "@/components/admin/edition-manager"
-
-interface TimeSlot {
-  id: string
-  title: string
-  startTime: string
-  endTime: string
-  conference?: {
-    id: string
-    title: string
-    speaker: {
-      id: string
-      name: string
-      email: string
-    }
-  }
-}
-
-interface Conference {
-  id: string
-  title: string
-  description?: string
-  speaker: {
-    id: string
-    name: string
-    email: string
-  }
-  timeSlot?: {
-    id: string
-    title: string
-    startTime: string
-    endTime: string
-  }
-}
+import { useTimeSlots } from "@/hooks/use-time-slots"
+import { useConferences } from "@/hooks/use-conferences"
+import { useAdminStats } from "@/hooks/use-admin-stats"
+import { useEditions } from "@/hooks/use-editions"
+import { queryKeys } from "@/lib/query-keys"
+import type { AdminTimeSlot } from "@/types"
 
 export default function AdminPage() {
-  const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([])
-  const [conferences, setConferences] = useState<Conference[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [stats, setStats] = useState<{ totalUsers: number; attendingUsers: number; attendingRate: number } | null>(null)
-  const [activeEditionDays, setActiveEditionDays] = useState<Date[]>([])
-  const [activeEditionStartHour, setActiveEditionStartHour] = useState<number>(10)
-  const [activeEditionEndHour, setActiveEditionEndHour] = useState<number>(20)
+  const qc = useQueryClient()
+  const { data: timeSlots = [], isLoading: slotsLoading } = useTimeSlots()
+  const { data: conferences = [], isLoading: confsLoading } = useConferences()
+  const { data: stats, isLoading: statsLoading } = useAdminStats()
+  const { data: editions = [], isLoading: editionsLoading } = useEditions()
 
-  useEffect(() => {
-    // 🛡️ Middleware ensures we're authenticated and have admin role
-    fetchData()
-  }, [])
+  const isLoading = slotsLoading || confsLoading || statsLoading || editionsLoading
 
-  const fetchData = async () => {
-    try {
-      const [slotsResponse, conferencesResponse, statsResponse, editionsResponse] = await Promise.all([
-        fetch("/api/timeslots"),
-        fetch("/api/conferences"),
-        fetch("/api/admin/stats"),
-        fetch("/api/editions")
-      ])
-
-      if (slotsResponse.ok) {
-        const slotsData = await slotsResponse.json()
-        setTimeSlots(slotsData)
-      }
-
-      if (conferencesResponse.ok) {
-        const conferencesData = await conferencesResponse.json()
-        setConferences(conferencesData)
-      }
-
-      if (statsResponse.ok) {
-        const s = await statsResponse.json()
-        setStats(s)
-      }
-
-      if (editionsResponse.ok) {
-        const editions = await editionsResponse.json()
-        const active = editions.find((e: { isActive: boolean; startDate: string | null; endDate: string | null }) => e.isActive)
-        if (active?.startDate && active?.endDate) {
-          const days: Date[] = []
-          const cur = new Date(active.startDate)
-          cur.setHours(0, 0, 0, 0)
-          const end = new Date(active.endDate)
-          end.setHours(0, 0, 0, 0)
-          while (cur <= end) {
-            days.push(new Date(cur))
-            cur.setDate(cur.getDate() + 1)
-          }
-          setActiveEditionDays(days)
-          if (active.startHour != null) setActiveEditionStartHour(active.startHour)
-          if (active.endHour != null) setActiveEditionEndHour(active.endHour)
-        }
-      }
-    } catch (error) {
-      console.error("🚨 Erreur lors du chargement des données:", error)
-    } finally {
-      setIsLoading(false)
+  const { activeEditionDays, activeEditionStartHour, activeEditionEndHour } = useMemo(() => {
+    const active = editions.find((e) => e.isActive)
+    if (!active?.startDate || !active?.endDate) {
+      return { activeEditionDays: [] as Date[], activeEditionStartHour: 10, activeEditionEndHour: 20 }
     }
-  }
+    const days: Date[] = []
+    const cur = new Date(active.startDate)
+    cur.setHours(0, 0, 0, 0)
+    const end = new Date(active.endDate)
+    end.setHours(0, 0, 0, 0)
+    while (cur <= end) {
+      days.push(new Date(cur))
+      cur.setDate(cur.getDate() + 1)
+    }
+    return {
+      activeEditionDays: days,
+      activeEditionStartHour: active.startHour ?? 10,
+      activeEditionEndHour: active.endHour ?? 20,
+    }
+  }, [editions])
 
-  const handleTimeSlotCreated = () => {
-    fetchData()
-  }
-
-  const handleConferenceUpdated = () => {
-    fetchData()
+  const refreshAll = () => {
+    qc.invalidateQueries({ queryKey: queryKeys.timeslots })
+    qc.invalidateQueries({ queryKey: queryKeys.conferences })
+    qc.invalidateQueries({ queryKey: queryKeys.adminStats })
+    qc.invalidateQueries({ queryKey: queryKeys.editions })
   }
 
   if (isLoading) {
@@ -263,7 +203,7 @@ export default function AdminPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <EditionManager onEditionChanged={fetchData} />
+            <EditionManager onEditionChanged={refreshAll} />
           </CardContent>
         </Card>
 
@@ -280,8 +220,8 @@ export default function AdminPage() {
             </CardHeader>
             <CardContent>
               <TimeSlotManager
-                timeSlots={timeSlots}
-                onTimeSlotCreated={handleTimeSlotCreated}
+                timeSlots={timeSlots as AdminTimeSlot[]}
+                onTimeSlotCreated={refreshAll}
                 editionDays={activeEditionDays}
                 editionStartHour={activeEditionStartHour}
                 editionEndHour={activeEditionEndHour}
@@ -302,7 +242,7 @@ export default function AdminPage() {
             <CardContent>
               <ConferenceManager
                 conferences={conferences}
-                onConferenceUpdated={handleConferenceUpdated}
+                onConferenceUpdated={refreshAll}
               />
             </CardContent>
           </Card>

@@ -11,29 +11,10 @@ import { DayTimePicker } from "@/components/ui/day-time-picker"
 import { ConferenceEditForm } from "@/features/conferences/conference-edit-form"
 import { type MealSlotData } from "@/components/admin/meal-slot-fields"
 import { SlotGrid } from "@/components/admin/slot-grid"
-
-interface TimeSlot {
-  id: string
-  title: string
-  startTime: string
-  endTime: string
-  kind?: 'CONFERENCE' | 'MEAL' | 'BREAK' | 'OTHER'
-  description?: string | null
-  price?: number | null
-  showInRegistration?: boolean
-  conference?: {
-    id: string
-    title: string
-    speaker: {
-      id: string
-      name: string
-      email: string
-    }
-  }
-}
+import type { AdminTimeSlot } from "@/types"
 
 interface TimeSlotManagerProps {
-  timeSlots: TimeSlot[]
+  timeSlots: AdminTimeSlot[]
   onTimeSlotCreated: () => void
   editionDays?: Date[]
   editionStartHour?: number
@@ -53,7 +34,7 @@ export function TimeSlotManager({ timeSlots, onTimeSlotCreated, editionDays, edi
   const useGrid = editionDays && editionDays.length > 0
 
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
-  const [editingSlot, setEditingSlot] = useState<TimeSlot | null>(null)
+  const [editingSlot, setEditingSlot] = useState<AdminTimeSlot | null>(null)
   const [editTitle, setEditTitle] = useState("")
   const [editStartDateTime, setEditStartDateTime] = useState<Date>()
   const [editEndDateTime, setEditEndDateTime] = useState<Date>()
@@ -130,7 +111,7 @@ export function TimeSlotManager({ timeSlots, onTimeSlotCreated, editionDays, edi
     })
   }
 
-  const openEditDialog = (slot: TimeSlot) => {
+  const openEditDialog = (slot: AdminTimeSlot) => {
     setEditingSlot(slot)
     setEditTitle(slot.title)
     setEditStartDateTime(new Date(slot.startTime))

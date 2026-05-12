@@ -1,24 +1,18 @@
 import { NextRequest, NextResponse } from "next/server"
-import { auth } from "@/lib/auth"
+import { requireUser } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { getActiveEdition, NoActiveEditionError } from "@/lib/edition"
-import type { AttendanceDays } from "@prisma/client"
+import { buildParticipationUpdate, upsertParticipation } from "@/lib/participation"
 
 export async function GET() {
   try {
-    const session = await auth()
-
-    if (!session?.user) {
-      return NextResponse.json(
-        { error: "🔒 Non authentifié" },
-        { status: 401 }
-      )
-    }
+    const { user: sessionUser, error } = await requireUser()
+    if (error) return error
 
     const activeEdition = await getActiveEdition()
 
     const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
+      where: { id: sessionUser.id },
       select: {
         id: true,
         name: true,
@@ -86,123 +80,47 @@ export async function GET() {
 
 export async function PATCH(request: NextRequest) {
   try {
-    const session = await auth()
-
-    if (!session?.user) {
-      return NextResponse.json(
-        { error: "🔒 Non authentifié" },
-        { status: 401 }
-      )
-    }
+    const { user: sessionUser, error } = await requireUser()
+    if (error) return error
 
     const body = await request.json()
     const activeEdition = await getActiveEdition()
 
-    const userUpdateData: Record<string, unknown> = {}
+    // ⚠ Couplage explicite : `wantsToSpeak ⇔ conferences.length > 0`.
+    // Passer `wantsToSpeak=false` supprime toutes les conférences de l'utilisateur pour
+    // l'édition active. Pendant Conference create/delete, l'inverse est maintenu côté
+    // `/api/conferences/*`. Voir REFACTOR.md §R8.
     if (typeof body.wantsToSpeak === "boolean" || body.wantsToSpeak === null) {
-      userUpdateData.wantsToSpeak = body.wantsToSpeak
       if (body.wantsToSpeak === false) {
         await prisma.conference.deleteMany({
-          where: { speakerId: session.user.id, editionId: activeEdition.id },
+          where: { speakerId: sessionUser.id, editionId: activeEdition.id },
         })
       }
-    }
-
-    if (Object.keys(userUpdateData).length > 0) {
       await prisma.user.update({
-        where: { id: session.user.id },
-        data: userUpdateData,
+        where: { id: sessionUser.id },
+        data: { wantsToSpeak: body.wantsToSpeak },
       })
     }
 
-    const participationData: Record<string, unknown> = {}
-    let needsParticipationUpdate = false
+    const participationResult = await buildParticipationUpdate(
+      sessionUser.id,
+      activeEdition.id,
+      body,
+    )
 
-    if (typeof body.isAttending === "boolean" || body.isAttending === null) {
-      participationData.isAttending = body.isAttending
-      needsParticipationUpdate = true
-      if (body.isAttending === false) {
-        participationData.attendanceDays = "NONE"
-        participationData.sleepsOnSite = null
-      } else if (body.isAttending === null) {
-        participationData.attendanceDays = "NONE"
-        participationData.sleepsOnSite = null
-      }
+    if (participationResult && "error" in participationResult) {
+      return NextResponse.json(
+        { error: participationResult.error },
+        { status: participationResult.status },
+      )
     }
 
-    if (typeof body.attendanceDays === "string") {
-      const allowed = ["NONE", "DAY1", "DAY2", "BOTH", "UNKNOWN"]
-      if (!allowed.includes(body.attendanceDays)) {
-        return NextResponse.json(
-          { error: "📝 Valeur attendanceDays invalide" },
-          { status: 400 }
-        )
-      }
-      participationData.attendanceDays = body.attendanceDays
-      needsParticipationUpdate = true
-      if (body.attendanceDays !== "NONE" && body.attendanceDays !== "UNKNOWN") {
-        participationData.isAttending = true
-      }
-    }
-
-    if (typeof body.sleepsOnSite === "boolean" || body.sleepsOnSite === null) {
-      participationData.sleepsOnSite = body.sleepsOnSite
-      needsParticipationUpdate = true
-    }
-
-    if (typeof body.willPayInCash === "boolean") {
-      participationData.willPayInCash = body.willPayInCash
-      needsParticipationUpdate = true
-    }
-
-    if (needsParticipationUpdate) {
-      const existing = await prisma.editionParticipation.findUnique({
-        where: {
-          userId_editionId: {
-            userId: session.user.id,
-            editionId: activeEdition.id,
-          },
-        },
-      })
-
-      const finalIsAttending =
-        "isAttending" in participationData
-          ? (participationData.isAttending as boolean | null)
-          : (existing?.isAttending ?? null)
-
-      if (body.sleepsOnSite === true && !finalIsAttending) {
-        return NextResponse.json(
-          { error: "📝 Impossible de dormir sur place si non présent" },
-          { status: 400 }
-        )
-      }
-
-      if (body.isAttending === true && !existing) {
-        participationData.attendanceDays =
-          participationData.attendanceDays ?? "BOTH"
-      }
-
-      await prisma.editionParticipation.upsert({
-        where: {
-          userId_editionId: {
-            userId: session.user.id,
-            editionId: activeEdition.id,
-          },
-        },
-        create: {
-          userId: session.user.id,
-          editionId: activeEdition.id,
-          isAttending: (participationData.isAttending as boolean | null) ?? null,
-          attendanceDays:
-            (participationData.attendanceDays as AttendanceDays) ?? "NONE",
-          sleepsOnSite: (participationData.sleepsOnSite as boolean | null) ?? null,
-        },
-        update: participationData,
-      })
+    if (participationResult) {
+      await upsertParticipation(sessionUser.id, activeEdition.id, participationResult.data)
     }
 
     const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
+      where: { id: sessionUser.id },
       select: {
         id: true,
         name: true,

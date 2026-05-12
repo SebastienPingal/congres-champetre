@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { auth } from "@/lib/auth"
+import { requireAdmin } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 
 // GET - Récupérer un créneau par id
@@ -47,22 +47,8 @@ export async function PATCH(
 ) {
   try {
     const { id } = await params
-    const session = await auth()
-
-    if (!session?.user) {
-      return NextResponse.json(
-        { error: "🔒 Non authentifié" },
-        { status: 401 }
-      )
-    }
-
-    const user = await prisma.user.findUnique({ where: { id: session.user.id } })
-    if (user?.role !== "ADMIN") {
-      return NextResponse.json(
-        { error: "⚠️ Accès refusé - Admin requis" },
-        { status: 403 }
-      )
-    }
+    const { error } = await requireAdmin()
+    if (error) return error
 
     const payload = await request.json()
     const { title, startTime, endTime, kind, description, price, showInRegistration } = payload as {
@@ -133,22 +119,8 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params
-    const session = await auth()
-
-    if (!session?.user) {
-      return NextResponse.json(
-        { error: "🔒 Non authentifié" },
-        { status: 401 }
-      )
-    }
-
-    const user = await prisma.user.findUnique({ where: { id: session.user.id } })
-    if (user?.role !== "ADMIN") {
-      return NextResponse.json(
-        { error: "⚠️ Accès refusé - Admin requis" },
-        { status: 403 }
-      )
-    }
+    const { error } = await requireAdmin()
+    if (error) return error
 
     const withRelations = await prisma.timeSlot.findUnique({
       where: { id },

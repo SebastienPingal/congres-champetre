@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { auth } from "@/lib/auth"
+import { requireAdmin } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { getActiveEdition, NoActiveEditionError } from "@/lib/edition"
 
@@ -42,25 +42,8 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await auth()
-
-    if (!session?.user) {
-      return NextResponse.json(
-        { error: "🔒 Non authentifié" },
-        { status: 401 }
-      )
-    }
-
-    const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
-    })
-
-    if (user?.role !== "ADMIN") {
-      return NextResponse.json(
-        { error: "⚠️ Accès refusé - Admin requis" },
-        { status: 403 }
-      )
-    }
+    const { error } = await requireAdmin()
+    if (error) return error
 
     const { title, startTime, endTime, kind, description, price, showInRegistration, editionId: bodyEditionId } = await request.json()
 

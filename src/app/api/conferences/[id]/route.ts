@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { auth } from "@/lib/auth"
+import { requireUser } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { Prisma } from "@prisma/client"
 
@@ -10,14 +10,8 @@ export async function PATCH(
 ) {
   try {
     const { id } = await params
-    const session = await auth()
-
-    if (!session?.user) {
-      return NextResponse.json(
-        { error: "🔒 Non authentifié" },
-        { status: 401 }
-      )
-    }
+    const { user, error } = await requireUser()
+    if (error) return error
 
     const { timeSlotId, title, description } = await request.json()
 
@@ -35,9 +29,8 @@ export async function PATCH(
     }
 
     // Vérifier que l'utilisateur est le propriétaire OU admin
-    const actor = await prisma.user.findUnique({ where: { id: session.user.id } })
-    const isOwner = existingConference.speakerId === session.user.id
-    const isAdmin = actor?.role === "ADMIN"
+    const isOwner = existingConference.speakerId === user.id
+    const isAdmin = user.role === "ADMIN"
     if (!isOwner && !isAdmin) {
       return NextResponse.json(
         { error: "⚠️ Accès refusé" },
@@ -119,14 +112,8 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params
-    const session = await auth()
-
-    if (!session?.user) {
-      return NextResponse.json(
-        { error: "🔒 Non authentifié" },
-        { status: 401 }
-      )
-    }
+    const { user, error } = await requireUser()
+    if (error) return error
 
     // Récupérer la conférence existante
     const existingConference = await prisma.conference.findUnique({
@@ -141,9 +128,8 @@ export async function DELETE(
     }
 
     // Vérifier que l'utilisateur est le propriétaire OU admin
-    const actor = await prisma.user.findUnique({ where: { id: session.user.id } })
-    const isOwner = existingConference.speakerId === session.user.id
-    const isAdmin = actor?.role === "ADMIN"
+    const isOwner = existingConference.speakerId === user.id
+    const isAdmin = user.role === "ADMIN"
     if (!isOwner && !isAdmin) {
       return NextResponse.json(
         { error: "⚠️ Accès refusé" },
@@ -155,7 +141,9 @@ export async function DELETE(
       where: { id }
     })
 
-    // Mettre à jour le statut wantsToSpeak du conférencier concerné
+    // ⚠ Couplage : `wantsToSpeak ⇔ conferences.length > 0` pour l'édition active.
+    // En pratique l'utilisateur n'a qu'une conférence par édition, donc la suppression
+    // ramène wantsToSpeak à false. Voir REFACTOR.md §R8.
     await prisma.user.update({
       where: { id: existingConference.speakerId },
       data: { wantsToSpeak: false }

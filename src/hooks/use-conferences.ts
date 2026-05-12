@@ -1,5 +1,17 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { queryKeys } from "@/lib/query-keys"
+import type { Conference } from "@/types"
+
+export function useConferences() {
+  return useQuery<Conference[]>({
+    queryKey: queryKeys.conferences,
+    queryFn: async () => {
+      const res = await fetch("/api/conferences")
+      if (!res.ok) throw new Error("Impossible de charger les conférences")
+      return res.json()
+    },
+  })
+}
 
 export function useCreateConference() {
   const qc = useQueryClient()
@@ -21,6 +33,7 @@ export function useCreateConference() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.userProfile })
       qc.invalidateQueries({ queryKey: queryKeys.timeslots })
+      qc.invalidateQueries({ queryKey: queryKeys.conferences })
     },
   })
 }
@@ -49,6 +62,7 @@ export function useUpdateConference() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.userProfile })
       qc.invalidateQueries({ queryKey: queryKeys.timeslots })
+      qc.invalidateQueries({ queryKey: queryKeys.conferences })
     },
   })
 }
@@ -63,6 +77,7 @@ export function useDeleteConference() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.userProfile })
       qc.invalidateQueries({ queryKey: queryKeys.timeslots })
+      qc.invalidateQueries({ queryKey: queryKeys.conferences })
     },
   })
 }

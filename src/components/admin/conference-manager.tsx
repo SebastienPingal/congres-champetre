@@ -8,25 +8,7 @@ import { formatDateTimeRange } from "@/lib/helper"
 import { ConferenceEditForm } from "@/features/conferences/conference-edit-form"
 import { ConferenceDeleteButton } from "@/features/conferences/conference-delete-button"
 import { ConferenceCreateDialog } from "@/components/admin/conference-create-dialog"
-
-interface Conference {
-  id: string
-  title: string
-  description?: string
-  speaker: {
-    id: string
-    name: string
-    email: string
-  }
-  timeSlot?: {
-    id: string
-    title: string
-    startTime: string
-    endTime: string
-  }
-}
-
-// Removed TimeSlot type usage in this component
+import type { Conference } from "@/types"
 
 interface ConferenceManagerProps {
   conferences: Conference[]
