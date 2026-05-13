@@ -1,6 +1,5 @@
 "use client"
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
@@ -70,58 +69,85 @@ export function PresenceSection({ user }: PresenceSectionProps) {
   const selectedDays = pendingDays ?? user.attendanceDays
 
   return (
-    <Card
-      id="section-presence"
-      className={needsAction ? "animate-border-rotate animate-border-rotate-green shadow-md" : "border-l-4 border-l-green-300"}
-    >
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle>Présence au weekend</CardTitle>
-          {locked ? (
-            <Badge className="bg-gray-100 text-gray-700 border-gray-300" variant="outline">
-              <Lock className="h-3 w-3 mr-1" />Inscriptions fermées
-            </Badge>
-          ) : needsAction ? (
-            <Badge className="bg-green-100 text-green-800 hover:bg-green-100 border-green-300" variant="outline">
-              <CircleDot className="h-3 w-3 mr-1" />À compléter
-            </Badge>
-          ) : (
-            <Badge className="bg-green-50 text-green-700 hover:bg-green-50 border-green-200" variant="outline">
-              <CheckCircle2 className="h-3 w-3 mr-1" />Confirmé
-            </Badge>
-          )}
+    <section id="section-presence" className="flex flex-col gap-6">
+      <div className="flex items-start justify-between gap-3">
+        <p className="text-sm text-muted-foreground">Indiquez vos disponibilités et votre besoin d&apos;hébergement.</p>
+        {locked ? (
+          <Badge variant="outline" className="text-muted-foreground">
+            <Lock className="h-3 w-3 mr-1" />Inscriptions fermées
+          </Badge>
+        ) : needsAction ? (
+          <Badge variant="outline" className="border-amber-300 text-amber-700">
+            <CircleDot className="h-3 w-3 mr-1" />À compléter
+          </Badge>
+        ) : (
+          <Badge variant="outline" className="border-green-300 text-green-700">
+            <CheckCircle2 className="h-3 w-3 mr-1" />Confirmé
+          </Badge>
+        )}
+      </div>
+
+      <div className="flex flex-col gap-3">
+        <Label className="text-sm font-medium">Serez-vous présent(e) au weekend ?</Label>
+        <div className="flex flex-wrap gap-2">
+          <Button
+            type="button"
+            variant={user.isAttending === true ? "default" : "outline"}
+            size="sm"
+            onClick={() => handleAttendingChange(true)}
+            disabled={inputsDisabled}
+          >
+            Oui, je viens !
+          </Button>
+          <Button
+            type="button"
+            variant={user.isAttending === false ? "default" : "outline"}
+            size="sm"
+            onClick={() => handleAttendingChange(false)}
+            disabled={inputsDisabled}
+          >
+            Non
+          </Button>
+          <Button
+            type="button"
+            variant={user.isAttending === null ? "secondary" : "ghost"}
+            size="sm"
+            className="text-muted-foreground"
+            onClick={() => handleAttendingChange(null)}
+            disabled={inputsDisabled}
+          >
+            Je ne sais pas encore
+          </Button>
         </div>
-        <CardDescription>Indiquez vos disponibilités et hébergement</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="flex flex-col gap-4">
-          <div className="flex flex-col gap-2">
-            <p className="text-sm font-medium">Serez-vous présent(e) au weekend ?</p>
-            <div className="flex flex-wrap gap-2">
+      </div>
+
+      {user.isAttending === true && (
+        <>
+          <div className="flex flex-col gap-3">
+            <Label id="attendanceDaysLabel" className="text-sm font-medium">Jours de présence</Label>
+            <div className="flex flex-wrap items-center gap-2" role="radiogroup" aria-labelledby="attendanceDaysLabel">
+              {(["BOTH", "DAY1", "DAY2"] as const).map((val) => (
+                <Button
+                  key={val}
+                  type="button"
+                  role="radio"
+                  aria-checked={selectedDays === val}
+                  variant={selectedDays === val ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => handleDaysChange(val)}
+                  disabled={inputsDisabled}
+                >
+                  {val === "BOTH" ? "Les deux jours" : val === "DAY1" ? "Seulement le samedi" : "Seulement le dimanche"}
+                </Button>
+              ))}
               <Button
                 type="button"
-                variant={user.isAttending === true ? "default" : "outline"}
+                role="radio"
+                aria-checked={selectedDays === "UNKNOWN"}
+                variant={selectedDays === "UNKNOWN" ? "secondary" : "ghost"}
                 size="sm"
-                onClick={() => handleAttendingChange(true)}
-                disabled={inputsDisabled}
-              >
-                Oui, je viens !
-              </Button>
-              <Button
-                type="button"
-                variant={user.isAttending === false ? "default" : "outline"}
-                size="sm"
-                onClick={() => handleAttendingChange(false)}
-                disabled={inputsDisabled}
-              >
-                Non
-              </Button>
-              <Button
-                type="button"
-                variant={user.isAttending === null ? "secondary" : "ghost"}
-                size="sm"
-                className="text-gray-500"
-                onClick={() => handleAttendingChange(null)}
+                className="text-muted-foreground"
+                onClick={() => handleDaysChange("UNKNOWN")}
                 disabled={inputsDisabled}
               >
                 Je ne sais pas encore
@@ -129,96 +155,61 @@ export function PresenceSection({ user }: PresenceSectionProps) {
             </div>
           </div>
 
-          {user.isAttending === true && (
-            <div className="flex flex-col gap-3">
-              <div className="flex items-center justify-between">
-                <Label id="attendanceDaysLabel" className="text-sm font-medium">Jours de présence</Label>
-              </div>
-              <div className="flex flex-wrap items-center gap-2" role="radiogroup" aria-labelledby="attendanceDaysLabel">
-                {(["BOTH", "DAY1", "DAY2"] as const).map((val) => (
-                  <Button
-                    key={val}
-                    type="button"
-                    role="radio"
-                    aria-checked={selectedDays === val}
-                    variant={selectedDays === val ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => handleDaysChange(val)}
-                    disabled={inputsDisabled}
-                  >
-                    {val === "BOTH" ? "Les deux jours" : val === "DAY1" ? "Seulement le samedi" : "Seulement le dimanche"}
-                  </Button>
-                ))}
-                <Button
-                  type="button"
-                  role="radio"
-                  aria-checked={selectedDays === "UNKNOWN"}
-                  variant={selectedDays === "UNKNOWN" ? "secondary" : "ghost"}
-                  size="sm"
-                  className="text-gray-500"
-                  onClick={() => handleDaysChange("UNKNOWN")}
-                  disabled={inputsDisabled}
-                >
-                  Je ne sais pas encore
-                </Button>
-              </div>
+          <div className="flex flex-col gap-3">
+            <Label className="text-sm font-medium">Hébergement sur place ?</Label>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                type="button"
+                variant={user.sleepsOnSite === true ? "default" : "outline"}
+                size="sm"
+                onClick={() => handleSleepChange(true)}
+                disabled={inputsDisabled}
+              >
+                Oui, je dors sur place
+              </Button>
+              <Button
+                type="button"
+                variant={user.sleepsOnSite === false ? "default" : "outline"}
+                size="sm"
+                onClick={() => handleSleepChange(false)}
+                disabled={inputsDisabled}
+              >
+                Non, je rentre
+              </Button>
+              <Button
+                type="button"
+                variant={user.sleepsOnSite === null ? "secondary" : "ghost"}
+                size="sm"
+                className="text-muted-foreground"
+                onClick={() => handleSleepChange(null)}
+                disabled={inputsDisabled}
+              >
+                Je ne sais pas encore
+              </Button>
+            </div>
+          </div>
 
-              <div className="flex flex-col gap-2">
-                <p className="text-sm font-medium">Hébergement sur place ?</p>
-                <div className="flex flex-wrap gap-2">
-                  <Button
-                    type="button"
-                    variant={user.sleepsOnSite === true ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => handleSleepChange(true)}
-                    disabled={inputsDisabled}
-                  >
-                    Oui, je dors sur place
-                  </Button>
-                  <Button
-                    type="button"
-                    variant={user.sleepsOnSite === false ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => handleSleepChange(false)}
-                    disabled={inputsDisabled}
-                  >
-                    Non, je rentre
-                  </Button>
-                  <Button
-                    type="button"
-                    variant={user.sleepsOnSite === null ? "secondary" : "ghost"}
-                    size="sm"
-                    className="text-gray-500"
-                    onClick={() => handleSleepChange(null)}
-                    disabled={inputsDisabled}
-                  >
-                    Je ne sais pas encore
-                  </Button>
-                </div>
-              </div>
-
-              {user.edition.startDate && user.edition.endDate && (
-                <div className="flex items-center gap-2">
-                  <Button
-                    type="button"
-                    onClick={handleGoogleCalendar}
-                    variant="secondary"
-                    className="flex items-center gap-2"
-                  >
-                    <svg className="w-4 h-4" viewBox="0 0 24 24" aria-hidden="true">
-                      <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                      <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                      <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                      <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-                    </svg>
-                    Ajouter à Google Calendar
-                  </Button>
-                </div>
-              )}
+          {user.edition.startDate && user.edition.endDate && (
+            <div>
+              <Button
+                type="button"
+                onClick={handleGoogleCalendar}
+                variant="outline"
+                size="sm"
+                className="gap-2"
+              >
+                <svg className="w-4 h-4" viewBox="0 0 24 24" aria-hidden="true">
+                  <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                  <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                  <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                  <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                </svg>
+                Ajouter à Google Calendar
+              </Button>
             </div>
           )}
-        </div>
-      </CardContent>
-    </Card>
+        </>
+      )}
+    </section>
   )
 }

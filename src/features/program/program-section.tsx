@@ -1,7 +1,6 @@
 "use client"
 
 import { useMemo } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
 import { useTimeSlots } from "@/hooks/use-time-slots"
 import type { TimeSlot } from "@/types"
@@ -27,6 +26,13 @@ function getDayLabel(dateString: string) {
   })
 }
 
+const kindAccent: Record<TimeSlot["kind"], string> = {
+  CONFERENCE: "bg-violet-400",
+  MEAL: "bg-amber-400",
+  BREAK: "bg-sky-400",
+  OTHER: "bg-gray-300",
+}
+
 export function ProgramSection({ className }: { className?: string }) {
   const { data: timeSlots = [], isLoading, error } = useTimeSlots()
 
@@ -46,68 +52,58 @@ export function ProgramSection({ className }: { className?: string }) {
     })
   }, [timeSlots])
 
+  if (isLoading) {
+    return <p className="text-sm text-muted-foreground">Chargement du programme…</p>
+  }
+  if (error) {
+    return <p className="text-sm text-destructive">Impossible de charger le programme</p>
+  }
+  if (byDay.length === 0) {
+    return <p className="text-sm text-muted-foreground">Aucun créneau publié pour le moment</p>
+  }
+
   return (
-    <Card className={cn(className)}>
-      <CardHeader>
-        <CardTitle>Programme du weekend</CardTitle>
-      </CardHeader>
-      <CardContent>
-        {isLoading ? (
-          <p className="text-sm text-gray-600 text-center">Chargement du programme…</p>
-        ) : error ? (
-          <p className="text-sm text-red-600 text-center">Impossible de charger le programme</p>
-        ) : byDay.length === 0 ? (
-          <p className="text-sm text-gray-600 text-center">Aucun créneau publié pour le moment</p>
-        ) : (
-          <div className="grid gap-6 md:grid-cols-2">
-            {byDay.map((day) => (
-              <div key={day.key} className="flex flex-col gap-4">
-                <h3 className="text-lg font-semibold capitalize">{day.label}</h3>
-                <div className="flex flex-col gap-3">
-                  {day.slots.map((slot) => (
-                    <div
-                      key={slot.id}
-                      className={cn(
-                        "rounded-lg ring-1",
-                        slot.kind === "CONFERENCE" && "bg-violet-50 ring-violet-200 border-l-4 border-violet-400",
-                        slot.kind === "MEAL" && "bg-amber-50 ring-amber-200 border-l-4 border-amber-400",
-                        slot.kind === "BREAK" && "bg-sky-50 ring-sky-200 border-l-4 border-sky-400",
-                        slot.kind === "OTHER" && "bg-gray-50 ring-gray-200 border-l-4 border-gray-300"
-                      )}
-                    >
-                      {slot.kind === "MEAL" ? (
-                        <div className="flex items-start gap-4 p-4">
-                          <div className="shrink-0 text-xs text-gray-500">
-                            {formatHourMinute(slot.startTime)} – {formatHourMinute(slot.endTime)}
-                          </div>
-                          <p className="text-sm font-medium grow">{slot.title}</p>
-                        </div>
-                      ) : (
-                        <div className="flex items-start gap-4 p-4">
-                          <div className="shrink-0 text-xs text-gray-500">
-                            {formatHourMinute(slot.startTime)} – {formatHourMinute(slot.endTime)}
-                          </div>
-                          <div className="flex grow flex-col gap-1">
-                            {slot.conference ? (
-                              <>
-                                <p className="text-base font-semibold">{slot.conference.title}</p>
-                                <p className="text-xs text-gray-600">{slot.conference.speaker.name}</p>
-                                {slot.title && <p className="text-xs text-gray-500">{slot.title}</p>}
-                              </>
-                            ) : (
-                              <p className="text-sm font-medium">{slot.title}</p>
-                            )}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
+    <section className={cn("flex flex-col gap-8", className)}>
+      <div className="grid gap-8 md:grid-cols-2">
+        {byDay.map((day) => (
+          <div key={day.key} className="flex flex-col gap-3">
+            <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground capitalize">
+              {day.label}
+            </h3>
+            <ul className="flex flex-col">
+              {day.slots.map((slot, index) => (
+                <li
+                  key={slot.id}
+                  className={cn(
+                    "flex items-start gap-4 py-3",
+                    index !== 0 && "border-t"
+                  )}
+                >
+                  <div className="flex items-center gap-2 shrink-0 w-24">
+                    <span className={cn("h-2 w-2 rounded-full", kindAccent[slot.kind])} aria-hidden="true" />
+                    <span className="text-xs tabular-nums text-muted-foreground">
+                      {formatHourMinute(slot.startTime)}
+                    </span>
+                  </div>
+                  <div className="flex grow flex-col min-w-0">
+                    {slot.kind === "CONFERENCE" && slot.conference ? (
+                      <>
+                        <p className="font-medium">{slot.conference.title}</p>
+                        <p className="text-xs text-muted-foreground">{slot.conference.speaker.name}</p>
+                      </>
+                    ) : (
+                      <p className="text-sm">{slot.title}</p>
+                    )}
+                  </div>
+                  <span className="text-xs tabular-nums text-muted-foreground shrink-0">
+                    {formatHourMinute(slot.endTime)}
+                  </span>
+                </li>
+              ))}
+            </ul>
           </div>
-        )}
-      </CardContent>
-    </Card>
+        ))}
+      </div>
+    </section>
   )
 }

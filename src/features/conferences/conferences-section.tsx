@@ -1,11 +1,10 @@
 "use client"
 
 import { useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { CircleDot, Lock } from "lucide-react"
+import { CheckCircle2, CircleDot, Lock } from "lucide-react"
 import { useUpdateProfile } from "@/hooks/use-user-profile"
 import { ConferenceForm } from "@/features/conferences/conference-form"
 import { ConferenceEditForm } from "./conference-edit-form"
@@ -24,96 +23,92 @@ export function ConferencesSection({ user }: ConferencesSectionProps) {
   const disabled = isPending || locked
 
   return (
-    <Card
-      id="section-conferences"
-      className={needsAction ? "animate-border-rotate animate-border-rotate-violet shadow-md" : "border-l-4 border-l-violet-300"}
-    >
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle>Participation aux conférences</CardTitle>
-          {locked ? (
-            <Badge className="bg-gray-100 text-gray-700 border-gray-300" variant="outline">
-              <Lock className="h-3 w-3 mr-1" />Inscriptions fermées
-            </Badge>
-          ) : needsAction ? (
-            <Badge className="bg-violet-100 text-violet-800 hover:bg-violet-100 border-violet-300" variant="outline">
-              <CircleDot className="h-3 w-3 mr-1" />À compléter
-            </Badge>
-          ) : null}
-        </div>
-        <CardDescription>Indiquez si vous souhaitez présenter une conférence</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="flex flex-col gap-2">
-          <p className="text-sm font-medium">Souhaitez-vous proposer une conférence ?</p>
-          <div className="flex flex-wrap gap-2">
-            <Button
-              type="button"
-              variant={user.wantsToSpeak === true ? "default" : "outline"}
-              size="sm"
-              onClick={() => updateProfile({ wantsToSpeak: true })}
-              disabled={disabled}
-            >
-              Oui
-            </Button>
-            <Button
-              type="button"
-              variant={user.wantsToSpeak === false ? "default" : "outline"}
-              size="sm"
-              onClick={() => updateProfile({ wantsToSpeak: false })}
-              disabled={disabled}
-            >
-              Non
-            </Button>
-            <Button
-              type="button"
-              variant={user.wantsToSpeak === null ? "secondary" : "ghost"}
-              size="sm"
-              className="text-gray-500"
-              onClick={() => updateProfile({ wantsToSpeak: null })}
-              disabled={disabled}
-            >
-              Je ne sais pas encore
-            </Button>
-          </div>
-        </div>
+    <section id="section-conferences" className="flex flex-col gap-6">
+      <div className="flex items-start justify-between gap-3">
+        <p className="text-sm text-muted-foreground">Indiquez si vous souhaitez proposer une conférence pour le weekend.</p>
+        {locked ? (
+          <Badge variant="outline" className="text-muted-foreground">
+            <Lock className="h-3 w-3 mr-1" />Inscriptions fermées
+          </Badge>
+        ) : needsAction ? (
+          <Badge variant="outline" className="border-amber-300 text-amber-700">
+            <CircleDot className="h-3 w-3 mr-1" />À compléter
+          </Badge>
+        ) : user.wantsToSpeak && user.conferences.length > 0 ? (
+          <Badge variant="outline" className="border-green-300 text-green-700">
+            <CheckCircle2 className="h-3 w-3 mr-1" />Inscrit
+          </Badge>
+        ) : null}
+      </div>
 
-        {user.wantsToSpeak && (
-          <div className="pt-4 border-t">
-            <Badge variant="secondary" className="mb-4">Conférencier inscrit</Badge>
+      <div className="flex flex-col gap-3">
+        <p className="text-sm font-medium">Souhaitez-vous proposer une conférence ?</p>
+        <div className="flex flex-wrap gap-2">
+          <Button
+            type="button"
+            variant={user.wantsToSpeak === true ? "default" : "outline"}
+            size="sm"
+            onClick={() => updateProfile({ wantsToSpeak: true })}
+            disabled={disabled}
+          >
+            Oui
+          </Button>
+          <Button
+            type="button"
+            variant={user.wantsToSpeak === false ? "default" : "outline"}
+            size="sm"
+            onClick={() => updateProfile({ wantsToSpeak: false })}
+            disabled={disabled}
+          >
+            Non
+          </Button>
+          <Button
+            type="button"
+            variant={user.wantsToSpeak === null ? "secondary" : "ghost"}
+            size="sm"
+            className="text-muted-foreground"
+            onClick={() => updateProfile({ wantsToSpeak: null })}
+            disabled={disabled}
+          >
+            Je ne sais pas encore
+          </Button>
+        </div>
+      </div>
 
-            {user.conferences.length === 0 ? (
-              locked ? (
-                <p className="text-sm text-gray-600">
-                  Les inscriptions sont fermées. Contactez l&apos;organisateur si vous souhaitez proposer une conférence.
-                </p>
-              ) : (
-                <ConferenceForm />
-              )
+      {user.wantsToSpeak && (
+        <div className="flex flex-col gap-4">
+          {user.conferences.length === 0 ? (
+            locked ? (
+              <p className="text-sm text-muted-foreground">
+                Les inscriptions sont fermées. Contactez l&apos;organisateur si vous souhaitez proposer une conférence.
+              </p>
             ) : (
-              <div className="space-y-3">
-                <h4 className="text-sm font-semibold">Votre conférence :</h4>
-                {user.conferences.map((conference) => (
-                  <div key={conference.id} className="p-3 bg-gray-50 rounded-lg">
-                    <h5 className="font-medium">{conference.title}</h5>
-                    {conference.description && (
-                      <p className="text-sm text-gray-600 mt-1">{conference.description}</p>
-                    )}
+              <ConferenceForm />
+            )
+          ) : (
+            <ul className="divide-y rounded-lg border bg-white/60">
+              {user.conferences.map((conference) => (
+                <li key={conference.id} className="flex flex-col gap-2 p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <h5 className="font-medium">{conference.title}</h5>
+                      {conference.description && (
+                        <p className="text-sm text-muted-foreground mt-1">{conference.description}</p>
+                      )}
+                    </div>
                     {conference.timeSlot ? (
-                      <div className="mt-2 text-sm">
-                        <Badge variant="outline">{conference.timeSlot.title}</Badge>
-                        <p className="text-xs text-gray-500 mt-1">
-                          {new Date(conference.timeSlot.startTime).toLocaleString("fr-FR")} -{" "}
-                          {new Date(conference.timeSlot.endTime).toLocaleString("fr-FR")}
-                        </p>
-                      </div>
+                      <Badge variant="outline" className="shrink-0">{conference.timeSlot.title}</Badge>
                     ) : (
-                      <Badge variant="secondary" className="mt-2">
-                        En attente d&apos;attribution de créneau
-                      </Badge>
+                      <Badge variant="secondary" className="shrink-0">Créneau à attribuer</Badge>
                     )}
-
-                    {!locked && <div className="flex items-center gap-2 mt-3">
+                  </div>
+                  {conference.timeSlot && (
+                    <p className="text-xs text-muted-foreground">
+                      {new Date(conference.timeSlot.startTime).toLocaleString("fr-FR")} – {new Date(conference.timeSlot.endTime).toLocaleString("fr-FR")}
+                    </p>
+                  )}
+                  {!locked && (
+                    <div className="flex items-center gap-2">
                       <Dialog
                         open={editingConferenceId === conference.id}
                         onOpenChange={(open) => setEditingConferenceId(open ? conference.id : null)}
@@ -141,14 +136,14 @@ export function ConferencesSection({ user }: ConferencesSectionProps) {
                         onDeleted={() => setEditingConferenceId(null)}
                         label="Supprimer"
                       />
-                    </div>}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-      </CardContent>
-    </Card>
+                    </div>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+    </section>
   )
 }

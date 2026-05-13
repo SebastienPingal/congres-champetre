@@ -4,8 +4,10 @@ Components for meal registration and payment validation.
 
 | File | Component | Purpose |
 |---|---|---|
-| `meals-section.tsx` | `MealsSection` | List of meal slots with PRESENT/ABSENT toggles. Read-only once registrations close. |
-| `payment-section.tsx` | `PaymentSection` | Dashboard validation panel: total breakdown, deadline countdown, Stripe "Payer maintenant" + "Payer plus tard". |
+| `meals-section.tsx` | `MealsSection` | Flat list of meal slots (ul `divide-y rounded-lg border`) avec toggles PRESENT/ABSENT. Read-only une fois les inscriptions fermées. |
+| `payment-section.tsx` | `PaymentSection` | Bloc plat de validation : breakdown des repas, total, deadline countdown, CTA Stripe « Payer maintenant » + « Payer plus tard ». |
+
+**Layout :** sections plates (pas de `Card`). Statut affiché via badge outline subtil (amber « À compléter » / green « Complet » ou « Validée » / destructive « Inscriptions fermées »).
 
 **Stripe-only:** The cash / bank-transfer (IBAN) UX has been removed from the participant dashboard. All paid participations go through Stripe PaymentIntents. The admin can still flip `willPayInCash` manually from `/admin/users` for on-site cash payments.
 
