@@ -18,21 +18,6 @@ const MONTHS_FR = [
   "juillet", "août", "septembre", "octobre", "novembre", "décembre",
 ]
 
-function toRoman(num: number): string {
-  if (!Number.isFinite(num) || num <= 0) return ""
-  const table: Array<[number, string]> = [
-    [1000, "M"], [900, "CM"], [500, "D"], [400, "CD"],
-    [100, "C"], [90, "XC"], [50, "L"], [40, "XL"],
-    [10, "X"], [9, "IX"], [5, "V"], [4, "IV"], [1, "I"],
-  ]
-  let out = ""
-  let n = num
-  for (const [v, s] of table) {
-    while (n >= v) { out += s; n -= v }
-  }
-  return out
-}
-
 function formatHM(iso: string) {
   return new Date(iso).toLocaleTimeString("fr-FR", {
     hour: "2-digit", minute: "2-digit", hour12: false,
@@ -127,7 +112,6 @@ function IlluminatedNumeral({ n }: { n: string }) {
 function TitleBlock({
   year, dateOrnament, subtitle,
 }: { year: number; dateOrnament: string; subtitle: string }) {
-  const yearRoman = toRoman(year)
   return (
     <div className="text-center mb-8">
       <div
@@ -137,7 +121,7 @@ function TitleBlock({
           fontSize: 11, letterSpacing: "0.34em", color: "var(--ink-3)",
         }}
       >
-        Le livret du congrès — édition&nbsp;{yearRoman}
+        Édition&nbsp;{year}
       </div>
       <h1
         style={{
@@ -246,9 +230,9 @@ function AlertParchemin({
                 fontStyle: "italic", fontSize: 17, fontWeight: 500,
               }}
             >
-              Le rideau est tombé —
+              Les inscriptions sont closes —
             </span>{" "}
-            les inscriptions sont closes et votre écot n&apos;a pas été réglé.
+            votre écot n&apos;a pas été réglé.
           </div>
         </div>
       )
@@ -298,7 +282,7 @@ function AlertParchemin({
             fontStyle: "italic", fontSize: 17, fontWeight: 500,
           }}
         >
-          Avant de lever le rideau,
+          Pour valider votre inscription,
         </span>{" "}
         {actions.map((a, i) => (
           <span key={a.key}>
@@ -331,11 +315,10 @@ function AlertParchemin({
 // ── Scene entry ──────────────────────────────────────────────────────
 
 function SceneEntry({
-  index, session, isLast,
-}: { index: string; session: TimeSlot; isLast: boolean }) {
+  session, isLast,
+}: { session: TimeSlot; isLast: boolean }) {
   const isMeal = session.kind === "MEAL"
   const isTalk = session.kind === "CONFERENCE"
-  const label = isMeal ? "Intermède" : isTalk ? "Scène" : "Tableau"
   const accent =
     isMeal ? "var(--meal)" : isTalk ? "var(--talk)" : "var(--ink-3)"
   const title = isTalk && session.conference ? session.conference.title : session.title
@@ -354,20 +337,10 @@ function SceneEntry({
     >
       <div className="text-right">
         <div
-          className="uppercase"
-          style={{
-            fontFamily: "var(--font-serif), serif",
-            fontStyle: "italic", fontSize: 12.5,
-            color: accent, letterSpacing: "0.1em", fontWeight: 500,
-          }}
-        >
-          {label} {index}
-        </div>
-        <div
           style={{
             fontFamily: "var(--font-display), 'Newsreader', serif",
             fontSize: 34, fontWeight: 500, lineHeight: 1,
-            marginTop: 6, color: "var(--ink)",
+            color: "var(--ink)",
             fontFeatureSettings: "'lnum'",
           }}
         >
@@ -419,7 +392,7 @@ function SceneEntry({
                   color: "var(--ink-2)", marginTop: 10,
                 }}
               >
-                conté par{" "}
+                par{" "}
                 <span style={{ fontStyle: "normal", fontWeight: 600, color: "var(--ink)" }}>
                   {speaker}
                 </span>
@@ -446,15 +419,14 @@ function SceneEntry({
 // ── Act (chapter) ────────────────────────────────────────────────────
 
 function Act({
-  actRoman, day, year,
-}: { actRoman: string; day: { sessions: TimeSlot[] }; year: number }) {
+  dayNumber, day, year,
+}: { dayNumber: number; day: { sessions: TimeSlot[] }; year: number }) {
   const first = day.sessions[0]
   const date = new Date(first.startTime)
   const weekday = date.toLocaleDateString("fr-FR", { weekday: "long" })
   const weekdayCap = weekday.charAt(0).toUpperCase() + weekday.slice(1)
   const dayNum = String(date.getDate()).padStart(2, "0")
   const month = MONTHS_FR[date.getMonth()]
-  const yearRoman = toRoman(year)
 
   return (
     <section className="flex-1 min-w-0 px-2">
@@ -469,12 +441,12 @@ function Act({
           }}
         >
           <span style={{ flex: 1, maxWidth: 80, height: 1, background: "var(--line-2)" }} />
-          Acte&nbsp;{actRoman}
+          Jour&nbsp;{dayNumber}
           <span style={{ flex: 1, maxWidth: 80, height: 1, background: "var(--line-2)" }} />
         </div>
 
         <div className="flex items-center justify-center mt-4" style={{ gap: 22 }}>
-          <IlluminatedNumeral n={actRoman} />
+          <IlluminatedNumeral n={String(dayNumber)} />
           <div className="text-left">
             <div
               style={{
@@ -492,7 +464,7 @@ function Act({
                 color: "var(--ink-2)", fontWeight: 400, marginTop: 4,
               }}
             >
-              {dayNum} {month} {yearRoman}
+              {dayNum} {month} {year}
             </div>
           </div>
         </div>
@@ -511,7 +483,6 @@ function Act({
         {day.sessions.map((s, i) => (
           <SceneEntry
             key={s.id}
-            index={String(i + 1).padStart(2, "0")}
             session={s}
             isLast={i === day.sessions.length - 1}
           />
@@ -521,9 +492,9 @@ function Act({
   )
 }
 
-// ── Dramatis Personæ ─────────────────────────────────────────────────
+// ── Speakers section ─────────────────────────────────────────────────
 
-function DramatisPersonae({ slots }: { slots: TimeSlot[] }) {
+function SpeakersList({ slots }: { slots: TimeSlot[] }) {
   const speakers = slots
     .filter((s) => s.kind === "CONFERENCE" && s.conference)
     .map((s) => ({
@@ -540,24 +511,14 @@ function DramatisPersonae({ slots }: { slots: TimeSlot[] }) {
       style={{ borderTop: "1px solid var(--line)" }}
     >
       <div className="text-center mb-6">
-        <div
-          className="uppercase mb-1.5"
-          style={{
-            fontFamily: "var(--font-mono), monospace",
-            fontSize: 11, letterSpacing: "0.24em",
-            color: "var(--ink-3)",
-          }}
-        >
-          Distribution
-        </div>
         <h2
           style={{
             fontFamily: "var(--font-display), 'Newsreader', serif",
-            fontSize: 34, fontWeight: 600, fontStyle: "italic",
+            fontSize: 34, fontWeight: 600,
             margin: 0, letterSpacing: "-0.02em",
           }}
         >
-          Dramatis Personæ
+          Intervenants
         </h2>
       </div>
       <div
@@ -592,7 +553,7 @@ function DramatisPersonae({ slots }: { slots: TimeSlot[] }) {
                 color: "var(--ink-2)", maxWidth: "60%",
               }}
             >
-              dans «&nbsp;{s.title}&nbsp;»
+              {s.title}
             </span>
           </div>
         ))}
@@ -620,17 +581,13 @@ export function ProgramSection({ user, meals, onNavigate }: ProgramSectionProps)
       ? new Date(days[days.length - 1].sessions[0].startTime)
       : first
     const month = MONTHS_FR[first.getMonth()].toUpperCase()
-    const d1 = toRoman(first.getDate())
-    const d2 = toRoman(last.getDate())
-    const yr = toRoman(first.getFullYear())
+    const d1 = first.getDate()
+    const d2 = last.getDate()
+    const yr = first.getFullYear()
     return days.length > 1 ? `${d1} — ${d2} ${month} ${yr}` : `${d1} ${month} ${yr}`
   }, [days])
 
-  const subtitle = useMemo(() => {
-    if (days.length === 2) return "en deux actes, à Moret-Loing-et-Orvanne"
-    if (days.length === 1) return "en un acte, à Moret-Loing-et-Orvanne"
-    return "à Moret-Loing-et-Orvanne"
-  }, [days.length])
+  const subtitle = "à Moret-Loing-et-Orvanne"
 
   const location = "4 allée des tertres, 77250 Moret-Loing-et-Orvanne"
   const count = user.edition.participantCount
@@ -677,7 +634,7 @@ export function ProgramSection({ user, meals, onNavigate }: ProgramSectionProps)
           </p>
         ) : days.length === 1 ? (
           <div className="mx-auto" style={{ maxWidth: 760 }}>
-            <Act actRoman="I" day={days[0]} year={year} />
+            <Act dayNumber={1} day={days[0]} year={year} />
           </div>
         ) : (
           <>
@@ -687,7 +644,7 @@ export function ProgramSection({ user, meals, onNavigate }: ProgramSectionProps)
                    gridTemplateColumns: "1fr 1px 1fr",
                    gap: 48,
                  }}>
-              <Act actRoman="I" day={days[0]} year={year} />
+              <Act dayNumber={1} day={days[0]} year={year} />
               <div
                 className="self-stretch"
                 style={{
@@ -696,21 +653,21 @@ export function ProgramSection({ user, meals, onNavigate }: ProgramSectionProps)
                     "linear-gradient(to bottom, transparent 0, var(--line-2) 30px, var(--line-2) calc(100% - 30px), transparent 100%)",
                 }}
               />
-              <Act actRoman="II" day={days[1]} year={year} />
+              <Act dayNumber={2} day={days[1]} year={year} />
             </div>
             <div className="flex xl:hidden flex-col mx-auto" style={{ maxWidth: 760, gap: 64 }}>
-              <Act actRoman="I" day={days[0]} year={year} />
+              <Act dayNumber={1} day={days[0]} year={year} />
               <Ornament lineWidth={120}>
                 <Fleuron size={11} />
                 <Fleuron size={11} color="var(--talk)" />
                 <Fleuron size={11} />
               </Ornament>
-              <Act actRoman="II" day={days[1]} year={year} />
+              <Act dayNumber={2} day={days[1]} year={year} />
             </div>
           </>
         )}
 
-        {days.length > 0 && <DramatisPersonae slots={timeSlots} />}
+        {days.length > 0 && <SpeakersList slots={timeSlots} />}
 
         <div className="mt-12" style={{ color: "var(--line-2)" }}>
           <Ornament lineWidth={100}>
@@ -729,7 +686,7 @@ export function ProgramSection({ user, meals, onNavigate }: ProgramSectionProps)
             color: "var(--ink-3)",
           }}
         >
-          — Fin du programme. Que les rideaux s&apos;ouvrent.&nbsp;—
+          Fin du programme.
         </div>
         <div
           className="flex justify-between mt-9 uppercase"
@@ -739,9 +696,8 @@ export function ProgramSection({ user, meals, onNavigate }: ProgramSectionProps)
             letterSpacing: "0.14em",
           }}
         >
-          <span>Congrès Champêtre · {toRoman(year)}</span>
+          <span>Congrès Champêtre · {year}</span>
           <span>Contes &amp; Légendes</span>
-          <span>p. I</span>
         </div>
       </div>
     </div>

@@ -73,8 +73,8 @@
   --talk-soft:    #ece5fb;
   --meal:         #c98a1a;
   --meal-soft:    #fbeccb;
-  --green:        #2b8a5b;
-  --green-soft:   #dbeede;
+  --green:        #16a34a;
+  --green-soft:   #dcfce7;
   --warn:         #a37800;
   --warn-bg:      #fff6d6;
   --warn-border:  #ebd58a;
@@ -156,7 +156,7 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-serif;
   }
 }
 

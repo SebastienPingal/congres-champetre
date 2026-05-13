@@ -23,11 +23,11 @@ export function Navbar() {
   if (!session) return null
 
   return (
-    <nav className="border-b bg-white/50 backdrop-blur-md sticky top-0 z-50">
+    <nav className="border-b bg-card/85 backdrop-blur-md sticky top-0 z-50">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-2">
-            <Link href="/dashboard" className="text-xl font-bold text-green-800">
+            <Link href="/dashboard" className="text-xl font-bold text-primary">
               Congrès Champêtre
             </Link>
             {editionName && (
@@ -94,7 +94,7 @@ export function Navbar() {
                 <div className="flex h-full flex-col justify-between">
                   <div className="flex flex-col gap-6">
                     <div className="flex items-center gap-2">
-                      <Link href="/dashboard" className="text-lg font-semibold text-green-800">
+                      <Link href="/dashboard" className="text-lg font-semibold text-primary">
                         Congrès Champêtre
                       </Link>
                       {editionName && (
