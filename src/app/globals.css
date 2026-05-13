@@ -121,6 +121,26 @@
   }
 }
 
+.grimoire {
+  --g-bg: #ece6d6;
+  --g-paper: #faf6ea;
+  --g-ink: #1c1b18;
+  --g-ink-2: #4a4842;
+  --g-ink-3: #8a8579;
+  --g-line: #e0d8c2;
+  --g-line-2: #cabf9f;
+  --g-talk: #6a4cb8;
+  --g-talk-soft: #ece5fb;
+  --g-meal: #c98a1a;
+  --g-meal-soft: #fbeccb;
+  --g-warn: #a37800;
+  --g-warn-bg: #fff6d6;
+  --g-warn-border: #ebd58a;
+  --g-warn-icon-bg: #f2d784;
+  background: var(--g-paper);
+  color: var(--g-ink);
+}
+
 @layer utilities {
   @keyframes border-rotate {
     0% {

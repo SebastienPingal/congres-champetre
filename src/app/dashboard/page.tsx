@@ -119,25 +119,31 @@ export default function Dashboard() {
         </Sidebar>
 
         <SidebarInset className="bg-transparent">
-          <div className="container mx-auto px-4 py-6 lg:py-8 flex flex-col gap-6">
-            <div className="flex items-center gap-3">
-              <SidebarTrigger className="md:hidden" />
-              <div className="flex items-center gap-2 text-2xl lg:text-3xl font-bold text-gray-900">
-                <CurrentIcon className="h-6 w-6 lg:h-7 lg:w-7 text-green-700" />
-                <h1>{currentItem.label}</h1>
-              </div>
+          {active === "program" ? (
+            <div className="container mx-auto px-4 py-6 lg:py-8 flex flex-col gap-4">
+              <SidebarTrigger className="md:hidden self-start" />
+              <ProgramSection user={user} meals={meals} onNavigate={setActive} />
             </div>
+          ) : (
+            <div className="container mx-auto px-4 py-6 lg:py-8 flex flex-col gap-6">
+              <div className="flex items-center gap-3">
+                <SidebarTrigger className="md:hidden" />
+                <div className="flex items-center gap-2 text-2xl lg:text-3xl font-bold text-gray-900">
+                  <CurrentIcon className="h-6 w-6 lg:h-7 lg:w-7 text-green-700" />
+                  <h1>{currentItem.label}</h1>
+                </div>
+              </div>
 
-            <EditionInfoCard edition={user.edition} />
+              <EditionInfoCard edition={user.edition} />
 
-            <AlertBanner user={user} meals={meals} />
+              <AlertBanner user={user} meals={meals} />
 
-            {active === "presence" && <PresenceSection user={user} />}
-            {active === "meals" && showMeals && <MealsSection user={user} />}
-            {active === "payment" && showPayment && <PaymentSection user={user} />}
-            {active === "conferences" && showConferences && <ConferencesSection user={user} />}
-            {active === "program" && <ProgramSection />}
-          </div>
+              {active === "presence" && <PresenceSection user={user} />}
+              {active === "meals" && showMeals && <MealsSection user={user} />}
+              {active === "payment" && showPayment && <PaymentSection user={user} />}
+              {active === "conferences" && showConferences && <ConferencesSection user={user} />}
+            </div>
+          )}
         </SidebarInset>
       </SidebarProvider>
     </div>

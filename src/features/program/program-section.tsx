@@ -1,109 +1,749 @@
 "use client"
 
 import { useMemo } from "react"
-import { cn } from "@/lib/utils"
+import { AlertTriangle, Lock, MapPin, Users } from "lucide-react"
 import { useTimeSlots } from "@/hooks/use-time-slots"
-import type { TimeSlot } from "@/types"
+import type { MealSlot, TimeSlot, UserProfile } from "@/types"
 
-function formatHourMinute(dateString: string) {
-  return new Date(dateString).toLocaleTimeString("fr-FR", {
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
+type NavTarget = "presence" | "meals" | "payment" | "conferences"
+
+interface ProgramSectionProps {
+  user: UserProfile
+  meals: MealSlot[]
+  onNavigate?: (target: NavTarget) => void
+}
+
+const MONTHS_FR = [
+  "janvier", "février", "mars", "avril", "mai", "juin",
+  "juillet", "août", "septembre", "octobre", "novembre", "décembre",
+]
+
+function toRoman(num: number): string {
+  if (!Number.isFinite(num) || num <= 0) return ""
+  const table: Array<[number, string]> = [
+    [1000, "M"], [900, "CM"], [500, "D"], [400, "CD"],
+    [100, "C"], [90, "XC"], [50, "L"], [40, "XL"],
+    [10, "X"], [9, "IX"], [5, "V"], [4, "IV"], [1, "I"],
+  ]
+  let out = ""
+  let n = num
+  for (const [v, s] of table) {
+    while (n >= v) { out += s; n -= v }
+  }
+  return out
+}
+
+function formatHM(iso: string) {
+  return new Date(iso).toLocaleTimeString("fr-FR", {
+    hour: "2-digit", minute: "2-digit", hour12: false,
   })
 }
 
-function getDayKey(dateString: string) {
-  const d = new Date(dateString)
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
+function durationMin(startIso: string, endIso: string) {
+  return Math.round((new Date(endIso).getTime() - new Date(startIso).getTime()) / 60000)
 }
 
-function getDayLabel(dateString: string) {
-  return new Date(dateString).toLocaleDateString("fr-FR", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-  })
+function dayKey(iso: string) {
+  const d = new Date(iso)
+  return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`
 }
 
-const kindAccent: Record<TimeSlot["kind"], string> = {
-  CONFERENCE: "bg-violet-400",
-  MEAL: "bg-amber-400",
-  BREAK: "bg-sky-400",
-  OTHER: "bg-gray-300",
+function groupByDay(slots: TimeSlot[]) {
+  const map = new Map<string, TimeSlot[]>()
+  for (const s of slots) {
+    const k = dayKey(s.startTime)
+    if (!map.has(k)) map.set(k, [])
+    map.get(k)!.push(s)
+  }
+  return [...map.entries()]
+    .map(([k, arr]) => ({
+      key: k,
+      sessions: arr.sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime()),
+    }))
+    .sort((a, b) =>
+      new Date(a.sessions[0].startTime).getTime() - new Date(b.sessions[0].startTime).getTime(),
+    )
 }
 
-export function ProgramSection({ className }: { className?: string }) {
-  const { data: timeSlots = [], isLoading, error } = useTimeSlots()
+// ── Atoms ────────────────────────────────────────────────────────────
 
-  const byDay = useMemo(() => {
-    const groups = new Map<string, TimeSlot[]>()
-    for (const slot of timeSlots) {
-      const key = getDayKey(slot.startTime)
-      if (!groups.has(key)) groups.set(key, [])
-      groups.get(key)!.push(slot)
-    }
-    const keys = [...groups.keys()].sort().slice(0, 2)
-    return keys.map((key) => {
-      const slots = groups.get(key)!.sort(
-        (a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime()
+function Fleuron({ size = 10, color }: { size?: number; color?: string }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 10 10" fill={color ?? "currentColor"} aria-hidden="true">
+      <path d="M5 0 L6 4 L10 5 L6 6 L5 10 L4 6 L0 5 L4 4 Z" />
+    </svg>
+  )
+}
+
+function Ornament({
+  children, lineWidth = 80, color,
+}: { children: React.ReactNode; lineWidth?: number; color?: string }) {
+  return (
+    <div className="flex items-center justify-center gap-3.5" style={{ color: color ?? "var(--g-line-2)" }}>
+      <span style={{ height: 1, width: lineWidth, background: "currentColor" }} />
+      {children}
+      <span style={{ height: 1, width: lineWidth, background: "currentColor" }} />
+    </div>
+  )
+}
+
+function IlluminatedNumeral({ n }: { n: string }) {
+  const accent = "var(--g-ink)"
+  return (
+    <div
+      className="relative flex items-center justify-center shrink-0"
+      style={{ width: 74, height: 74, border: `1.5px solid ${accent}` }}
+    >
+      {([
+        ["top", "left"], ["top", "right"],
+        ["bottom", "left"], ["bottom", "right"],
+      ] as const).map(([v, h], i) => (
+        <span
+          key={i}
+          style={{
+            position: "absolute",
+            [v]: -1, [h]: -1,
+            width: 8, height: 8,
+            [`border${v[0].toUpperCase() + v.slice(1)}`]: `1.5px solid ${accent}`,
+            [`border${h[0].toUpperCase() + h.slice(1)}`]: `1.5px solid ${accent}`,
+          } as React.CSSProperties}
+        />
+      ))}
+      <span
+        style={{
+          fontFamily: "var(--font-cormorant), 'Newsreader', serif",
+          fontSize: 54, fontWeight: 600, fontStyle: "italic", lineHeight: 1,
+          color: accent, transform: "translateY(2px)",
+        }}
+      >
+        {n}
+      </span>
+    </div>
+  )
+}
+
+// ── Title block + meta ───────────────────────────────────────────────
+
+function TitleBlock({
+  year, dateOrnament, subtitle,
+}: { year: number; dateOrnament: string; subtitle: string }) {
+  const yearRoman = toRoman(year)
+  return (
+    <div className="text-center mb-8">
+      <div
+        className="uppercase mb-4"
+        style={{
+          fontFamily: "var(--font-jetbrains), monospace",
+          fontSize: 11, letterSpacing: "0.34em", color: "var(--g-ink-3)",
+        }}
+      >
+        Le livret du congrès — édition&nbsp;{yearRoman}
+      </div>
+      <h1
+        style={{
+          fontFamily: "var(--font-cormorant), 'Newsreader', serif",
+          fontSize: "clamp(64px, 9vw, 108px)",
+          fontWeight: 500,
+          letterSpacing: "-0.04em",
+          lineHeight: 1,
+          margin: 0,
+        }}
+      >
+        Programme
+      </h1>
+      <div
+        className="mt-3.5"
+        style={{
+          fontFamily: "var(--font-newsreader), serif",
+          fontStyle: "italic", fontSize: 21,
+          color: "var(--g-ink-2)", fontWeight: 400,
+        }}
+      >
+        {subtitle}
+      </div>
+      <div className="mt-4">
+        <Ornament lineWidth={70}>
+          <Fleuron size={9} />
+          <span
+            className="uppercase"
+            style={{
+              fontFamily: "var(--font-jetbrains), monospace",
+              fontSize: 11, letterSpacing: "0.16em",
+              color: "var(--g-ink-3)",
+            }}
+          >
+            {dateOrnament}
+          </span>
+          <Fleuron size={9} />
+        </Ornament>
+      </div>
+    </div>
+  )
+}
+
+function MetaLine({ location, participants }: { location: string; participants: string }) {
+  return (
+    <div
+      className="flex justify-center flex-wrap gap-x-7 gap-y-2 mb-6"
+      style={{ fontSize: 13.5, color: "var(--g-ink-2)" }}
+    >
+      <span className="inline-flex items-center gap-2">
+        <MapPin size={14} style={{ color: "var(--g-ink-3)" }} aria-hidden="true" />
+        {location}
+      </span>
+      <span style={{ color: "var(--g-line-2)" }}>·</span>
+      <span className="inline-flex items-center gap-2">
+        <Users size={14} style={{ color: "var(--g-ink-3)" }} aria-hidden="true" />
+        {participants}
+      </span>
+    </div>
+  )
+}
+
+// ── Parchment alert ──────────────────────────────────────────────────
+
+function AlertParchemin({
+  user, meals, onNavigate,
+}: {
+  user: UserProfile
+  meals: MealSlot[]
+  onNavigate?: (target: NavTarget) => void
+}) {
+  const locked = user.edition.isRegistrationClosed
+  const totalToPay = meals
+    .filter((m) => m.status === "PRESENT" && m.price != null)
+    .reduce((s, m) => s + (m.price ?? 0), 0)
+
+  const needsPresence = !locked && !user.isAttending
+  const needsMeals =
+    !locked && user.isAttending && meals.length > 0 && meals.some((m) => m.status === null)
+  const needsPayment = user.isAttending && totalToPay > 0 && !user.hasPaid
+  const needsConference =
+    !locked && user.isAttending && user.wantsToSpeak && user.conferences.length === 0
+
+  if (locked) {
+    if (user.isAttending && totalToPay > 0 && !user.hasPaid) {
+      return (
+        <div
+          className="mx-auto mb-11 flex items-center gap-4 rounded-2xl px-5 py-4"
+          style={{
+            maxWidth: 780,
+            background: "#fde2dd",
+            border: "1px solid #d34a3b",
+            color: "#7a1f15",
+          }}
+        >
+          <div
+            className="flex items-center justify-center rounded-full shrink-0"
+            style={{ width: 38, height: 38, background: "#f3b9b1", color: "#7a1f15" }}
+          >
+            <Lock size={18} aria-hidden="true" />
+          </div>
+          <div style={{ fontSize: 14.5, lineHeight: 1.45 }}>
+            <span
+              style={{
+                fontFamily: "var(--font-newsreader), serif",
+                fontStyle: "italic", fontSize: 17, fontWeight: 500,
+              }}
+            >
+              Le rideau est tombé —
+            </span>{" "}
+            les inscriptions sont closes et votre écot n&apos;a pas été réglé.
+          </div>
+        </div>
       )
-      return { key, label: getDayLabel(slots[0].startTime), slots }
-    })
-  }, [timeSlots])
+    }
+    return null
+  }
 
-  if (isLoading) {
-    return <p className="text-sm text-muted-foreground">Chargement du programme…</p>
+  if (!needsPresence && !needsMeals && !needsPayment && !needsConference) return null
+
+  type Action = { key: string; target: NavTarget; label: React.ReactNode }
+  const actions: Action[] = []
+  if (needsPresence) {
+    actions.push({ key: "presence", target: "presence", label: "confirmez votre présence" })
   }
-  if (error) {
-    return <p className="text-sm text-destructive">Impossible de charger le programme</p>
+  if (needsMeals) {
+    actions.push({ key: "meals", target: "meals", label: "indiquez vos repas" })
   }
-  if (byDay.length === 0) {
-    return <p className="text-sm text-muted-foreground">Aucun créneau publié pour le moment</p>
+  if (needsPayment) {
+    actions.push({
+      key: "payment", target: "payment",
+      label: <>réglez votre écot ({totalToPay}&nbsp;€)</>,
+    })
+  }
+  if (needsConference) {
+    actions.push({ key: "conference", target: "conferences", label: "proposez votre conférence" })
   }
 
   return (
-    <section className={cn("flex flex-col gap-8", className)}>
-      <div className="grid gap-8 md:grid-cols-2">
-        {byDay.map((day) => (
-          <div key={day.key} className="flex flex-col gap-3">
-            <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground capitalize">
-              {day.label}
-            </h3>
-            <ul className="flex flex-col">
-              {day.slots.map((slot, index) => (
-                <li
-                  key={slot.id}
-                  className={cn(
-                    "flex items-start gap-4 py-3",
-                    index !== 0 && "border-t"
-                  )}
-                >
-                  <div className="flex items-center gap-2 shrink-0 w-24">
-                    <span className={cn("h-2 w-2 rounded-full", kindAccent[slot.kind])} aria-hidden="true" />
-                    <span className="text-xs tabular-nums text-muted-foreground">
-                      {formatHourMinute(slot.startTime)}
-                    </span>
-                  </div>
-                  <div className="flex grow flex-col min-w-0">
-                    {slot.kind === "CONFERENCE" && slot.conference ? (
-                      <>
-                        <p className="font-medium">{slot.conference.title}</p>
-                        <p className="text-xs text-muted-foreground">{slot.conference.speaker.name}</p>
-                      </>
-                    ) : (
-                      <p className="text-sm">{slot.title}</p>
-                    )}
-                  </div>
-                  <span className="text-xs tabular-nums text-muted-foreground shrink-0">
-                    {formatHourMinute(slot.endTime)}
-                  </span>
-                </li>
-              ))}
-            </ul>
+    <div
+      className="mx-auto mb-11 flex items-center gap-4 rounded-2xl px-5 py-4"
+      style={{
+        maxWidth: 780,
+        background: "var(--g-warn-bg)",
+        border: "1px solid var(--g-warn-border)",
+      }}
+    >
+      <div
+        className="flex items-center justify-center rounded-full shrink-0"
+        style={{ width: 38, height: 38, background: "var(--g-warn-icon-bg)", color: "var(--g-warn)" }}
+      >
+        <AlertTriangle size={20} aria-hidden="true" />
+      </div>
+      <div style={{ fontSize: 14.5, color: "var(--g-warn)", lineHeight: 1.5 }}>
+        <span
+          style={{
+            fontFamily: "var(--font-newsreader), serif",
+            fontStyle: "italic", fontSize: 17, fontWeight: 500,
+          }}
+        >
+          Avant de lever le rideau,
+        </span>{" "}
+        {actions.map((a, i) => (
+          <span key={a.key}>
+            {i > 0 && (i === actions.length - 1 ? " et " : ", ")}
+            <button
+              type="button"
+              onClick={() => onNavigate?.(a.target)}
+              style={{
+                fontWeight: 600,
+                textDecoration: "underline",
+                textUnderlineOffset: 3,
+                color: "var(--g-warn)",
+                background: "transparent",
+                border: 0,
+                padding: 0,
+                cursor: "pointer",
+                font: "inherit",
+              }}
+            >
+              {a.label}
+            </button>
+          </span>
+        ))}
+        .
+      </div>
+    </div>
+  )
+}
+
+// ── Scene entry ──────────────────────────────────────────────────────
+
+function SceneEntry({
+  index, session, isLast,
+}: { index: string; session: TimeSlot; isLast: boolean }) {
+  const isMeal = session.kind === "MEAL"
+  const isTalk = session.kind === "CONFERENCE"
+  const label = isMeal ? "Intermède" : isTalk ? "Scène" : "Tableau"
+  const accent =
+    isMeal ? "var(--g-meal)" : isTalk ? "var(--g-talk)" : "var(--g-ink-3)"
+  const title = isTalk && session.conference ? session.conference.title : session.title
+  const speaker = isTalk && session.conference ? session.conference.speaker.name : null
+
+  return (
+    <div
+      className="grid"
+      style={{
+        gridTemplateColumns: "96px 1fr",
+        gap: 24,
+        paddingBottom: isLast ? 0 : 22,
+        marginBottom: isLast ? 0 : 22,
+        borderBottom: isLast ? "none" : "1px dashed var(--g-line-2)",
+      }}
+    >
+      <div className="text-right">
+        <div
+          className="uppercase"
+          style={{
+            fontFamily: "var(--font-newsreader), serif",
+            fontStyle: "italic", fontSize: 12.5,
+            color: accent, letterSpacing: "0.1em", fontWeight: 500,
+          }}
+        >
+          {label} {index}
+        </div>
+        <div
+          style={{
+            fontFamily: "var(--font-cormorant), 'Newsreader', serif",
+            fontSize: 34, fontWeight: 500, lineHeight: 1,
+            marginTop: 6, color: "var(--g-ink)",
+            fontFeatureSettings: "'lnum'",
+          }}
+        >
+          {formatHM(session.startTime)}
+        </div>
+        <div
+          style={{
+            fontFamily: "var(--font-jetbrains), monospace",
+            fontSize: 10, color: "var(--g-ink-3)",
+            marginTop: 6, letterSpacing: "0.06em",
+          }}
+        >
+          → {formatHM(session.endTime)} · {durationMin(session.startTime, session.endTime)}&nbsp;min
+        </div>
+      </div>
+      <div
+        className="relative"
+        style={{
+          paddingTop: 2,
+          borderLeft: "1px solid var(--g-line)",
+          paddingLeft: 24,
+        }}
+      >
+        <span
+          aria-hidden="true"
+          style={{
+            position: "absolute", left: -5, top: 6,
+            width: 9, height: 9, borderRadius: "50%",
+            background: accent, border: "2px solid var(--g-paper)",
+          }}
+        />
+        {isTalk ? (
+          <>
+            <div
+              style={{
+                fontFamily: "var(--font-newsreader), serif",
+                fontSize: 23, fontWeight: 600,
+                color: "var(--g-ink)", lineHeight: 1.22,
+                letterSpacing: "-0.015em",
+              }}
+            >
+              «&nbsp;{title}&nbsp;»
+            </div>
+            {speaker && (
+              <div
+                style={{
+                  fontFamily: "var(--font-newsreader), serif",
+                  fontSize: 14, fontStyle: "italic",
+                  color: "var(--g-ink-2)", marginTop: 10,
+                }}
+              >
+                conté par{" "}
+                <span style={{ fontStyle: "normal", fontWeight: 600, color: "var(--g-ink)" }}>
+                  {speaker}
+                </span>
+              </div>
+            )}
+          </>
+        ) : (
+          <div
+            style={{
+              fontFamily: "var(--font-newsreader), serif",
+              fontSize: 23, fontStyle: "italic",
+              fontWeight: 500, color: "var(--g-ink)",
+              lineHeight: 1.2, letterSpacing: "-0.01em",
+            }}
+          >
+            {title}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ── Act (chapter) ────────────────────────────────────────────────────
+
+function Act({
+  actRoman, day, year,
+}: { actRoman: string; day: { sessions: TimeSlot[] }; year: number }) {
+  const first = day.sessions[0]
+  const date = new Date(first.startTime)
+  const weekday = date.toLocaleDateString("fr-FR", { weekday: "long" })
+  const weekdayCap = weekday.charAt(0).toUpperCase() + weekday.slice(1)
+  const dayNum = String(date.getDate()).padStart(2, "0")
+  const month = MONTHS_FR[date.getMonth()]
+  const yearRoman = toRoman(year)
+
+  return (
+    <section className="flex-1 min-w-0 px-2">
+      <div className="text-center mb-7">
+        <div
+          className="flex items-center justify-center uppercase"
+          style={{
+            gap: 16,
+            fontFamily: "var(--font-newsreader), serif",
+            fontStyle: "italic", fontSize: 14,
+            color: "var(--g-ink-3)", letterSpacing: "0.18em",
+          }}
+        >
+          <span style={{ flex: 1, maxWidth: 80, height: 1, background: "var(--g-line-2)" }} />
+          Acte&nbsp;{actRoman}
+          <span style={{ flex: 1, maxWidth: 80, height: 1, background: "var(--g-line-2)" }} />
+        </div>
+
+        <div className="flex items-center justify-center mt-4" style={{ gap: 22 }}>
+          <IlluminatedNumeral n={actRoman} />
+          <div className="text-left">
+            <div
+              style={{
+                fontFamily: "var(--font-cormorant), 'Newsreader', serif",
+                fontSize: 50, fontWeight: 600,
+                lineHeight: 1, letterSpacing: "-0.025em",
+              }}
+            >
+              {weekdayCap}
+            </div>
+            <div
+              style={{
+                fontFamily: "var(--font-newsreader), serif",
+                fontStyle: "italic", fontSize: 20,
+                color: "var(--g-ink-2)", fontWeight: 400, marginTop: 4,
+              }}
+            >
+              {dayNum} {month} {yearRoman}
+            </div>
+          </div>
+        </div>
+
+        <div
+          className="flex items-center justify-center mt-4"
+          style={{ gap: 10, color: "var(--g-line-2)" }}
+        >
+          <Fleuron />
+          <Fleuron color="var(--g-talk)" />
+          <Fleuron />
+        </div>
+      </div>
+
+      <div>
+        {day.sessions.map((s, i) => (
+          <SceneEntry
+            key={s.id}
+            index={String(i + 1).padStart(2, "0")}
+            session={s}
+            isLast={i === day.sessions.length - 1}
+          />
+        ))}
+      </div>
+    </section>
+  )
+}
+
+// ── Dramatis Personæ ─────────────────────────────────────────────────
+
+function DramatisPersonae({ slots }: { slots: TimeSlot[] }) {
+  const speakers = slots
+    .filter((s) => s.kind === "CONFERENCE" && s.conference)
+    .map((s) => ({
+      id: s.id,
+      name: s.conference!.speaker.name,
+      title: s.conference!.title,
+    }))
+
+  if (speakers.length === 0) return null
+
+  return (
+    <section
+      className="mt-12 pt-8"
+      style={{ borderTop: "1px solid var(--g-line)" }}
+    >
+      <div className="text-center mb-6">
+        <div
+          className="uppercase mb-1.5"
+          style={{
+            fontFamily: "var(--font-jetbrains), monospace",
+            fontSize: 11, letterSpacing: "0.24em",
+            color: "var(--g-ink-3)",
+          }}
+        >
+          Distribution
+        </div>
+        <h2
+          style={{
+            fontFamily: "var(--font-cormorant), 'Newsreader', serif",
+            fontSize: 34, fontWeight: 600, fontStyle: "italic",
+            margin: 0, letterSpacing: "-0.02em",
+          }}
+        >
+          Dramatis Personæ
+        </h2>
+      </div>
+      <div
+        className="grid mx-auto"
+        style={{
+          gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+          gap: "14px 56px",
+          maxWidth: 880,
+        }}
+      >
+        {speakers.map((s) => (
+          <div
+            key={s.id}
+            className="flex items-baseline gap-3.5 pb-2.5"
+            style={{ borderBottom: "1px dotted var(--g-line-2)" }}
+          >
+            <span
+              style={{
+                fontFamily: "var(--font-cormorant), 'Newsreader', serif",
+                fontSize: 20, fontWeight: 600,
+                color: "var(--g-ink)", letterSpacing: "-0.01em",
+              }}
+            >
+              {s.name}
+            </span>
+            <span className="flex-1" />
+            <span
+              className="text-right"
+              style={{
+                fontFamily: "var(--font-newsreader), serif",
+                fontStyle: "italic", fontSize: 13.5,
+                color: "var(--g-ink-2)", maxWidth: "60%",
+              }}
+            >
+              dans «&nbsp;{s.title}&nbsp;»
+            </span>
           </div>
         ))}
       </div>
     </section>
+  )
+}
+
+// ── Main ─────────────────────────────────────────────────────────────
+
+export function ProgramSection({ user, meals, onNavigate }: ProgramSectionProps) {
+  const { data: timeSlots = [], isLoading, error } = useTimeSlots()
+
+  const days = useMemo(() => groupByDay(timeSlots).slice(0, 2), [timeSlots])
+  const year = useMemo(() => {
+    if (days[0]) return new Date(days[0].sessions[0].startTime).getFullYear()
+    if (user.edition.startDate) return new Date(user.edition.startDate).getFullYear()
+    return new Date().getFullYear()
+  }, [days, user.edition.startDate])
+
+  const dateOrnament = useMemo(() => {
+    if (days.length === 0) return ""
+    const first = new Date(days[0].sessions[0].startTime)
+    const last = days[days.length - 1]
+      ? new Date(days[days.length - 1].sessions[0].startTime)
+      : first
+    const month = MONTHS_FR[first.getMonth()].toUpperCase()
+    const d1 = toRoman(first.getDate())
+    const d2 = toRoman(last.getDate())
+    const yr = toRoman(first.getFullYear())
+    return days.length > 1 ? `${d1} — ${d2} ${month} ${yr}` : `${d1} ${month} ${yr}`
+  }, [days])
+
+  const subtitle = useMemo(() => {
+    if (days.length === 2) return "en deux actes, à Moret-Loing-et-Orvanne"
+    if (days.length === 1) return "en un acte, à Moret-Loing-et-Orvanne"
+    return "à Moret-Loing-et-Orvanne"
+  }, [days.length])
+
+  const location = "4 allée des tertres, 77250 Moret-Loing-et-Orvanne"
+  const count = user.edition.participantCount
+  const participants = `${count} ${count > 1 ? "participants inscrits" : "participant inscrit"}`
+
+  return (
+    <div className="grimoire rounded-2xl px-6 sm:px-10 lg:px-16 py-12 lg:py-14 relative overflow-hidden">
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background: `
+            radial-gradient(ellipse at 15% 0%, rgba(217,154,43,0.06), transparent 50%),
+            radial-gradient(ellipse at 100% 100%, rgba(106,76,184,0.05), transparent 55%)
+          `,
+        }}
+      />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 opacity-40"
+        style={{
+          backgroundImage:
+            "radial-gradient(circle at 1px 1px, rgba(0,0,0,0.025) 1px, transparent 0)",
+          backgroundSize: "3px 3px",
+        }}
+      />
+
+      <div className="relative mx-auto" style={{ maxWidth: 1180 }}>
+        <TitleBlock year={year} dateOrnament={dateOrnament} subtitle={subtitle} />
+        <MetaLine location={location} participants={participants} />
+        <AlertParchemin user={user} meals={meals} onNavigate={onNavigate} />
+
+        {isLoading ? (
+          <p className="text-center" style={{ color: "var(--g-ink-3)" }}>
+            Chargement du programme…
+          </p>
+        ) : error ? (
+          <p className="text-center" style={{ color: "#d34a3b" }}>
+            Impossible de charger le programme.
+          </p>
+        ) : days.length === 0 ? (
+          <p className="text-center" style={{ color: "var(--g-ink-3)" }}>
+            Aucun créneau publié pour le moment.
+          </p>
+        ) : days.length === 1 ? (
+          <div className="mx-auto" style={{ maxWidth: 760 }}>
+            <Act actRoman="I" day={days[0]} year={year} />
+          </div>
+        ) : (
+          <>
+            {/* ≥ 1180 : grille deux colonnes ; < 1180 : pile verticale */}
+            <div className="hidden xl:grid items-start"
+                 style={{
+                   gridTemplateColumns: "1fr 1px 1fr",
+                   gap: 48,
+                 }}>
+              <Act actRoman="I" day={days[0]} year={year} />
+              <div
+                className="self-stretch"
+                style={{
+                  background: "var(--g-line-2)",
+                  backgroundImage:
+                    "linear-gradient(to bottom, transparent 0, var(--g-line-2) 30px, var(--g-line-2) calc(100% - 30px), transparent 100%)",
+                }}
+              />
+              <Act actRoman="II" day={days[1]} year={year} />
+            </div>
+            <div className="flex xl:hidden flex-col mx-auto" style={{ maxWidth: 760, gap: 64 }}>
+              <Act actRoman="I" day={days[0]} year={year} />
+              <Ornament lineWidth={120}>
+                <Fleuron size={11} />
+                <Fleuron size={11} color="var(--g-talk)" />
+                <Fleuron size={11} />
+              </Ornament>
+              <Act actRoman="II" day={days[1]} year={year} />
+            </div>
+          </>
+        )}
+
+        {days.length > 0 && <DramatisPersonae slots={timeSlots} />}
+
+        <div className="mt-12" style={{ color: "var(--g-line-2)" }}>
+          <Ornament lineWidth={100}>
+            <Fleuron />
+            <Fleuron color="var(--g-talk)" />
+            <Fleuron color="var(--g-meal)" />
+            <Fleuron color="var(--g-talk)" />
+            <Fleuron />
+          </Ornament>
+        </div>
+        <div
+          className="text-center mt-3"
+          style={{
+            fontFamily: "var(--font-newsreader), serif",
+            fontStyle: "italic", fontSize: 15,
+            color: "var(--g-ink-3)",
+          }}
+        >
+          — Fin du programme. Que les rideaux s&apos;ouvrent.&nbsp;—
+        </div>
+        <div
+          className="flex justify-between mt-9 uppercase"
+          style={{
+            fontFamily: "var(--font-jetbrains), monospace",
+            fontSize: 10.5, color: "var(--g-ink-3)",
+            letterSpacing: "0.14em",
+          }}
+        >
+          <span>Congrès Champêtre · {toRoman(year)}</span>
+          <span>Contes &amp; Légendes</span>
+          <span>p. I</span>
+        </div>
+      </div>
+    </div>
   )
 }
