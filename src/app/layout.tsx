@@ -1,17 +1,19 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Cormorant_Garamond, Newsreader, JetBrains_Mono } from "next/font/google";
+import { Manrope, Cormorant_Garamond, Newsreader, JetBrains_Mono } from "next/font/google";
 import { AuthProvider } from "@/components/providers/auth-provider";
 import { QueryProvider } from "@/components/providers/query-provider";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const manrope = Manrope({
+  variable: "--font-manrope",
   subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const jetbrains = JetBrains_Mono({
+  variable: "--font-jetbrains",
   subsets: ["latin"],
+  weight: ["400", "500", "600"],
 });
 
 const cormorant = Cormorant_Garamond({
@@ -28,12 +30,6 @@ const newsreader = Newsreader({
   style: ["normal", "italic"],
 });
 
-const jetbrains = JetBrains_Mono({
-  variable: "--font-jetbrains",
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
-});
-
 export const metadata: Metadata = {
   title: "Congrès Champêtre",
   description: "Le site officiel du Congrès Champêtre",
@@ -47,7 +43,7 @@ export default function RootLayout({
   return (
     <html lang="fr">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${cormorant.variable} ${newsreader.variable} ${jetbrains.variable} antialiased`}
+        className={`${manrope.variable} ${jetbrains.variable} ${cormorant.variable} ${newsreader.variable} antialiased`}
       >
         <AuthProvider>
           <QueryProvider>

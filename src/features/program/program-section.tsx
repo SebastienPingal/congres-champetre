@@ -79,7 +79,7 @@ function Ornament({
   children, lineWidth = 80, color,
 }: { children: React.ReactNode; lineWidth?: number; color?: string }) {
   return (
-    <div className="flex items-center justify-center gap-3.5" style={{ color: color ?? "var(--g-line-2)" }}>
+    <div className="flex items-center justify-center gap-3.5" style={{ color: color ?? "var(--line-2)" }}>
       <span style={{ height: 1, width: lineWidth, background: "currentColor" }} />
       {children}
       <span style={{ height: 1, width: lineWidth, background: "currentColor" }} />
@@ -88,7 +88,7 @@ function Ornament({
 }
 
 function IlluminatedNumeral({ n }: { n: string }) {
-  const accent = "var(--g-ink)"
+  const accent = "var(--ink)"
   return (
     <div
       className="relative flex items-center justify-center shrink-0"
@@ -111,7 +111,7 @@ function IlluminatedNumeral({ n }: { n: string }) {
       ))}
       <span
         style={{
-          fontFamily: "var(--font-cormorant), 'Newsreader', serif",
+          fontFamily: "var(--font-display), 'Newsreader', serif",
           fontSize: 54, fontWeight: 600, fontStyle: "italic", lineHeight: 1,
           color: accent, transform: "translateY(2px)",
         }}
@@ -133,15 +133,15 @@ function TitleBlock({
       <div
         className="uppercase mb-4"
         style={{
-          fontFamily: "var(--font-jetbrains), monospace",
-          fontSize: 11, letterSpacing: "0.34em", color: "var(--g-ink-3)",
+          fontFamily: "var(--font-mono), monospace",
+          fontSize: 11, letterSpacing: "0.34em", color: "var(--ink-3)",
         }}
       >
         Le livret du congrès — édition&nbsp;{yearRoman}
       </div>
       <h1
         style={{
-          fontFamily: "var(--font-cormorant), 'Newsreader', serif",
+          fontFamily: "var(--font-display), 'Newsreader', serif",
           fontSize: "clamp(64px, 9vw, 108px)",
           fontWeight: 500,
           letterSpacing: "-0.04em",
@@ -154,9 +154,9 @@ function TitleBlock({
       <div
         className="mt-3.5"
         style={{
-          fontFamily: "var(--font-newsreader), serif",
+          fontFamily: "var(--font-serif), serif",
           fontStyle: "italic", fontSize: 21,
-          color: "var(--g-ink-2)", fontWeight: 400,
+          color: "var(--ink-2)", fontWeight: 400,
         }}
       >
         {subtitle}
@@ -167,9 +167,9 @@ function TitleBlock({
           <span
             className="uppercase"
             style={{
-              fontFamily: "var(--font-jetbrains), monospace",
+              fontFamily: "var(--font-mono), monospace",
               fontSize: 11, letterSpacing: "0.16em",
-              color: "var(--g-ink-3)",
+              color: "var(--ink-3)",
             }}
           >
             {dateOrnament}
@@ -185,15 +185,15 @@ function MetaLine({ location, participants }: { location: string; participants: 
   return (
     <div
       className="flex justify-center flex-wrap gap-x-7 gap-y-2 mb-6"
-      style={{ fontSize: 13.5, color: "var(--g-ink-2)" }}
+      style={{ fontSize: 13.5, color: "var(--ink-2)" }}
     >
       <span className="inline-flex items-center gap-2">
-        <MapPin size={14} style={{ color: "var(--g-ink-3)" }} aria-hidden="true" />
+        <MapPin size={14} style={{ color: "var(--ink-3)" }} aria-hidden="true" />
         {location}
       </span>
-      <span style={{ color: "var(--g-line-2)" }}>·</span>
+      <span style={{ color: "var(--line-2)" }}>·</span>
       <span className="inline-flex items-center gap-2">
-        <Users size={14} style={{ color: "var(--g-ink-3)" }} aria-hidden="true" />
+        <Users size={14} style={{ color: "var(--ink-3)" }} aria-hidden="true" />
         {participants}
       </span>
     </div>
@@ -242,7 +242,7 @@ function AlertParchemin({
           <div style={{ fontSize: 14.5, lineHeight: 1.45 }}>
             <span
               style={{
-                fontFamily: "var(--font-newsreader), serif",
+                fontFamily: "var(--font-serif), serif",
                 fontStyle: "italic", fontSize: 17, fontWeight: 500,
               }}
             >
@@ -281,20 +281,20 @@ function AlertParchemin({
       className="mx-auto mb-11 flex items-center gap-4 rounded-2xl px-5 py-4"
       style={{
         maxWidth: 780,
-        background: "var(--g-warn-bg)",
-        border: "1px solid var(--g-warn-border)",
+        background: "var(--warn-bg)",
+        border: "1px solid var(--warn-border)",
       }}
     >
       <div
         className="flex items-center justify-center rounded-full shrink-0"
-        style={{ width: 38, height: 38, background: "var(--g-warn-icon-bg)", color: "var(--g-warn)" }}
+        style={{ width: 38, height: 38, background: "var(--warn-icon-bg)", color: "var(--warn)" }}
       >
         <AlertTriangle size={20} aria-hidden="true" />
       </div>
-      <div style={{ fontSize: 14.5, color: "var(--g-warn)", lineHeight: 1.5 }}>
+      <div style={{ fontSize: 14.5, color: "var(--warn)", lineHeight: 1.5 }}>
         <span
           style={{
-            fontFamily: "var(--font-newsreader), serif",
+            fontFamily: "var(--font-serif), serif",
             fontStyle: "italic", fontSize: 17, fontWeight: 500,
           }}
         >
@@ -310,7 +310,7 @@ function AlertParchemin({
                 fontWeight: 600,
                 textDecoration: "underline",
                 textUnderlineOffset: 3,
-                color: "var(--g-warn)",
+                color: "var(--warn)",
                 background: "transparent",
                 border: 0,
                 padding: 0,
@@ -337,7 +337,7 @@ function SceneEntry({
   const isTalk = session.kind === "CONFERENCE"
   const label = isMeal ? "Intermède" : isTalk ? "Scène" : "Tableau"
   const accent =
-    isMeal ? "var(--g-meal)" : isTalk ? "var(--g-talk)" : "var(--g-ink-3)"
+    isMeal ? "var(--meal)" : isTalk ? "var(--talk)" : "var(--ink-3)"
   const title = isTalk && session.conference ? session.conference.title : session.title
   const speaker = isTalk && session.conference ? session.conference.speaker.name : null
 
@@ -349,14 +349,14 @@ function SceneEntry({
         gap: 24,
         paddingBottom: isLast ? 0 : 22,
         marginBottom: isLast ? 0 : 22,
-        borderBottom: isLast ? "none" : "1px dashed var(--g-line-2)",
+        borderBottom: isLast ? "none" : "1px dashed var(--line-2)",
       }}
     >
       <div className="text-right">
         <div
           className="uppercase"
           style={{
-            fontFamily: "var(--font-newsreader), serif",
+            fontFamily: "var(--font-serif), serif",
             fontStyle: "italic", fontSize: 12.5,
             color: accent, letterSpacing: "0.1em", fontWeight: 500,
           }}
@@ -365,9 +365,9 @@ function SceneEntry({
         </div>
         <div
           style={{
-            fontFamily: "var(--font-cormorant), 'Newsreader', serif",
+            fontFamily: "var(--font-display), 'Newsreader', serif",
             fontSize: 34, fontWeight: 500, lineHeight: 1,
-            marginTop: 6, color: "var(--g-ink)",
+            marginTop: 6, color: "var(--ink)",
             fontFeatureSettings: "'lnum'",
           }}
         >
@@ -375,8 +375,8 @@ function SceneEntry({
         </div>
         <div
           style={{
-            fontFamily: "var(--font-jetbrains), monospace",
-            fontSize: 10, color: "var(--g-ink-3)",
+            fontFamily: "var(--font-mono), monospace",
+            fontSize: 10, color: "var(--ink-3)",
             marginTop: 6, letterSpacing: "0.06em",
           }}
         >
@@ -387,7 +387,7 @@ function SceneEntry({
         className="relative"
         style={{
           paddingTop: 2,
-          borderLeft: "1px solid var(--g-line)",
+          borderLeft: "1px solid var(--line)",
           paddingLeft: 24,
         }}
       >
@@ -396,16 +396,16 @@ function SceneEntry({
           style={{
             position: "absolute", left: -5, top: 6,
             width: 9, height: 9, borderRadius: "50%",
-            background: accent, border: "2px solid var(--g-paper)",
+            background: accent, border: "2px solid var(--paper)",
           }}
         />
         {isTalk ? (
           <>
             <div
               style={{
-                fontFamily: "var(--font-newsreader), serif",
+                fontFamily: "var(--font-serif), serif",
                 fontSize: 23, fontWeight: 600,
-                color: "var(--g-ink)", lineHeight: 1.22,
+                color: "var(--ink)", lineHeight: 1.22,
                 letterSpacing: "-0.015em",
               }}
             >
@@ -414,13 +414,13 @@ function SceneEntry({
             {speaker && (
               <div
                 style={{
-                  fontFamily: "var(--font-newsreader), serif",
+                  fontFamily: "var(--font-serif), serif",
                   fontSize: 14, fontStyle: "italic",
-                  color: "var(--g-ink-2)", marginTop: 10,
+                  color: "var(--ink-2)", marginTop: 10,
                 }}
               >
                 conté par{" "}
-                <span style={{ fontStyle: "normal", fontWeight: 600, color: "var(--g-ink)" }}>
+                <span style={{ fontStyle: "normal", fontWeight: 600, color: "var(--ink)" }}>
                   {speaker}
                 </span>
               </div>
@@ -429,9 +429,9 @@ function SceneEntry({
         ) : (
           <div
             style={{
-              fontFamily: "var(--font-newsreader), serif",
+              fontFamily: "var(--font-serif), serif",
               fontSize: 23, fontStyle: "italic",
-              fontWeight: 500, color: "var(--g-ink)",
+              fontWeight: 500, color: "var(--ink)",
               lineHeight: 1.2, letterSpacing: "-0.01em",
             }}
           >
@@ -463,14 +463,14 @@ function Act({
           className="flex items-center justify-center uppercase"
           style={{
             gap: 16,
-            fontFamily: "var(--font-newsreader), serif",
+            fontFamily: "var(--font-serif), serif",
             fontStyle: "italic", fontSize: 14,
-            color: "var(--g-ink-3)", letterSpacing: "0.18em",
+            color: "var(--ink-3)", letterSpacing: "0.18em",
           }}
         >
-          <span style={{ flex: 1, maxWidth: 80, height: 1, background: "var(--g-line-2)" }} />
+          <span style={{ flex: 1, maxWidth: 80, height: 1, background: "var(--line-2)" }} />
           Acte&nbsp;{actRoman}
-          <span style={{ flex: 1, maxWidth: 80, height: 1, background: "var(--g-line-2)" }} />
+          <span style={{ flex: 1, maxWidth: 80, height: 1, background: "var(--line-2)" }} />
         </div>
 
         <div className="flex items-center justify-center mt-4" style={{ gap: 22 }}>
@@ -478,7 +478,7 @@ function Act({
           <div className="text-left">
             <div
               style={{
-                fontFamily: "var(--font-cormorant), 'Newsreader', serif",
+                fontFamily: "var(--font-display), 'Newsreader', serif",
                 fontSize: 50, fontWeight: 600,
                 lineHeight: 1, letterSpacing: "-0.025em",
               }}
@@ -487,9 +487,9 @@ function Act({
             </div>
             <div
               style={{
-                fontFamily: "var(--font-newsreader), serif",
+                fontFamily: "var(--font-serif), serif",
                 fontStyle: "italic", fontSize: 20,
-                color: "var(--g-ink-2)", fontWeight: 400, marginTop: 4,
+                color: "var(--ink-2)", fontWeight: 400, marginTop: 4,
               }}
             >
               {dayNum} {month} {yearRoman}
@@ -499,10 +499,10 @@ function Act({
 
         <div
           className="flex items-center justify-center mt-4"
-          style={{ gap: 10, color: "var(--g-line-2)" }}
+          style={{ gap: 10, color: "var(--line-2)" }}
         >
           <Fleuron />
-          <Fleuron color="var(--g-talk)" />
+          <Fleuron color="var(--talk)" />
           <Fleuron />
         </div>
       </div>
@@ -537,22 +537,22 @@ function DramatisPersonae({ slots }: { slots: TimeSlot[] }) {
   return (
     <section
       className="mt-12 pt-8"
-      style={{ borderTop: "1px solid var(--g-line)" }}
+      style={{ borderTop: "1px solid var(--line)" }}
     >
       <div className="text-center mb-6">
         <div
           className="uppercase mb-1.5"
           style={{
-            fontFamily: "var(--font-jetbrains), monospace",
+            fontFamily: "var(--font-mono), monospace",
             fontSize: 11, letterSpacing: "0.24em",
-            color: "var(--g-ink-3)",
+            color: "var(--ink-3)",
           }}
         >
           Distribution
         </div>
         <h2
           style={{
-            fontFamily: "var(--font-cormorant), 'Newsreader', serif",
+            fontFamily: "var(--font-display), 'Newsreader', serif",
             fontSize: 34, fontWeight: 600, fontStyle: "italic",
             margin: 0, letterSpacing: "-0.02em",
           }}
@@ -572,13 +572,13 @@ function DramatisPersonae({ slots }: { slots: TimeSlot[] }) {
           <div
             key={s.id}
             className="flex items-baseline gap-3.5 pb-2.5"
-            style={{ borderBottom: "1px dotted var(--g-line-2)" }}
+            style={{ borderBottom: "1px dotted var(--line-2)" }}
           >
             <span
               style={{
-                fontFamily: "var(--font-cormorant), 'Newsreader', serif",
+                fontFamily: "var(--font-display), 'Newsreader', serif",
                 fontSize: 20, fontWeight: 600,
-                color: "var(--g-ink)", letterSpacing: "-0.01em",
+                color: "var(--ink)", letterSpacing: "-0.01em",
               }}
             >
               {s.name}
@@ -587,9 +587,9 @@ function DramatisPersonae({ slots }: { slots: TimeSlot[] }) {
             <span
               className="text-right"
               style={{
-                fontFamily: "var(--font-newsreader), serif",
+                fontFamily: "var(--font-serif), serif",
                 fontStyle: "italic", fontSize: 13.5,
-                color: "var(--g-ink-2)", maxWidth: "60%",
+                color: "var(--ink-2)", maxWidth: "60%",
               }}
             >
               dans «&nbsp;{s.title}&nbsp;»
@@ -637,7 +637,7 @@ export function ProgramSection({ user, meals, onNavigate }: ProgramSectionProps)
   const participants = `${count} ${count > 1 ? "participants inscrits" : "participant inscrit"}`
 
   return (
-    <div className="grimoire rounded-2xl px-6 sm:px-10 lg:px-16 py-12 lg:py-14 relative overflow-hidden">
+    <div className="bg-card text-foreground rounded-2xl px-6 sm:px-10 lg:px-16 py-12 lg:py-14 relative overflow-hidden">
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-0"
@@ -664,7 +664,7 @@ export function ProgramSection({ user, meals, onNavigate }: ProgramSectionProps)
         <AlertParchemin user={user} meals={meals} onNavigate={onNavigate} />
 
         {isLoading ? (
-          <p className="text-center" style={{ color: "var(--g-ink-3)" }}>
+          <p className="text-center" style={{ color: "var(--ink-3)" }}>
             Chargement du programme…
           </p>
         ) : error ? (
@@ -672,7 +672,7 @@ export function ProgramSection({ user, meals, onNavigate }: ProgramSectionProps)
             Impossible de charger le programme.
           </p>
         ) : days.length === 0 ? (
-          <p className="text-center" style={{ color: "var(--g-ink-3)" }}>
+          <p className="text-center" style={{ color: "var(--ink-3)" }}>
             Aucun créneau publié pour le moment.
           </p>
         ) : days.length === 1 ? (
@@ -691,9 +691,9 @@ export function ProgramSection({ user, meals, onNavigate }: ProgramSectionProps)
               <div
                 className="self-stretch"
                 style={{
-                  background: "var(--g-line-2)",
+                  background: "var(--line-2)",
                   backgroundImage:
-                    "linear-gradient(to bottom, transparent 0, var(--g-line-2) 30px, var(--g-line-2) calc(100% - 30px), transparent 100%)",
+                    "linear-gradient(to bottom, transparent 0, var(--line-2) 30px, var(--line-2) calc(100% - 30px), transparent 100%)",
                 }}
               />
               <Act actRoman="II" day={days[1]} year={year} />
@@ -702,7 +702,7 @@ export function ProgramSection({ user, meals, onNavigate }: ProgramSectionProps)
               <Act actRoman="I" day={days[0]} year={year} />
               <Ornament lineWidth={120}>
                 <Fleuron size={11} />
-                <Fleuron size={11} color="var(--g-talk)" />
+                <Fleuron size={11} color="var(--talk)" />
                 <Fleuron size={11} />
               </Ornament>
               <Act actRoman="II" day={days[1]} year={year} />
@@ -712,21 +712,21 @@ export function ProgramSection({ user, meals, onNavigate }: ProgramSectionProps)
 
         {days.length > 0 && <DramatisPersonae slots={timeSlots} />}
 
-        <div className="mt-12" style={{ color: "var(--g-line-2)" }}>
+        <div className="mt-12" style={{ color: "var(--line-2)" }}>
           <Ornament lineWidth={100}>
             <Fleuron />
-            <Fleuron color="var(--g-talk)" />
-            <Fleuron color="var(--g-meal)" />
-            <Fleuron color="var(--g-talk)" />
+            <Fleuron color="var(--talk)" />
+            <Fleuron color="var(--meal)" />
+            <Fleuron color="var(--talk)" />
             <Fleuron />
           </Ornament>
         </div>
         <div
           className="text-center mt-3"
           style={{
-            fontFamily: "var(--font-newsreader), serif",
+            fontFamily: "var(--font-serif), serif",
             fontStyle: "italic", fontSize: 15,
-            color: "var(--g-ink-3)",
+            color: "var(--ink-3)",
           }}
         >
           — Fin du programme. Que les rideaux s&apos;ouvrent.&nbsp;—
@@ -734,8 +734,8 @@ export function ProgramSection({ user, meals, onNavigate }: ProgramSectionProps)
         <div
           className="flex justify-between mt-9 uppercase"
           style={{
-            fontFamily: "var(--font-jetbrains), monospace",
-            fontSize: 10.5, color: "var(--g-ink-3)",
+            fontFamily: "var(--font-mono), monospace",
+            fontSize: 10.5, color: "var(--ink-3)",
             letterSpacing: "0.14em",
           }}
         >
