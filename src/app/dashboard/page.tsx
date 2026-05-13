@@ -5,11 +5,9 @@ import { Navbar } from "@/components/navbar"
 import {
   Sidebar,
   SidebarContent,
-  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
-  SidebarHeader,
   SidebarInset,
   SidebarMenu,
   SidebarMenuButton,
@@ -83,7 +81,8 @@ export default function Dashboard() {
     { key: "program", label: "Programme", icon: CalendarDays },
   ]
 
-  const currentLabel = items.find((item) => item.key === active)?.label ?? ""
+  const currentItem = items.find((item) => item.key === active) ?? items[0]
+  const CurrentIcon = currentItem.icon
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
@@ -93,13 +92,6 @@ export default function Dashboard() {
 
       <SidebarProvider>
         <Sidebar variant="inset" className="top-16 h-[calc(100svh-4rem)]">
-          <SidebarHeader>
-            <div className="px-2 py-1">
-              <p className="text-sm font-semibold truncate">{user.name}</p>
-              <p className="text-xs text-muted-foreground truncate">{user.edition.name}</p>
-            </div>
-          </SidebarHeader>
-
           <SidebarContent>
             <SidebarGroup>
               <SidebarGroupLabel>Ma participation</SidebarGroupLabel>
@@ -124,27 +116,19 @@ export default function Dashboard() {
               </SidebarGroupContent>
             </SidebarGroup>
           </SidebarContent>
-
-          <SidebarFooter>
-            <EditionInfoCard edition={user.edition} />
-          </SidebarFooter>
         </Sidebar>
 
         <SidebarInset className="bg-transparent">
-          <header className="sticky top-16 z-20 flex items-center gap-2 border-b bg-white/70 backdrop-blur px-4 py-3 md:hidden">
-            <SidebarTrigger />
-            <h2 className="text-base font-semibold">{currentLabel}</h2>
-          </header>
-
           <div className="container mx-auto px-4 py-6 lg:py-8 flex flex-col gap-6">
-            <div>
-              <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-1">
-                Bienvenue, {user.name} !
-              </h1>
-              <p className="text-gray-600 text-sm lg:text-base">
-                Gérez votre participation — {user.edition.name}
-              </p>
+            <div className="flex items-center gap-3">
+              <SidebarTrigger className="md:hidden" />
+              <div className="flex items-center gap-2 text-2xl lg:text-3xl font-bold text-gray-900">
+                <CurrentIcon className="h-6 w-6 lg:h-7 lg:w-7 text-green-700" />
+                <h1>{currentItem.label}</h1>
+              </div>
             </div>
+
+            <EditionInfoCard edition={user.edition} />
 
             <AlertBanner user={user} meals={meals} />
 
