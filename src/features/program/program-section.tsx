@@ -133,7 +133,7 @@ function TitleBlock({
           margin: 0,
         }}
       >
-        Programme
+        programme
       </h1>
       <div
         className="mt-3.5"
