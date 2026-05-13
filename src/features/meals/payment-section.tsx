@@ -9,11 +9,10 @@ import {
   useElements,
 } from "@stripe/react-stripe-js"
 import { useQueryClient } from "@tanstack/react-query"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { CheckCircle2, CreditCard, Lock, ShieldCheck, Sparkles } from "lucide-react"
+import { CheckCircle2, CreditCard, Lock, ShieldCheck } from "lucide-react"
 import { useMeals } from "@/hooks/use-meals"
 import { queryKeys } from "@/lib/query-keys"
 import type { UserProfile } from "@/types"
@@ -54,11 +53,11 @@ function CheckoutForm({ onSuccess }: { onSuccess: () => void }) {
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
       <PaymentElement />
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p className="text-sm text-destructive">{error}</p>}
       <Button type="submit" disabled={!stripe || isProcessing} className="w-full">
         {isProcessing ? "Traitement..." : "Confirmer le paiement"}
       </Button>
-      <p className="text-xs text-gray-500 text-center flex items-center justify-center gap-1">
+      <p className="text-xs text-muted-foreground text-center flex items-center justify-center gap-1">
         <ShieldCheck className="h-3 w-3" />
         Paiement sécurisé par Stripe
       </p>
@@ -125,22 +124,15 @@ export function PaymentSection({ user }: PaymentSectionProps) {
 
   if (hasPaid) {
     return (
-      <Card id="section-validation" className="border-l-4 border-l-green-400">
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center gap-2 text-green-800">
-              <CheckCircle2 className="h-5 w-5" />
-              Participation validée
-            </CardTitle>
-            <Badge className="bg-green-100 text-green-800 border-green-300" variant="outline">
-              {total > 0 ? `${total} € payés` : "✓"}
-            </Badge>
-          </div>
-          <CardDescription>
-            Merci pour votre règlement ! Votre place est réservée, à très vite au congrès.
-          </CardDescription>
-        </CardHeader>
-      </Card>
+      <section id="section-validation" className="flex flex-col gap-3">
+        <div className="flex items-start justify-between gap-3">
+          <p className="text-sm text-muted-foreground">Merci pour votre règlement ! Votre place est réservée, à très vite au congrès.</p>
+          <Badge variant="outline" className="border-green-300 text-green-700">
+            <CheckCircle2 className="h-3 w-3 mr-1" />
+            {total > 0 ? `${total} € payés` : "Validée"}
+          </Badge>
+        </div>
+      </section>
     )
   }
 
@@ -148,121 +140,99 @@ export function PaymentSection({ user }: PaymentSectionProps) {
     ? formatDeadline(user.edition.registrationDeadline)
     : null
 
-  const urgent = !deferred && !locked
-
   return (
-    <Card
-      id="section-validation"
-      className={
-        locked
-          ? "border-l-4 border-l-red-400"
-          : urgent
-          ? "animate-border-rotate animate-border-rotate-amber shadow-md"
-          : "border-l-4 border-l-amber-300"
-      }
-    >
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2">
-            <Sparkles className="h-5 w-5" />
-            Validez votre participation
-          </CardTitle>
-          {locked ? (
-            <Badge className="bg-red-100 text-red-800 border-red-300" variant="outline">
-              <Lock className="h-3 w-3 mr-1" />Inscriptions fermées
-            </Badge>
-          ) : (
-            <Badge className="bg-amber-100 text-amber-800 border-amber-300" variant="outline">
-              Non validée
-            </Badge>
-          )}
-        </div>
-        <CardDescription>
+    <section id="section-validation" className="flex flex-col gap-5">
+      <div className="flex items-start justify-between gap-3">
+        <p className="text-sm text-muted-foreground">
           Réglez votre participation aux repas pour confirmer votre place. Tant que le paiement n&apos;est pas reçu, votre inscription reste provisoire.
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="flex flex-col gap-4">
-        <div className="rounded-lg border bg-amber-50/60 p-4">
-          <ul className="flex flex-col gap-1.5 text-sm">
-            {payableMeals.map((m) => (
-              <li key={m.id} className="flex items-center justify-between">
-                <span className="text-gray-700">{m.title}</span>
-                <span className="font-medium text-gray-900">{m.price} €</span>
-              </li>
-            ))}
-          </ul>
-          <div className="mt-3 pt-3 border-t flex items-center justify-between">
-            <span className="text-sm font-medium">Total</span>
-            <span className="text-lg font-semibold">{total} €</span>
-          </div>
-        </div>
-
-        {deadline && !locked && (
-          <p className="text-xs text-gray-500">
-            Les inscriptions ferment le <span className="font-medium">{deadline.label}</span>
-            {deadline.daysLeft > 0 && (
-              <> — il vous reste <span className="font-medium">{deadline.daysLeft} jour{deadline.daysLeft > 1 ? "s" : ""}</span> pour confirmer.</>
-            )}
-          </p>
-        )}
-
-        {locked && (
-          <p className="text-sm text-red-700">
-            Les inscriptions sont closes. Contactez l&apos;organisateur si vous souhaitez tout de même participer.
-          </p>
-        )}
-
-        {errorMessage && (
-          <p className="text-sm text-red-600">{errorMessage}</p>
-        )}
-
-        {!stripeConfigured ? (
-          <p className="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-md p-3">
-            Le paiement en ligne n&apos;est pas configuré sur cet environnement.
-          </p>
+        </p>
+        {locked ? (
+          <Badge variant="outline" className="border-destructive/40 text-destructive">
+            <Lock className="h-3 w-3 mr-1" />Inscriptions fermées
+          </Badge>
         ) : (
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+          <Badge variant="outline" className="border-amber-300 text-amber-700">Non validée</Badge>
+        )}
+      </div>
+
+      <div className="rounded-lg border bg-white/60">
+        <ul className="divide-y">
+          {payableMeals.map((m) => (
+            <li key={m.id} className="flex items-center justify-between px-4 py-2.5 text-sm">
+              <span className="text-foreground/90">{m.title}</span>
+              <span className="font-medium">{m.price} €</span>
+            </li>
+          ))}
+        </ul>
+        <div className="flex items-center justify-between border-t px-4 py-3">
+          <span className="text-sm font-medium">Total</span>
+          <span className="text-lg font-semibold">{total} €</span>
+        </div>
+      </div>
+
+      {deadline && !locked && (
+        <p className="text-xs text-muted-foreground">
+          Les inscriptions ferment le <span className="font-medium text-foreground">{deadline.label}</span>
+          {deadline.daysLeft > 0 && (
+            <> — il vous reste <span className="font-medium text-foreground">{deadline.daysLeft} jour{deadline.daysLeft > 1 ? "s" : ""}</span> pour confirmer.</>
+          )}
+        </p>
+      )}
+
+      {locked && (
+        <p className="text-sm text-destructive">
+          Les inscriptions sont closes. Contactez l&apos;organisateur si vous souhaitez tout de même participer.
+        </p>
+      )}
+
+      {errorMessage && <p className="text-sm text-destructive">{errorMessage}</p>}
+
+      {!stripeConfigured ? (
+        <p className="text-sm text-muted-foreground">
+          Le paiement en ligne n&apos;est pas configuré sur cet environnement.
+        </p>
+      ) : (
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+          <Button
+            type="button"
+            onClick={handleOpenPayment}
+            disabled={isLoading || total === 0}
+            className="flex-1"
+          >
+            <CreditCard className="h-4 w-4 mr-2" />
+            {isLoading ? "Préparation..." : `Payer maintenant — ${total} €`}
+          </Button>
+          {!deferred && !locked && (
             <Button
               type="button"
-              onClick={handleOpenPayment}
-              disabled={isLoading || total === 0}
-              className="flex-1"
+              variant="ghost"
+              onClick={() => setDeferred(true)}
+              className="text-muted-foreground"
             >
-              <CreditCard className="h-4 w-4 mr-2" />
-              {isLoading ? "Préparation..." : `Payer maintenant — ${total} €`}
+              Payer plus tard
             </Button>
-            {!deferred && !locked && (
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={() => setDeferred(true)}
-                className="text-gray-600"
-              >
-                Payer plus tard
-              </Button>
-            )}
-          </div>
-        )}
+          )}
+        </div>
+      )}
 
-        {deferred && !locked && (
-          <p className="text-xs text-gray-500">
-            Vous pourrez revenir payer à tout moment depuis cet écran avant la fermeture des inscriptions.
-          </p>
-        )}
+      {deferred && !locked && (
+        <p className="text-xs text-muted-foreground">
+          Vous pourrez revenir payer à tout moment depuis cet écran avant la fermeture des inscriptions.
+        </p>
+      )}
 
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle>Paiement — {total} €</DialogTitle>
-            </DialogHeader>
-            {clientSecret && stripePromise && (
-              <Elements stripe={stripePromise} options={{ clientSecret }}>
-                <CheckoutForm onSuccess={handlePaymentSuccess} />
-              </Elements>
-            )}
-          </DialogContent>
-        </Dialog>
-      </CardContent>
-    </Card>
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Paiement — {total} €</DialogTitle>
+          </DialogHeader>
+          {clientSecret && stripePromise && (
+            <Elements stripe={stripePromise} options={{ clientSecret }}>
+              <CheckoutForm onSuccess={handlePaymentSuccess} />
+            </Elements>
+          )}
+        </DialogContent>
+      </Dialog>
+    </section>
   )
 }
