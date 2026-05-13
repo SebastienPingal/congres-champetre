@@ -446,7 +446,7 @@ function Act({
         </div>
 
         <div className="flex items-center justify-center mt-4" style={{ gap: 22 }}>
-          <IlluminatedNumeral n={String(dayNumber)} />
+          <IlluminatedNumeral n={["", "I", "II", "III", "IV", "V"][dayNumber] ?? String(dayNumber)} />
           <div className="text-left">
             <div
               style={{
