@@ -74,11 +74,11 @@ export default function Dashboard() {
   const showConferences = user.isAttending
 
   const items: NavItem[] = [
+    { key: "program", label: "Programme", icon: CalendarDays },
     { key: "presence", label: "Présence", icon: UserCheck },
     ...(showMeals ? [{ key: "meals" as const, label: "Repas", icon: UtensilsCrossed }] : []),
-    ...(showPayment ? [{ key: "payment" as const, label: "Paiement", icon: CreditCard }] : []),
     ...(showConferences ? [{ key: "conferences" as const, label: "Conférences", icon: Mic }] : []),
-    { key: "program", label: "Programme", icon: CalendarDays },
+    ...(showPayment ? [{ key: "payment" as const, label: "Paiement", icon: CreditCard }] : []),
   ]
 
   const currentItem = items.find((item) => item.key === active) ?? items[0]
