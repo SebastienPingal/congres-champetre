@@ -1,19 +1,24 @@
 # features/program
 
-Read-only weekend schedule display.
+Affichage du programme du weekend, façon livret typographique.
 
 | File | Component | Purpose |
 |---|---|---|
-| `program-section.tsx` | `ProgramSection` | Grouped-by-day schedule (max 2 days), color-coded by slot kind |
+| `program-section.tsx` | `ProgramSection` | Vue complète : titre, méta, alerte parchemin, deux Jours (Jour 1 / Jour 2), liste des intervenants, footer ornemental |
 
-**Data:** `useTimeSlots()` from `src/hooks/use-time-slots.ts`. The same query is also used by the conference forms, so data is shared from cache (no extra fetch).
+**Données :**
+- `useTimeSlots()` (`src/hooks/use-time-slots.ts`) pour les créneaux
+- `user: UserProfile` et `meals: MealSlot[]` passés en prop par le dashboard
+- `onNavigate?: (target) => void` : callback utilisé par l'alerte parchemin pour changer d'onglet (`presence | meals | payment | conferences`)
 
-**Layout :** section plate (pas de `Card`). Programme rendu en grille 2 colonnes (un jour par colonne), avec liste `<ul>` plate séparée par bordures.
+**Layout :** la `ProgramSection` est un **bloc plein** (`bg-card`) qui remplace toute la chrome standard du dashboard (titre + `EditionInfoCard` + `AlertBanner`). Sur ≥ `xl`, les deux Jours s'affichent en diptyque (1fr 1px 1fr) ; en-dessous, ils s'empilent avec un ornement central.
 
-**Code couleur (puce de 2×2px à gauche, pas de fond plein) :**
-- CONFERENCE → violet-400
-- MEAL → amber-400
-- BREAK → sky-400
-- OTHER → gray-300
+**Tokens couleur (via `globals.css`) :**
+- CONFERENCE → `var(--talk)` (`bg-talk-soft`, `text-talk`)
+- MEAL → `var(--meal)` (`bg-meal-soft`, `text-meal`)
+- OTHER / autre → `var(--ink-3)`
 
-**Slot display:** Conference slots show title + speaker name. Meal slots show time only. Other slots show title.
+**Typographies :**
+- Titres grands formats / numéraux : `var(--font-display)` (Cormorant Garamond)
+- Sous-titres, corps des entrées, intervenants : `var(--font-serif)` (Newsreader)
+- Eyebrow, heures de fin, footer : `var(--font-mono)` (JetBrains Mono)

@@ -332,7 +332,7 @@ export function TimeSlotManager({ timeSlots, onTimeSlotCreated, editionDays, edi
                 </>
               )}
 
-              {error && <div className="text-sm text-red-600">{error}</div>}
+              {error && <div className="text-sm text-destructive">{error}</div>}
               <div className="flex gap-2">
                 <Button type="submit" disabled={isLoading} className="flex-1">
                   {isLoading ? "Création..." : "Créer le créneau"}
@@ -346,7 +346,7 @@ export function TimeSlotManager({ timeSlots, onTimeSlotCreated, editionDays, edi
         </Dialog>
       </div>
       {timeSlots.length === 0 ? (
-        <div className="text-center py-8 text-gray-500">
+        <div className="text-center py-8 text-muted-foreground">
           <p>Aucun créneau créé pour le moment</p>
           <p className="text-sm">Commencez par créer votre premier créneau</p>
         </div>
@@ -363,8 +363,8 @@ export function TimeSlotManager({ timeSlots, onTimeSlotCreated, editionDays, edi
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex flex-col gap-1">
                     <h4 className="font-medium">{slot.title}</h4>
-                    <p className="text-sm text-gray-600">{formatDateTime(slot.startTime)}</p>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-muted-foreground">{formatDateTime(slot.startTime)}</p>
+                    <p className="text-sm text-muted-foreground">
                       Durée: {Math.round((new Date(slot.endTime).getTime() - new Date(slot.startTime).getTime()) / (1000 * 60))} minutes
                     </p>
                   </div>
@@ -373,11 +373,11 @@ export function TimeSlotManager({ timeSlots, onTimeSlotCreated, editionDays, edi
                   </div>
                 </div>
                 {slot.conference && (
-                  <div className="rounded-lg bg-blue-50 p-3">
+                  <div className="rounded-lg bg-talk-soft p-3">
                     <h5 className="text-sm font-medium">Conférence assignée:</h5>
                     <div className="text-sm flex flex-col gap-2">
                       <p className="font-medium">{slot.conference.title}</p>
-                      <p className="text-gray-600">{slot.conference.speaker.name}</p>
+                      <p className="text-muted-foreground">{slot.conference.speaker.name}</p>
                       <div className="flex items-center gap-2">
                         <Dialog open={editingConferenceId === slot.conference.id} onOpenChange={(open) => setEditingConferenceId(open ? slot.conference!.id : null)}>
                           <DialogTrigger asChild>
@@ -502,7 +502,7 @@ export function TimeSlotManager({ timeSlots, onTimeSlotCreated, editionDays, edi
               </>
             )}
             {editError && (
-              <div className="text-sm text-red-600">{editError}</div>
+              <div className="text-sm text-destructive">{editError}</div>
             )}
             <div className="flex gap-2">
               <Button type="submit" disabled={editIsLoading} className="flex-1">

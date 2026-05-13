@@ -40,14 +40,14 @@ export function MealsStep({ meals, onAnswer, isSubmitting }: MealsStepProps) {
 
   return (
     <div className="flex flex-col gap-4">
-      <p className="text-gray-600 text-center text-sm">
+      <p className="text-muted-foreground text-center text-sm">
         Cochez les repas auxquels vous participerez.
         <br />
-        <span className="text-gray-400">Vous pourrez modifier ça plus tard.</span>
+        <span className="text-muted-foreground/80">Vous pourrez modifier ça plus tard.</span>
       </p>
 
       {meals.length === 0 ? (
-        <p className="text-sm text-gray-400 text-center py-4">
+        <p className="text-sm text-muted-foreground/80 text-center py-4">
           Aucun repas programmé pour le moment.
         </p>
       ) : (
@@ -59,10 +59,10 @@ export function MealsStep({ meals, onAnswer, isSubmitting }: MealsStepProps) {
                 key={meal.id}
                 className={`rounded-lg border p-4 transition-colors ${
                   status === "PRESENT"
-                    ? "border-amber-300 bg-amber-50"
+                    ? "border-warn-border bg-warn-bg"
                     : status === "ABSENT"
-                    ? "border-gray-200 bg-gray-50"
-                    : "border-gray-200"
+                    ? "border-border bg-muted/50"
+                    : "border-border"
                 }`}
               >
                 <div className="flex items-start justify-between gap-3">
@@ -73,9 +73,9 @@ export function MealsStep({ meals, onAnswer, isSubmitting }: MealsStepProps) {
                         <Badge variant="secondary" className="shrink-0">{meal.price} €</Badge>
                       )}
                     </div>
-                    <p className="text-xs text-gray-500 mt-0.5">{formatMealTime(meal.startTime, meal.endTime)}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{formatMealTime(meal.startTime, meal.endTime)}</p>
                     {meal.description && (
-                      <p className="text-xs text-gray-500 mt-1">{meal.description}</p>
+                      <p className="text-xs text-muted-foreground mt-1">{meal.description}</p>
                     )}
                   </div>
                   <div className="flex gap-1 shrink-0">

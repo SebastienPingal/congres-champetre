@@ -12,14 +12,14 @@ interface ConferenceStepProps {
 export function ConferenceStep({ onCreated, onSkip, isCompleting }: ConferenceStepProps) {
   return (
     <div className="flex flex-col gap-4">
-      <p className="text-gray-600 text-center text-sm">
+      <p className="text-muted-foreground text-center text-sm">
         Donnez-nous quelques infos sur votre conférence. Vous pourrez les compléter ou modifier plus tard.
       </p>
       <ConferenceForm onConferenceCreated={onCreated} withCard={false} />
       <Button
         type="button"
         variant="ghost"
-        className="w-full h-10 text-sm text-gray-500"
+        className="w-full h-10 text-sm text-muted-foreground"
         onClick={onSkip}
         disabled={isCompleting}
       >

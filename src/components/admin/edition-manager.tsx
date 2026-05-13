@@ -226,11 +226,11 @@ export function EditionManager({ onEditionChanged }: EditionManagerProps) {
   }
 
   if (loading) {
-    return <div className="text-sm text-gray-600">⏳ Chargement des éditions...</div>
+    return <div className="text-sm text-muted-foreground">⏳ Chargement des éditions...</div>
   }
 
   if (error) {
-    return <div className="text-sm text-red-600">🚨 {error}</div>
+    return <div className="text-sm text-destructive">🚨 {error}</div>
   }
 
   return (
@@ -254,8 +254,8 @@ export function EditionManager({ onEditionChanged }: EditionManagerProps) {
 
             {/* Progress bar */}
             <div className="flex gap-1.5 mb-2">
-              <div className={`h-1.5 flex-1 rounded-full transition-colors ${wizardStep === 'info' || wizardStep === 'meals' ? 'bg-green-500' : 'bg-gray-200'}`} />
-              <div className={`h-1.5 flex-1 rounded-full transition-colors ${wizardStep === 'meals' ? 'bg-green-500' : 'bg-gray-200'}`} />
+              <div className={`h-1.5 flex-1 rounded-full transition-colors ${wizardStep === 'info' || wizardStep === 'meals' ? 'bg-primary' : 'bg-muted'}`} />
+              <div className={`h-1.5 flex-1 rounded-full transition-colors ${wizardStep === 'meals' ? 'bg-primary' : 'bg-muted'}`} />
             </div>
 
             {wizardStep === 'info' && (
@@ -298,7 +298,7 @@ export function EditionManager({ onEditionChanged }: EditionManagerProps) {
                   />
                 </div>
                 {createError && (
-                  <div className="text-sm text-red-600">{createError}</div>
+                  <div className="text-sm text-destructive">{createError}</div>
                 )}
                 <div className="flex gap-2">
                   <Button type="submit" disabled={createLoading} className="flex-1">
@@ -318,7 +318,7 @@ export function EditionManager({ onEditionChanged }: EditionManagerProps) {
 
             {wizardStep === 'meals' && (
               <div className="flex flex-col gap-4">
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-muted-foreground">
                   Ajoutez les créneaux repas du weekend. Vous pourrez en ajouter d&apos;autres plus tard via le gestionnaire de créneaux.
                 </p>
 
@@ -352,7 +352,7 @@ export function EditionManager({ onEditionChanged }: EditionManagerProps) {
                 </Button>
 
                 {mealsError && (
-                  <div className="text-sm text-red-600">{mealsError}</div>
+                  <div className="text-sm text-destructive">{mealsError}</div>
                 )}
 
                 <div className="flex gap-2">
@@ -384,7 +384,7 @@ export function EditionManager({ onEditionChanged }: EditionManagerProps) {
       </div>
 
       {editions.length === 0 ? (
-        <div className="text-center py-8 text-gray-500">
+        <div className="text-center py-8 text-muted-foreground">
           <p>Aucune édition créée</p>
           <p className="text-sm">Commencez par créer votre première édition</p>
         </div>
@@ -395,7 +395,7 @@ export function EditionManager({ onEditionChanged }: EditionManagerProps) {
               key={edition.id}
               className={`border rounded-lg p-4 flex flex-col gap-3 ${
                 edition.isActive
-                  ? "ring-2 ring-green-500 bg-green-50/50"
+                  ? "ring-2 ring-primary bg-green-soft/50"
                   : ""
               }`}
             >
@@ -404,15 +404,15 @@ export function EditionManager({ onEditionChanged }: EditionManagerProps) {
                   <div className="flex items-center gap-2">
                     <h4 className="font-medium">{edition.name}</h4>
                     {edition.isActive && (
-                      <Badge className="bg-green-100 text-green-700">
+                      <Badge className="bg-green-soft text-primary">
                         Active
                       </Badge>
                     )}
                   </div>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-muted-foreground">
                     {formatDate(edition.startDate)} → {formatDate(edition.endDate)}
                   </p>
-                  <div className="flex items-center gap-3 text-xs text-gray-500">
+                  <div className="flex items-center gap-3 text-xs text-muted-foreground">
                     <span>{edition._count?.participations ?? 0} participant(s)</span>
                     <span>{edition._count?.conferences ?? 0} conférence(s)</span>
                     <span>{edition._count?.timeSlots ?? 0} créneau(x)</span>

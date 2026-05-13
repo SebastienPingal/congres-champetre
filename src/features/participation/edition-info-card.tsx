@@ -24,17 +24,17 @@ export function EditionInfoCard({ edition }: { edition: EditionInfo }) {
   return (
     <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
       <span className="inline-flex items-center gap-1.5">
-        <MapPin className="h-4 w-4 text-green-700/70" aria-hidden="true" />
+        <MapPin className="h-4 w-4 text-primary/70" aria-hidden="true" />
         4 allée des tertres, 77250 Moret-Loing-et-Orvanne
       </span>
       <span className="text-muted-foreground/40">·</span>
       <span className="inline-flex items-center gap-1.5">
-        <CalendarDays className="h-4 w-4 text-green-700/70" aria-hidden="true" />
+        <CalendarDays className="h-4 w-4 text-primary/70" aria-hidden="true" />
         {formatEditionDates(edition)}
       </span>
       <span className="text-muted-foreground/40">·</span>
       <span className="inline-flex items-center gap-1.5">
-        <Users className="h-4 w-4 text-green-700/70" aria-hidden="true" />
+        <Users className="h-4 w-4 text-primary/70" aria-hidden="true" />
         {participantsLabel}
       </span>
     </div>

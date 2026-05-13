@@ -123,11 +123,11 @@ export function ConferenceEditForm({ conference, onUpdated, onClose }: Conferenc
                     />
                     <label htmlFor={`edit-${slot.id}`} className="text-sm flex items-center gap-2">
                       <Badge variant="outline">{slot.title}</Badge>
-                      <span className="text-xs text-gray-500">
+                      <span className="text-xs text-muted-foreground">
                         {formatDateTimeRange(slot.startTime, slot.endTime)}
                       </span>
                       {slot.conference?.id === conference.id && (
-                        <span className="text-xs text-green-600">(actuel)</span>
+                        <span className="text-xs text-primary">(actuel)</span>
                       )}
                     </label>
                   </div>
@@ -136,7 +136,7 @@ export function ConferenceEditForm({ conference, onUpdated, onClose }: Conferenc
             </div>
           )}
 
-          {error && <div className="text-sm text-red-600">{error}</div>}
+          {error && <div className="text-sm text-destructive">{error}</div>}
 
           <div className="flex items-center gap-2">
             <Button type="submit" disabled={isPending} className="w-full">

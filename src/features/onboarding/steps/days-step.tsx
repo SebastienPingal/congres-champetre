@@ -11,7 +11,7 @@ interface DaysStepProps {
 export function DaysStep({ onAnswer, isSubmitting }: DaysStepProps) {
   return (
     <div className="flex flex-col gap-4">
-      <p className="text-gray-600 text-center">Quels jours serez-vous là ?</p>
+      <p className="text-muted-foreground text-center">Quels jours serez-vous là ?</p>
       <div className="flex flex-col gap-3">
         <Button
           className="w-full h-14 text-base"
@@ -38,7 +38,7 @@ export function DaysStep({ onAnswer, isSubmitting }: DaysStepProps) {
         </Button>
         <Button
           variant="ghost"
-          className="w-full h-12 text-sm text-gray-500"
+          className="w-full h-12 text-sm text-muted-foreground"
           onClick={() => onAnswer('UNKNOWN')}
           disabled={isSubmitting}
         >

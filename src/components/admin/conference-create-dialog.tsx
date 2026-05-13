@@ -215,7 +215,7 @@ export function ConferenceCreateDialog({ conferences, onConferenceCreated }: Con
               ))}
             </select>
             {availableSpeakers.length === 0 && !isLoadingData && (
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-muted-foreground">
                 Tous les utilisateurs ont déjà une conférence sur cette édition.
               </p>
             )}
@@ -252,7 +252,7 @@ export function ConferenceCreateDialog({ conferences, onConferenceCreated }: Con
                     />
                     <label htmlFor={`slot-${slot.id}`} className="text-sm flex items-center gap-2">
                       <Badge variant="outline">{slot.title}</Badge>
-                      <span className="text-xs text-gray-500">
+                      <span className="text-xs text-muted-foreground">
                         {formatDateTimeRange(slot.startTime, slot.endTime)}
                       </span>
                     </label>
@@ -263,7 +263,7 @@ export function ConferenceCreateDialog({ conferences, onConferenceCreated }: Con
           )}
 
           {error && (
-            <div className="text-sm text-red-600">
+            <div className="text-sm text-destructive">
               {error}
             </div>
           )}

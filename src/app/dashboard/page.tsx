@@ -128,7 +128,7 @@ export default function Dashboard() {
             <div className="container mx-auto px-4 py-6 lg:py-8 flex flex-col gap-6">
               <div className="flex items-center gap-3">
                 <SidebarTrigger className="md:hidden" />
-                <div className="flex items-center gap-2 text-2xl lg:text-3xl font-bold text-gray-900">
+                <div className="flex items-center gap-2 text-2xl lg:text-3xl font-bold text-foreground">
                   <CurrentIcon className="h-6 w-6 lg:h-7 lg:w-7 text-primary" />
                   <h1>{currentItem.label}</h1>
                 </div>

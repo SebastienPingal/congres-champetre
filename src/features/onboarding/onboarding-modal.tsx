@@ -200,12 +200,12 @@ export function OnboardingModal() {
             <div
               key={step}
               className={`h-1.5 flex-1 rounded-full transition-colors ${
-                i <= currentIndex ? 'bg-green-500' : 'bg-gray-200'
+                i <= currentIndex ? 'bg-primary' : 'bg-muted'
               }`}
             />
           ))}
         </div>
-        <p className="text-xs text-gray-400 text-center mb-4">
+        <p className="text-xs text-muted-foreground/80 text-center mb-4">
           Étape {currentIndex + 1} sur {totalSteps} — {STEP_LABELS[currentStep]}
         </p>
 
@@ -232,13 +232,13 @@ export function OnboardingModal() {
           <ConferenceStep onCreated={handleConferenceDone} onSkip={handleConferenceDone} isCompleting={isCompleting} />
         )}
 
-        <p className="text-xs text-gray-400 text-center mt-3">
+        <p className="text-xs text-muted-foreground/80 text-center mt-3">
           Ces choix pourront être modifiés facilement depuis votre tableau de bord.
         </p>
 
         <button
           type="button"
-          className="mt-1 text-xs text-gray-400 hover:text-gray-600 underline underline-offset-2 text-center w-full transition-colors"
+          className="mt-1 text-xs text-muted-foreground/80 hover:text-muted-foreground underline underline-offset-2 text-center w-full transition-colors"
           onClick={handleLater}
           disabled={isSubmitting}
         >

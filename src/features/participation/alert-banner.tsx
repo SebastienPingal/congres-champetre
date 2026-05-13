@@ -24,14 +24,14 @@ export function AlertBanner({ user, meals }: AlertBannerProps) {
   if (locked) {
     if (user.isAttending && totalToPay > 0 && !user.hasPaid) {
       return (
-        <div className="mb-6 rounded-xl border border-red-300 bg-red-50 p-4 shadow-sm animate-fade-in">
+        <div className="mb-6 rounded-xl border border-destructive/40 bg-destructive/10 p-4 shadow-sm animate-fade-in">
           <div className="flex items-start gap-3">
-            <div className="rounded-full bg-red-100 p-2 text-red-600 shrink-0">
+            <div className="rounded-full bg-destructive/20 p-2 text-destructive shrink-0">
               <Lock className="h-5 w-5" />
             </div>
             <div className="flex flex-col gap-1">
-              <p className="font-semibold text-red-900">Inscriptions fermées</p>
-              <p className="text-sm text-red-800">
+              <p className="font-semibold text-destructive">Inscriptions fermées</p>
+              <p className="text-sm text-destructive">
                 Votre participation n&apos;a pas été validée par un paiement. Contactez l&apos;organisateur si vous souhaitez encore venir.
               </p>
             </div>
@@ -50,22 +50,22 @@ export function AlertBanner({ user, meals }: AlertBannerProps) {
   }
 
   return (
-    <div className="mb-6 rounded-xl border border-amber-300 bg-amber-50 p-4 shadow-sm animate-fade-in">
+    <div className="mb-6 rounded-xl border border-warn-border bg-warn-bg p-4 shadow-sm animate-fade-in">
       <div className="flex items-start gap-3">
-        <div className="rounded-full bg-amber-100 p-2 text-amber-600 shrink-0">
+        <div className="rounded-full bg-warn-border p-2 text-warn shrink-0">
           <AlertTriangle className="h-5 w-5" />
         </div>
         <div className="flex flex-col gap-2">
-          <p className="font-semibold text-amber-900">Il reste des informations à compléter</p>
+          <p className="font-semibold text-warn">Il reste des informations à compléter</p>
           <ul className="flex flex-col gap-1.5">
             {needsPresenceAction && (
               <li>
                 <a
                   href="#section-presence"
-                  className="inline-flex items-center gap-1.5 text-sm text-amber-800 underline underline-offset-2 hover:text-amber-950 transition-colors"
+                  className="inline-flex items-center gap-1.5 text-sm text-warn underline underline-offset-2 hover:text-warn transition-colors"
                   onClick={scrollTo("section-presence")}
                 >
-                  <CircleDot className="h-3.5 w-3.5 text-green-600" />
+                  <CircleDot className="h-3.5 w-3.5 text-primary" />
                   Confirmez votre présence au weekend
                 </a>
               </li>
@@ -74,10 +74,10 @@ export function AlertBanner({ user, meals }: AlertBannerProps) {
               <li>
                 <a
                   href="#section-repas"
-                  className="inline-flex items-center gap-1.5 text-sm text-amber-800 underline underline-offset-2 hover:text-amber-950 transition-colors"
+                  className="inline-flex items-center gap-1.5 text-sm text-warn underline underline-offset-2 hover:text-warn transition-colors"
                   onClick={scrollTo("section-repas")}
                 >
-                  <CircleDot className="h-3.5 w-3.5 text-amber-600" />
+                  <CircleDot className="h-3.5 w-3.5 text-warn" />
                   Indiquez votre présence aux repas
                 </a>
               </li>
@@ -86,10 +86,10 @@ export function AlertBanner({ user, meals }: AlertBannerProps) {
               <li>
                 <a
                   href="#section-validation"
-                  className="inline-flex items-center gap-1.5 text-sm text-amber-800 underline underline-offset-2 hover:text-amber-950 transition-colors"
+                  className="inline-flex items-center gap-1.5 text-sm text-warn underline underline-offset-2 hover:text-warn transition-colors"
                   onClick={scrollTo("section-validation")}
                 >
-                  <CircleDot className="h-3.5 w-3.5 text-amber-600" />
+                  <CircleDot className="h-3.5 w-3.5 text-warn" />
                   Validez votre participation ({totalToPay} €)
                 </a>
               </li>
@@ -98,10 +98,10 @@ export function AlertBanner({ user, meals }: AlertBannerProps) {
               <li>
                 <a
                   href="#section-conferences"
-                  className="inline-flex items-center gap-1.5 text-sm text-amber-800 underline underline-offset-2 hover:text-amber-950 transition-colors"
+                  className="inline-flex items-center gap-1.5 text-sm text-warn underline underline-offset-2 hover:text-warn transition-colors"
                   onClick={scrollTo("section-conferences")}
                 >
-                  <CircleDot className="h-3.5 w-3.5 text-violet-600" />
+                  <CircleDot className="h-3.5 w-3.5 text-talk" />
                   Proposez votre conférence
                 </a>
               </li>
