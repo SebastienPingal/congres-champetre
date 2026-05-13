@@ -1,6 +1,7 @@
 "use client"
 
 import { Navbar } from "@/components/navbar"
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { useUserProfile } from "@/hooks/use-user-profile"
 import { useMeals } from "@/hooks/use-meals"
 import { AlertBanner } from "@/features/participation/alert-banner"
@@ -38,6 +39,10 @@ export default function Dashboard() {
     )
   }
 
+  const showMeals = user.isAttending && meals.length > 0
+  const showPayment = user.isAttending && !!user.onboardingCompletedAt
+  const showConferences = user.isAttending
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
       <Navbar />
@@ -52,14 +57,45 @@ export default function Dashboard() {
 
         <AlertBanner user={user} meals={meals} />
 
-        <div className="grid gap-6 md:grid-cols-2">
-          <ProgramSection className="md:col-span-2" />
+        <div className="mb-6">
           <EditionInfoCard edition={user.edition} />
-          <PresenceSection user={user} />
-          {user.isAttending && meals.length > 0 && <MealsSection user={user} />}
-          {user.isAttending && user.onboardingCompletedAt && <PaymentSection user={user} />}
-          {user.isAttending && <ConferencesSection user={user} />}
         </div>
+
+        <Tabs defaultValue="presence" className="gap-6">
+          <TabsList className="w-full h-auto flex-wrap justify-start">
+            <TabsTrigger value="presence">👋 Présence</TabsTrigger>
+            {showMeals && <TabsTrigger value="meals">🍽️ Repas</TabsTrigger>}
+            {showPayment && <TabsTrigger value="payment">💳 Paiement</TabsTrigger>}
+            {showConferences && <TabsTrigger value="conferences">🎤 Conférences</TabsTrigger>}
+            <TabsTrigger value="program">📅 Programme</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="presence">
+            <PresenceSection user={user} />
+          </TabsContent>
+
+          {showMeals && (
+            <TabsContent value="meals">
+              <MealsSection user={user} />
+            </TabsContent>
+          )}
+
+          {showPayment && (
+            <TabsContent value="payment">
+              <PaymentSection user={user} />
+            </TabsContent>
+          )}
+
+          {showConferences && (
+            <TabsContent value="conferences">
+              <ConferencesSection user={user} />
+            </TabsContent>
+          )}
+
+          <TabsContent value="program">
+            <ProgramSection />
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   )
