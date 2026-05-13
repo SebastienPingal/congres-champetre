@@ -97,7 +97,7 @@ function IlluminatedNumeral({ n }: { n: string }) {
       <span
         style={{
           fontFamily: "var(--font-display), 'Newsreader', serif",
-          fontSize: 54, fontWeight: 600, fontStyle: "italic", lineHeight: 1,
+          fontSize: 54, fontWeight: 400, fontStyle: "italic", lineHeight: 1,
           color: accent, transform: "translateY(2px)",
         }}
       >
@@ -127,13 +127,13 @@ function TitleBlock({
         style={{
           fontFamily: "var(--font-display), 'Newsreader', serif",
           fontSize: "clamp(64px, 9vw, 108px)",
-          fontWeight: 500,
+          fontWeight: 400,
           letterSpacing: "-0.04em",
           lineHeight: 1,
           margin: 0,
         }}
       >
-        programme
+        Programme
       </h1>
       <div
         className="mt-3.5"
@@ -446,7 +446,7 @@ function Act({
         </div>
 
         <div className="flex items-center justify-center mt-4" style={{ gap: 22 }}>
-          <IlluminatedNumeral n={["", "i", "ii", "iii", "iv", "v"][dayNumber] ?? String(dayNumber)} />
+          <IlluminatedNumeral n={["", "I", "II", "III", "IV", "V"][dayNumber] ?? String(dayNumber)} />
           <div className="text-left">
             <div
               style={{
