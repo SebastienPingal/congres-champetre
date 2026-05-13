@@ -160,6 +160,8 @@ if (me?.role !== "ADMIN") return NextResponse.json({ error: "⚠️ Accès refus
 
 **i18n** : strings user-facing en français. Variables, fonctions, types : anglais.
 
+**UI : shadcn d'abord** : pour toute primitive UI (sidebar, tabs, tooltip, sheet, dialog, etc.), utiliser le composant shadcn correspondant — ne pas écrire un équivalent custom. Si le composant n'est pas encore dans `src/components/ui/`, l'ajouter via `npx shadcn@latest add <name>` (style `new-york`, voir `components.json`). Si la CLI échoue (registre auth, offline), copier le source depuis `shadcn-ui/ui` (branche `main`, dossier `apps/v4/registry/new-york-v4/ui`) et adapter les imports (`@/registry/new-york-v4/...` → `@/components/ui/...`, `@/lib/utils`, `@/hooks/...`). Remplacer `import { Slot } from "radix-ui"` par `import { Slot } from "@radix-ui/react-slot"` (et `<Slot.Root>` → `<Slot>`).
+
 ## Pièges connus
 
 1. **Sans édition active**, presque toutes les pages user et tous les endpoints `/api/*` (sauf auth, editions list, et admin/emails avec `filter=all`) retournent une 500. Toujours seeder ou créer une édition active avant la première utilisation.
