@@ -127,7 +127,7 @@ export function PaymentSection({ user }: PaymentSectionProps) {
       <section id="section-validation" className="flex flex-col gap-3">
         <div className="flex items-start justify-between gap-3">
           <p className="text-sm text-muted-foreground">Merci pour votre règlement ! Votre place est réservée, à très vite au congrès.</p>
-          <Badge variant="outline" className="border-green-300 text-green-700">
+          <Badge variant="outline" className="border-primary/40 text-primary">
             <CheckCircle2 className="h-3 w-3 mr-1" />
             {total > 0 ? `${total} € payés` : "Validée"}
           </Badge>
@@ -151,7 +151,7 @@ export function PaymentSection({ user }: PaymentSectionProps) {
             <Lock className="h-3 w-3 mr-1" />Inscriptions fermées
           </Badge>
         ) : (
-          <Badge variant="outline" className="border-amber-300 text-amber-700">Non validée</Badge>
+          <Badge variant="outline" className="border-warn-border text-warn">Non validée</Badge>
         )}
       </div>
 

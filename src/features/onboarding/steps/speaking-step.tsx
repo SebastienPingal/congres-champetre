@@ -18,7 +18,7 @@ export function SpeakingStep({ onAnswer, isSubmitting }: SpeakingStepProps) {
 
   return (
     <div className="flex flex-col gap-4">
-      <p className="text-gray-600 text-center">
+      <p className="text-muted-foreground text-center">
         Souhaitez-vous proposer une conférence ?
       </p>
       <div className="flex flex-col gap-3">
@@ -39,7 +39,7 @@ export function SpeakingStep({ onAnswer, isSubmitting }: SpeakingStepProps) {
         </Button>
         <Button
           variant="ghost"
-          className="w-full h-12 text-sm text-gray-500"
+          className="w-full h-12 text-sm text-muted-foreground"
           onClick={() => handle(null)}
           disabled={isSubmitting}
         >

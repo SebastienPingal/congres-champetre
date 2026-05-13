@@ -40,6 +40,8 @@
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
   --color-paper: var(--paper);
+  --color-page-bg: var(--page-bg);
+  --color-green-soft: var(--green-soft);
   --color-ink: var(--ink);
   --color-ink-2: var(--ink-2);
   --color-ink-3: var(--ink-3);

@@ -104,18 +104,18 @@ export function Navbar() {
                       )}
                     </div>
                     <div className="flex flex-col gap-4">
-                      <Link href="/dashboard" className="text-base hover:text-green-600 transition-colors">
+                      <Link href="/dashboard" className="text-base hover:text-primary transition-colors">
                         Accueil
                       </Link>
                       {(session.user as User).role === "ADMIN" && (
                         <>
-                          <Link href="/admin" className="text-base hover:text-green-600 transition-colors">
+                          <Link href="/admin" className="text-base hover:text-primary transition-colors">
                             Administration
                           </Link>
-                          <Link href="/admin/users" className="text-base hover:text-green-600 transition-colors">
+                          <Link href="/admin/users" className="text-base hover:text-primary transition-colors">
                             Utilisateurs
                           </Link>
-                          <Link href="/admin/emails" className="text-base hover:text-green-600 transition-colors">
+                          <Link href="/admin/emails" className="text-base hover:text-primary transition-colors">
                             Email global
                           </Link>
                         </>
@@ -133,7 +133,7 @@ export function Navbar() {
                   </div>
                   <div className="flex flex-col gap-3">
                     <div className="flex items-center gap-2">
-                      <span className="text-sm text-gray-600">
+                      <span className="text-sm text-muted-foreground">
                         {(session.user as User).name}
                       </span>
                       {(session.user as User).role === "ADMIN" && (
@@ -154,7 +154,7 @@ export function Navbar() {
 
         <div className="hidden md:flex items-center gap-4">
           <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-600">
+            <span className="text-sm text-muted-foreground">
               {(session.user as User).name}
             </span>
             {(session.user as User).role === "ADMIN" && (

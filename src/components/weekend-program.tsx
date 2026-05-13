@@ -107,15 +107,15 @@ export function WeekendProgram({ className }: { className?: string }) {
       <CardContent>
         {isLoading ? (
           <div className="flex items-center justify-center">
-            <p className="text-sm text-gray-600">Chargement du programme…</p>
+            <p className="text-sm text-muted-foreground">Chargement du programme…</p>
           </div>
         ) : error ? (
           <div className="flex items-center justify-center">
-            <p className="text-sm text-red-600">{error}</p>
+            <p className="text-sm text-destructive">{error}</p>
           </div>
         ) : byDay.length === 0 ? (
           <div className="flex items-center justify-center">
-            <p className="text-sm text-gray-600">Aucun créneau publié pour le moment</p>
+            <p className="text-sm text-muted-foreground">Aucun créneau publié pour le moment</p>
           </div>
         ) : (
           <div className="grid gap-6 md:grid-cols-2">
@@ -129,16 +129,16 @@ export function WeekendProgram({ className }: { className?: string }) {
                       key={slot.id}
                       className={cn(
                         "rounded-lg ring-1",
-                        slot.kind === 'CONFERENCE' && "bg-violet-50 ring-violet-200 border-l-4 border-violet-400",
-                        slot.kind === 'MEAL' && "bg-amber-50 ring-amber-200 border-l-4 border-amber-400",
-                        slot.kind === 'BREAK' && "bg-sky-50 ring-sky-200 border-l-4 border-sky-400",
-                        (!slot.kind || slot.kind === 'OTHER') && "bg-gray-50 ring-gray-200 border-l-4 border-gray-300"
+                        slot.kind === 'CONFERENCE' && "bg-talk-soft ring-talk/30 border-l-4 border-talk",
+                        slot.kind === 'MEAL' && "bg-warn-bg ring-meal/30 border-l-4 border-meal",
+                        slot.kind === 'BREAK' && "bg-talk-soft ring-talk/30 border-l-4 border-talk",
+                        (!slot.kind || slot.kind === 'OTHER') && "bg-muted/50 ring-muted-foreground/20 border-l-4 border-border"
                       )}
                     >
                       {slot.kind === 'MEAL' ? (
                         <div className="flex items-start gap-4 p-4">
                           <div className="shrink-0">
-                            <div className="text-xs text-gray-500">
+                            <div className="text-xs text-muted-foreground">
                               {formatHourMinute(slot.startTime)} – {formatHourMinute(slot.endTime)}
                             </div>
                           </div>
@@ -149,7 +149,7 @@ export function WeekendProgram({ className }: { className?: string }) {
                       ) : (
                         <div className="flex items-start gap-4 p-4">
                           <div className="shrink-0">
-                            <div className="text-xs text-gray-500">
+                            <div className="text-xs text-muted-foreground">
                               {formatHourMinute(slot.startTime)} – {formatHourMinute(slot.endTime)}
                             </div>
                           </div>
@@ -158,9 +158,9 @@ export function WeekendProgram({ className }: { className?: string }) {
                             {slot.conference ? (
                               <div className="flex flex-col gap-1">
                                 <p className="text-base font-semibold">{slot.conference.title}</p>
-                                <p className="text-xs text-gray-600">{slot.conference.speaker.name}</p>
+                                <p className="text-xs text-muted-foreground">{slot.conference.speaker.name}</p>
                                 {slot.title && (
-                                  <p className="text-xs text-gray-500">{slot.title}</p>
+                                  <p className="text-xs text-muted-foreground">{slot.title}</p>
                                 )}
                               </div>
                             ) : (

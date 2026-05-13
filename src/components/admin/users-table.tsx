@@ -239,13 +239,13 @@ export function UsersTable() {
 
   if (loading) {
     return (
-      <div className="text-sm text-gray-600">⏳ Chargement des utilisateurs…</div>
+      <div className="text-sm text-muted-foreground">⏳ Chargement des utilisateurs…</div>
     )
   }
 
   if (error) {
     return (
-      <div className="text-sm text-red-600">🚨 {error}</div>
+      <div className="text-sm text-destructive">🚨 {error}</div>
     )
   }
 
@@ -390,20 +390,20 @@ export function UsersTable() {
               <TableCell>{u.email}</TableCell>
               <TableCell>
                 {u.wantsToSpeak === true ? (
-                  <Badge className="bg-amber-100 text-amber-700">Oui</Badge>
+                  <Badge className="bg-warn-bg text-warn">Oui</Badge>
                 ) : u.wantsToSpeak === false ? (
                   <Badge variant="outline">Non</Badge>
                 ) : (
-                  <Badge className="bg-gray-100 text-gray-500">?</Badge>
+                  <Badge className="bg-muted text-muted-foreground">?</Badge>
                 )}
               </TableCell>
               <TableCell>
                 {u.isAttending === true ? (
-                  <Badge className="bg-emerald-100 text-emerald-700">Oui</Badge>
+                  <Badge className="bg-green-soft text-primary">Oui</Badge>
                 ) : u.isAttending === false ? (
-                  <Badge className="bg-gray-100 text-gray-700">Non</Badge>
+                  <Badge className="bg-muted text-foreground">Non</Badge>
                 ) : (
-                  <Badge className="bg-gray-100 text-gray-500">?</Badge>
+                  <Badge className="bg-muted text-muted-foreground">?</Badge>
                 )}
               </TableCell>
               <TableCell>
@@ -411,28 +411,28 @@ export function UsersTable() {
                   <Badge variant="outline">—</Badge>
                 )}
                 {u.attendanceDays === "DAY1" && (
-                  <Badge className="bg-sky-100 text-sky-700">Jour 1</Badge>
+                  <Badge className="bg-talk-soft text-talk">Jour 1</Badge>
                 )}
                 {u.attendanceDays === "DAY2" && (
-                  <Badge className="bg-amber-100 text-amber-700">Jour 2</Badge>
+                  <Badge className="bg-warn-bg text-warn">Jour 2</Badge>
                 )}
                 {u.attendanceDays === "BOTH" && (
-                  <Badge className="bg-emerald-100 text-emerald-700">Les deux</Badge>
+                  <Badge className="bg-green-soft text-primary">Les deux</Badge>
                 )}
                 {u.attendanceDays === "UNKNOWN" && (
-                  <Badge className="bg-gray-100 text-gray-500">?</Badge>
+                  <Badge className="bg-muted text-muted-foreground">?</Badge>
                 )}
               </TableCell>
               <TableCell>
                 {u.sleepsOnSite === true ? (
-                  <Badge className="bg-purple-100 text-purple-700">Oui</Badge>
+                  <Badge className="bg-talk-soft text-talk">Oui</Badge>
                 ) : u.sleepsOnSite === false ? (
                   <Badge variant="outline">Non</Badge>
                 ) : (
-                  <Badge className="bg-gray-100 text-gray-500">?</Badge>
+                  <Badge className="bg-muted text-muted-foreground">?</Badge>
                 )}
               </TableCell>
-              <TableCell className={u.isAttending === true && !u.hasPaid ? "bg-red-200" : undefined}>
+              <TableCell className={u.isAttending === true && !u.hasPaid ? "bg-destructive/30" : undefined}>
                 <div className="flex items-center gap-2">
                   <Checkbox
                     aria-label="A payé"
@@ -455,7 +455,7 @@ export function UsersTable() {
                   />
                 </div>
               </TableCell>
-              <TableCell className={u.willPayInCash ? "bg-amber-200" : undefined}>
+              <TableCell className={u.willPayInCash ? "bg-warn-border" : undefined}>
                 <div className="flex items-center gap-2">
                   <Checkbox
                     aria-label="Paiera en cash"
@@ -484,16 +484,16 @@ export function UsersTable() {
                   <TableCell key={slot.id} className="text-center px-2">
                     <button
                       type="button"
-                      className="w-full flex justify-center items-center cursor-pointer hover:bg-gray-100 rounded p-1 transition-colors"
+                      className="w-full flex justify-center items-center cursor-pointer hover:bg-muted rounded p-1 transition-colors"
                       title={status === "PRESENT" ? "Présent → Absent" : status === "ABSENT" ? "Absent → Non renseigné" : "Non renseigné → Présent"}
                       onClick={() => toggleMealStatus(u.id, slot.id, status)}
                     >
                       {status === "PRESENT" ? (
-                        <Check className="h-4 w-4 text-emerald-600" />
+                        <Check className="h-4 w-4 text-primary" />
                       ) : status === "ABSENT" ? (
-                        <X className="h-4 w-4 text-red-400" />
+                        <X className="h-4 w-4 text-destructive" />
                       ) : (
-                        <span className="text-gray-300">—</span>
+                        <span className="text-muted-foreground/60">—</span>
                       )}
                     </button>
                   </TableCell>
@@ -503,7 +503,7 @@ export function UsersTable() {
                 {u.mealTotal > 0 ? (
                   <span className="text-sm font-medium">{u.mealTotal} €</span>
                 ) : (
-                  <span className="text-gray-400">—</span>
+                  <span className="text-muted-foreground/80">—</span>
                 )}
               </TableCell>
               <TableCell className="text-center">
@@ -511,7 +511,7 @@ export function UsersTable() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                    className="text-destructive hover:text-destructive hover:bg-destructive/10"
                     onClick={() => setDeleteTarget(u)}
                     title="Supprimer la participation"
                   >

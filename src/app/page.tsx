@@ -7,13 +7,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 export default function Home() {
   // 🏠 This page will only be shown to unauthenticated users thanks to middleware
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 flex items-center justify-center">
+    <div className="min-h-screen flex items-center justify-center">
       <div className="container mx-auto px-4 max-w-4xl">
         <div className="text-center mb-12">
-          <h1 className="text-5xl font-bold text-gray-900 mb-4">
+          <h1 className="text-5xl font-bold text-foreground mb-4">
             Congrès Champêtre
           </h1>
-          <p className="text-xl text-gray-600 mb-8">
+          <p className="text-xl text-muted-foreground mb-8">
             Organisez votre weekend de conférences dans un cadre champêtre
           </p>
         </div>
@@ -29,7 +29,7 @@ export default function Home() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <ul className="space-y-2 text-sm text-gray-600">
+              <ul className="space-y-2 text-sm text-muted-foreground">
                 <li className="flex items-center gap-2">
                   <span>•</span> Indiquez si vous souhaitez faire une conférence
                 </li>
@@ -56,7 +56,7 @@ export default function Home() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <ul className="space-y-2 text-sm text-gray-600">
+              <ul className="space-y-2 text-sm text-muted-foreground">
                 <li className="flex items-center gap-2">
                   <span>•</span> Créez et gérez les créneaux horaires
                 </li>
@@ -88,7 +88,7 @@ export default function Home() {
             </Link>
           </div>
 
-          <p className="text-sm text-gray-500 mt-6">
+          <p className="text-sm text-muted-foreground mt-6">
             Un weekend inoubliable vous attend dans la campagne
           </p>
         </div>

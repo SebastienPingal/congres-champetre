@@ -150,7 +150,7 @@ export default function AdminEmailsPage() {
 
   if (!session || !isAdmin) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
+      <div className="min-h-screen">
         <Navbar />
         <div className="container mx-auto px-4 py-8">
           <Card>
@@ -165,7 +165,7 @@ export default function AdminEmailsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
+    <div className="min-h-screen">
       <Navbar />
       <div className="container mx-auto px-4 py-8 flex flex-col gap-6">
         <Card>
@@ -205,7 +205,7 @@ export default function AdminEmailsPage() {
 
               <div className="flex flex-col gap-2">
                 <Label htmlFor="email-message">Message</Label>
-                <p className="text-xs text-gray-600">
+                <p className="text-xs text-muted-foreground">
                   Format Markdown supporté: titres (`#`), listes (`- item`), `**gras**`, `*italique*`, liens (`[texte](https://...)`).
                 </p>
                 <textarea
@@ -222,7 +222,7 @@ export default function AdminEmailsPage() {
 
               <div className="flex flex-col gap-2">
                 <Label htmlFor="email-image">Image (optionnelle)</Label>
-                <p className="text-xs text-gray-600">
+                <p className="text-xs text-muted-foreground">
                   L&apos;image sera jointe en pièce jointe à l&apos;email. Formats: png, jpeg, gif, webp. Taille max: 5 Mo.
                 </p>
                 <input
@@ -241,7 +241,7 @@ export default function AdminEmailsPage() {
                       alt="Aperçu"
                       className="max-h-40 rounded-md border border-input object-contain"
                     />
-                    <div className="flex flex-col gap-1 text-xs text-gray-600">
+                    <div className="flex flex-col gap-1 text-xs text-muted-foreground">
                       <span className="font-medium">{image.name}</span>
                       <span>{(image.size / 1024).toFixed(1)} Ko</span>
                       <Button type="button" variant="outline" size="sm" onClick={clearImage} disabled={isSending}>
@@ -259,7 +259,7 @@ export default function AdminEmailsPage() {
                 <Button type="button" variant="outline" disabled={isSending} onClick={() => submitEmail(true)}>
                   {isSending ? "Envoi en cours..." : "Envoyer un test à mon email admin"}
                 </Button>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-muted-foreground">
                   Test admin puis envoi global: un email est envoyé individuellement à chaque destinataire.
                 </p>
               </div>
@@ -270,7 +270,7 @@ export default function AdminEmailsPage() {
         {error && (
           <Card>
             <CardContent>
-              <p className="text-sm text-red-600">{error}</p>
+              <p className="text-sm text-destructive">{error}</p>
             </CardContent>
           </Card>
         )}
@@ -291,7 +291,7 @@ export default function AdminEmailsPage() {
                 <div className="flex flex-col gap-1">
                   <p className="font-medium">Erreurs (max 20):</p>
                   {result.errors.map((entry) => (
-                    <p key={entry.email} className="text-red-600">
+                    <p key={entry.email} className="text-destructive">
                       - {entry.email}: {entry.error}
                     </p>
                   ))}

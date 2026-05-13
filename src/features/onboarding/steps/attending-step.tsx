@@ -10,7 +10,7 @@ interface AttendingStepProps {
 export function AttendingStep({ onAnswer, isSubmitting }: AttendingStepProps) {
   return (
     <div className="flex flex-col gap-4">
-      <p className="text-gray-600 text-center">
+      <p className="text-muted-foreground text-center">
         Serez-vous présent(e) au weekend ?
       </p>
       <div className="flex flex-col gap-3">
@@ -31,7 +31,7 @@ export function AttendingStep({ onAnswer, isSubmitting }: AttendingStepProps) {
         </Button>
         <Button
           variant="ghost"
-          className="w-full h-12 text-sm text-gray-500"
+          className="w-full h-12 text-sm text-muted-foreground"
           onClick={() => onAnswer('unknown')}
           disabled={isSubmitting}
         >

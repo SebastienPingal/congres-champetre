@@ -35,8 +35,8 @@ export function MealSlotFields({ index, data, onChange, onRemove, disabled, avai
   return (
     <div className="border rounded-lg p-4 flex flex-col gap-3">
       <div className="flex items-center justify-between">
-        <span className="text-sm font-medium text-gray-700">Repas {index + 1}</span>
-        <Button type="button" variant="ghost" size="sm" onClick={onRemove} disabled={disabled} className="text-red-500 hover:text-red-700 h-7 px-2">
+        <span className="text-sm font-medium text-foreground">Repas {index + 1}</span>
+        <Button type="button" variant="ghost" size="sm" onClick={onRemove} disabled={disabled} className="text-destructive hover:text-destructive h-7 px-2">
           Supprimer
         </Button>
       </div>

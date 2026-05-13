@@ -64,15 +64,15 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
+    <div className="min-h-screen">
       <Navbar />
 
       <div className="container flex flex-col gap-4 mx-auto px-4 py-8">
         <div className="mb-8 flex flex-col gap-2">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          <h1 className="text-3xl font-bold text-foreground mb-2">
             Administration
           </h1>
-          <p className="text-gray-600">
+          <p className="text-muted-foreground">
             Gérez les créneaux horaires et les conférences
           </p>
         </div>
@@ -83,14 +83,14 @@ export default function AdminPage() {
           <Card>
             <CardContent>
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-full bg-blue-100 text-blue-700">
+                <div className="p-2 rounded-full bg-talk-soft text-talk">
                   <CalendarRange className="h-5 w-5" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-gray-900">
+                  <p className="text-2xl font-bold text-foreground">
                     {timeSlots.length}
                   </p>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-muted-foreground">
                     Créneaux créés
                   </p>
                 </div>
@@ -101,14 +101,14 @@ export default function AdminPage() {
           <Card>
             <CardContent>
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-full bg-purple-100 text-purple-700">
+                <div className="p-2 rounded-full bg-talk-soft text-talk">
                   <CalendarRange className="h-5 w-5" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-gray-900">
+                  <p className="text-2xl font-bold text-foreground">
                     {conferences.length}
                   </p>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-muted-foreground">
                     Conférences proposées
                   </p>
                 </div>
@@ -119,14 +119,14 @@ export default function AdminPage() {
           <Card>
             <CardContent>
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-full bg-emerald-100 text-emerald-700">
+                <div className="p-2 rounded-full bg-green-soft text-primary">
                   <CalendarRange className="h-5 w-5" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-gray-900">
+                  <p className="text-2xl font-bold text-foreground">
                     {conferences.filter(c => c.timeSlot).length}
                   </p>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-muted-foreground">
                     Conférences planifiées
                   </p>
                 </div>
@@ -137,14 +137,14 @@ export default function AdminPage() {
           <Card>
             <CardContent>
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-full bg-amber-100 text-amber-700">
+                <div className="p-2 rounded-full bg-warn-border text-warn">
                   <Users className="h-5 w-5" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-gray-900">
+                  <p className="text-2xl font-bold text-foreground">
                     {stats ? stats.totalUsers : "—"}
                   </p>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-muted-foreground">
                     Utilisateurs inscrits
                   </p>
                 </div>
@@ -158,14 +158,14 @@ export default function AdminPage() {
           <Card>
             <CardContent>
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-full bg-green-100 text-green-700">
+                <div className="p-2 rounded-full bg-green-soft text-primary">
                   <UserCheck className="h-5 w-5" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-gray-900">
+                  <p className="text-2xl font-bold text-foreground">
                     {stats ? stats.attendingUsers : "—"}
                   </p>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-muted-foreground">
                     Participants au weekend
                   </p>
                 </div>
@@ -176,14 +176,14 @@ export default function AdminPage() {
           <Card>
             <CardContent>
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-full bg-sky-100 text-sky-700">
+                <div className="p-2 rounded-full bg-talk-soft text-talk">
                   <Users className="h-5 w-5" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-gray-900">
+                  <p className="text-2xl font-bold text-foreground">
                     {stats ? `${stats.attendingRate}%` : "—"}
                   </p>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-muted-foreground">
                     Taux de participation
                   </p>
                 </div>

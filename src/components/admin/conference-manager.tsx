@@ -25,7 +25,7 @@ export function ConferenceManager({ conferences, onConferenceUpdated }: Conferen
         <ConferenceCreateDialog conferences={conferences} onConferenceCreated={onConferenceUpdated} />
       </div>
       {conferences.length === 0 ? (
-        <div className="text-center py-8 text-gray-500">
+        <div className="text-center py-8 text-muted-foreground">
           <div className="text-4xl">•</div>
           <p>Aucune conférence proposée pour le moment</p>
           <p className="text-sm">Les participants peuvent proposer des conférences depuis leur dashboard</p>
@@ -37,11 +37,11 @@ export function ConferenceManager({ conferences, onConferenceUpdated }: Conferen
               <div className="flex items-start justify-between">
                 <div className="flex-1 flex flex-col gap-2">
                   <h4 className="font-medium">{conference.title}</h4>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-muted-foreground">
                     {conference.speaker.name} ({conference.speaker.email})
                   </p>
                   {conference.description && (
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-muted-foreground">
                       {conference.description}
                     </p>
                   )}
@@ -50,7 +50,7 @@ export function ConferenceManager({ conferences, onConferenceUpdated }: Conferen
                       <Badge variant="outline">
                         {conference.timeSlot.title}
                       </Badge>
-                      <span className="text-xs text-gray-500">
+                      <span className="text-xs text-muted-foreground">
                         {formatDateTimeRange(conference.timeSlot.startTime, conference.timeSlot.endTime)}
                       </span>
                     </div>

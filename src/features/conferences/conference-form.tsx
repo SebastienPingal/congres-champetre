@@ -110,7 +110,7 @@ export function ConferenceForm({ onConferenceCreated, withCard = true }: Confere
                 />
                 <label htmlFor={slot.id} className="text-sm flex items-center gap-2">
                   <Badge variant="outline">{slot.title}</Badge>
-                  <span className="text-xs text-gray-500">
+                  <span className="text-xs text-muted-foreground">
                     {formatDateTimeRange(slot.startTime, slot.endTime)}
                   </span>
                 </label>
@@ -120,7 +120,7 @@ export function ConferenceForm({ onConferenceCreated, withCard = true }: Confere
         </div>
       )}
 
-      {error && <div className="text-sm text-red-600">{error}</div>}
+      {error && <div className="text-sm text-destructive">{error}</div>}
 
       <Button type="submit" disabled={isPending} className="w-full">
         {isPending ? "Création..." : "Proposer ma conférence"}

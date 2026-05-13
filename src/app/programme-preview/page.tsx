@@ -108,7 +108,7 @@ export default function ProgrammePreviewPage() {
   return (
     <div className="min-h-screen py-8">
       <div className="container mx-auto px-4">
-        <div className="mb-4 text-xs text-amber-900 bg-amber-50 border border-amber-300 rounded-lg px-3 py-2 inline-block">
+        <div className="mb-4 text-xs text-warn bg-warn-bg border border-warn-border rounded-lg px-3 py-2 inline-block">
           Aperçu statique avec fausses données — route non listée dans la nav.
         </div>
         {ready && (

@@ -46,7 +46,7 @@ export function SlotGrid({ days, startHour, endHour, duration, existingSlots = [
 
   if (availableStartHours.length === 0) {
     return (
-      <p className="text-sm text-gray-400 text-center py-2">
+      <p className="text-sm text-muted-foreground/80 text-center py-2">
         Durée trop longue pour les heures de l&apos;édition.
       </p>
     )
@@ -57,7 +57,7 @@ export function SlotGrid({ days, startHour, endHour, duration, existingSlots = [
       {/* Hour header */}
       <div className="flex gap-0.5 pl-20">
         {availableStartHours.map((h) => (
-          <div key={h} className="w-8 text-center text-xs text-gray-400 font-medium">
+          <div key={h} className="w-8 text-center text-xs text-muted-foreground/80 font-medium">
             {h}h
           </div>
         ))}
@@ -66,7 +66,7 @@ export function SlotGrid({ days, startHour, endHour, duration, existingSlots = [
       {/* Day rows */}
       {days.map((day) => (
         <div key={day.toISOString()} className="flex items-center gap-0.5">
-          <span className="w-20 shrink-0 text-xs font-medium text-gray-600 capitalize">
+          <span className="w-20 shrink-0 text-xs font-medium text-muted-foreground capitalize">
             {format(day, "EEE dd MMM", { locale: fr })}
           </span>
           {availableStartHours.map((hour) => {
@@ -95,7 +95,7 @@ export function SlotGrid({ days, startHour, endHour, duration, existingSlots = [
       ))}
 
       {selected && (
-        <p className="text-xs text-gray-500 text-center mt-1">
+        <p className="text-xs text-muted-foreground text-center mt-1">
           {format(selected, "EEEE dd MMMM", { locale: fr })} · {selected.getHours()}h → {selected.getHours() + duration}h
         </p>
       )}
