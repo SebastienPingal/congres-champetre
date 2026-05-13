@@ -1,12 +1,12 @@
 "use client"
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { CalendarDays, MapPin, Users } from "lucide-react"
 import type { EditionInfo } from "@/types"
 
 function formatEditionDates(edition: EditionInfo): string {
   if (!edition.startDate && !edition.endDate) return "Dates à définir"
-  const opts: Intl.DateTimeFormatOptions = { weekday: "long", day: "numeric", month: "long", year: "numeric" }
+  const opts: Intl.DateTimeFormatOptions = { day: "numeric", month: "long", year: "numeric" }
   if (edition.startDate && edition.endDate) {
     const start = new Date(edition.startDate)
     const end = new Date(edition.endDate)
@@ -19,48 +19,39 @@ function formatEditionDates(edition: EditionInfo): string {
   return `Jusqu'au ${new Date(edition.endDate!).toLocaleDateString("fr-FR", opts)}`
 }
 
+function InfoItem({
+  icon: Icon,
+  label,
+  value,
+}: {
+  icon: typeof MapPin
+  label: string
+  value: string
+}) {
+  return (
+    <div className="flex items-start gap-3">
+      <Icon className="h-4 w-4 mt-0.5 text-muted-foreground shrink-0" aria-hidden="true" />
+      <div className="flex flex-col gap-0.5 min-w-0">
+        <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{label}</p>
+        <p className="text-sm text-foreground">{value}</p>
+      </div>
+    </div>
+  )
+}
+
 export function EditionInfoCard({ edition }: { edition: EditionInfo }) {
+  const participantsLabel = `${edition.participantCount} ${edition.participantCount > 1 ? "participants inscrits" : "participant inscrit"}`
+
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>Informations — {edition.name}</CardTitle>
-        <CardDescription>Détails pratiques et planning</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="grid gap-3 md:grid-cols-2">
-          <div className="flex items-start gap-3 rounded-lg ring-1 ring-green-200 bg-green-50/60 p-3">
-            <div className="rounded-md bg-green-100 p-2 text-green-700">
-              <MapPin className="h-5 w-5" aria-hidden="true" />
-            </div>
-            <div className="flex flex-col gap-1">
-              <p className="font-medium">Lieu</p>
-              <p className="text-sm text-gray-700">4 allée des tertres, 77250 Moret-Loing-et-Orvanne</p>
-            </div>
-          </div>
-
-          <div className="flex items-start gap-3 rounded-lg ring-1 ring-blue-200 bg-blue-50/60 p-3">
-            <div className="rounded-md bg-blue-100 p-2 text-blue-700">
-              <CalendarDays className="h-5 w-5" aria-hidden="true" />
-            </div>
-            <div className="flex flex-col gap-1">
-              <p className="font-medium">Dates</p>
-              <p className="text-sm text-gray-700">{formatEditionDates(edition)}</p>
-            </div>
-          </div>
-
-          <div className="flex items-start gap-3 rounded-lg ring-1 ring-amber-200 bg-amber-50/60 p-3 md:col-span-2">
-            <div className="rounded-md bg-amber-100 p-2 text-amber-700">
-              <Users className="h-5 w-5" aria-hidden="true" />
-            </div>
-            <div className="flex flex-col gap-1">
-              <p className="font-medium">Participants</p>
-              <p className="text-sm text-gray-700">
-                Pour le moment, vous serez {edition.participantCount}{" "}
-                {edition.participantCount > 1 ? "participants" : "participant"} au congrès
-              </p>
-            </div>
-          </div>
-        </div>
+      <CardContent className="grid gap-4 sm:grid-cols-3 sm:gap-6 py-4">
+        <InfoItem
+          icon={MapPin}
+          label="Lieu"
+          value="4 allée des tertres, 77250 Moret-Loing-et-Orvanne"
+        />
+        <InfoItem icon={CalendarDays} label="Dates" value={formatEditionDates(edition)} />
+        <InfoItem icon={Users} label="Participants" value={participantsLabel} />
       </CardContent>
     </Card>
   )
