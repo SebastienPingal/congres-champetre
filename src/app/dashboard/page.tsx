@@ -90,7 +90,7 @@ export default function Dashboard() {
 
       <OnboardingModal />
 
-      <SidebarProvider>
+      <SidebarProvider className="min-h-[calc(100svh-4rem)]">
         <Sidebar variant="inset" className="top-16 h-[calc(100svh-4rem)]">
           <SidebarContent>
             <SidebarGroup>
