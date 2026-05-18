@@ -40,7 +40,7 @@ export default function ProgrammePage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-6 lg:py-8 flex flex-col gap-4">
+    <div className="mx-auto w-full max-w-6xl px-4 py-6 lg:py-8 flex flex-col gap-4">
       <ProgramSection
         user={user}
         meals={meals}
