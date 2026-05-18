@@ -594,26 +594,7 @@ export function ProgramSection({ user, meals, onNavigate }: ProgramSectionProps)
   const participants = `${count} ${count > 1 ? "participants inscrits" : "participant inscrit"}`
 
   return (
-    <div className="bg-card text-foreground rounded-2xl px-6 sm:px-8 lg:px-12 py-6 lg:py-8 relative overflow-hidden">
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0"
-        style={{
-          background: `
-            radial-gradient(ellipse at 15% 0%, rgba(217,154,43,0.06), transparent 50%),
-            radial-gradient(ellipse at 100% 100%, rgba(106,76,184,0.05), transparent 55%)
-          `,
-        }}
-      />
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0 opacity-40"
-        style={{
-          backgroundImage:
-            "radial-gradient(circle at 1px 1px, rgba(0,0,0,0.025) 1px, transparent 0)",
-          backgroundSize: "3px 3px",
-        }}
-      />
+    <div className="text-foreground px-2 sm:px-4 lg:px-6 py-6 lg:py-8 relative">
 
       <div className="relative mx-auto" style={{ maxWidth: 1180 }}>
         <TitleBlock editionName={user.edition.name} dateOrnament={dateOrnament} subtitle={subtitle} />
