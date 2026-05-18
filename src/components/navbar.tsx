@@ -11,6 +11,7 @@ import {
   Mic,
   CreditCard,
   MessageCircle,
+  LogOut,
   type LucideIcon,
 } from "lucide-react"
 import { useUserProfile } from "@/hooks/use-user-profile"
@@ -146,14 +147,15 @@ export function Navbar() {
           <button
             type="button"
             onClick={() => signOut()}
-            className="flex items-center gap-[9px] bg-transparent cursor-pointer shrink-0 whitespace-nowrap rounded-[10px] py-1.5 pl-2.5 pr-3 text-[13px] font-sans"
+            aria-label="Se déconnecter"
+            className="navbar-logout group flex items-center gap-[9px] bg-transparent cursor-pointer shrink-0 whitespace-nowrap rounded-[10px] py-1.5 pl-2.5 pr-3 text-[13px] font-sans transition-colors"
             style={{
               border: "1px solid var(--line-2)",
               color: "var(--ink)",
             }}
           >
             <span
-              className="flex items-center justify-center font-bold rounded-full shrink-0"
+              className="navbar-logout__avatar flex items-center justify-center font-bold rounded-full shrink-0 transition-colors"
               style={{
                 width: 26,
                 height: 26,
@@ -162,10 +164,14 @@ export function Navbar() {
                 fontSize: 11,
               }}
             >
-              {initials}
+              <span className="navbar-logout__initials">{initials}</span>
+              <LogOut className="navbar-logout__icon" width={14} height={14} />
             </span>
             <span className="flex flex-col items-start leading-[1.15]">
-              <span style={{ fontSize: 10.5, color: "var(--ink-3)" }}>
+              <span
+                className="navbar-logout__kicker"
+                style={{ fontSize: 10.5, color: "var(--ink-3)" }}
+              >
                 Connecté · déconnexion
               </span>
               <span style={{ fontWeight: 600, fontSize: 13 }}>{userName}</span>

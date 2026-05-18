@@ -162,6 +162,20 @@
   }
 }
 
+.navbar-logout__icon { display: none; }
+.navbar-logout:hover {
+  background: var(--red);
+  border-color: var(--red);
+  color: #fff;
+}
+.navbar-logout:hover .navbar-logout__avatar {
+  background: rgba(255, 255, 255, 0.18);
+  color: #fff;
+}
+.navbar-logout:hover .navbar-logout__initials { display: none; }
+.navbar-logout:hover .navbar-logout__icon { display: block; }
+.navbar-logout:hover .navbar-logout__kicker { color: rgba(255, 255, 255, 0.8); }
+
 @layer utilities {
   @keyframes border-rotate {
     0% {
