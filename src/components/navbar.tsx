@@ -137,7 +137,7 @@ export function Navbar() {
             href={WHATSAPP_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-[7px] text-white no-underline font-semibold shrink-0 whitespace-nowrap rounded-[10px] px-3.5 py-[9px] text-[13px]"
+            className="animate-whatsapp-pulse flex items-center gap-[7px] text-white no-underline font-semibold shrink-0 whitespace-nowrap rounded-[10px] px-3.5 py-[9px] text-[13px] transition-transform hover:scale-105"
             style={{ background: "#22a463" }}
           >
             <MessageCircle width={16} height={16} />
