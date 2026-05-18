@@ -25,7 +25,7 @@ export function AlertBanner({ user, meals }: AlertBannerProps) {
   if (locked) {
     if (user.isAttending && totalToPay > 0 && !user.hasPaid) {
       return (
-        <div className="mb-6 rounded-xl border border-destructive/40 bg-destructive/10 p-4 shadow-sm animate-fade-in">
+        <div className="rounded-xl border border-destructive/40 bg-destructive/10 p-4 shadow-sm animate-fade-in">
           <div className="flex items-start gap-3">
             <div className="rounded-full bg-destructive/20 p-2 text-destructive shrink-0">
               <Lock className="h-5 w-5" />
@@ -48,7 +48,7 @@ export function AlertBanner({ user, meals }: AlertBannerProps) {
   const linkCls = "inline-flex items-center gap-1.5 text-sm text-warn underline underline-offset-2 hover:text-warn transition-colors"
 
   return (
-    <div className="mb-6 rounded-xl border border-warn-border bg-warn-bg p-4 shadow-sm animate-fade-in">
+    <div className="rounded-xl border border-warn-border bg-warn-bg p-4 shadow-sm animate-fade-in">
       <div className="flex items-start gap-3">
         <div className="rounded-full bg-warn-border p-2 text-warn shrink-0">
           <AlertTriangle className="h-5 w-5" />
