@@ -15,10 +15,10 @@ pnpm db:seed
 
 > Le schéma a été étendu depuis la dernière migration. Les champs ajoutés sont :
 > - `EditionParticipation.onboardingCompletedAt` (DateTime?)
-> - `EditionParticipation.stripePaymentIntentId` (String?)
-> - `EditionParticipation.stripePaymentStatus` (String?)
-> - `EditionParticipation.paidAmount` (Float?)
-> - Nouveau modèle `PaymentIntent` (audit trail Stripe)
+> - `EditionParticipation.paymentProviderId` (String?) — id du dernier Order PayPal
+> - `EditionParticipation.paymentStatus` (String?) — `pending` / `succeeded` / `failed`
+> - `EditionParticipation.paidAmount` (Int?) — montant payé en centimes
+> - Nouveau modèle `PaymentIntent` (audit trail PayPal)
 
 ---
 
@@ -73,27 +73,48 @@ GITHUB_CLIENT_ID="<id>"
 GITHUB_CLIENT_SECRET="<secret>"
 ```
 
-### Stripe (paiements par carte)
-1. Créer un compte sur [stripe.com](https://stripe.com)
-2. Activer le mode **live** (pas test) pour la production
-3. Récupérer les clés dans Dashboard → Developers → API keys
+### PayPal (paiements — compte PayPal ou carte bancaire invité)
+
+PayPal accepte les comptes Personnels en France sans SIRET ni asso. Plafond ~2 500 €/an avant vérification approfondie.
+
+**Étape 1 — Compte PayPal**
+1. Créer un compte sur [paypal.com/fr/welcome/signup](https://www.paypal.com/fr/welcome/signup/) → « Compte Personnel ».
+2. Vérifier l'identité (pièce + IBAN) pour lever le plafond.
+
+**Étape 2 — App développeur**
+1. [developer.paypal.com/dashboard/applications](https://developer.paypal.com/dashboard/applications)
+2. Onglet **Sandbox** (test) ou **Live** (prod) → "Create App" → type "Merchant".
+3. Récupérer `Client ID` et `Secret`.
 
 ```env
-STRIPE_SECRET_KEY="sk_live_..."
-NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY="pk_live_..."
+# En sandbox :
+PAYPAL_ENV="sandbox"
+PAYPAL_CLIENT_ID="AY..."         # Sandbox client id
+PAYPAL_CLIENT_SECRET="EM..."     # Sandbox secret
+NEXT_PUBLIC_PAYPAL_CLIENT_ID="AY..."  # même valeur que PAYPAL_CLIENT_ID
+
+# En production :
+PAYPAL_ENV="live"
+PAYPAL_CLIENT_ID="A..."          # Live client id
+PAYPAL_CLIENT_SECRET="E..."      # Live secret
+NEXT_PUBLIC_PAYPAL_CLIENT_ID="A..."
 ```
 
-**Webhook Stripe :**
-1. Dashboard → Developers → Webhooks → Add endpoint
+**Étape 3 — Webhook PayPal**
+1. Sur l'app PayPal créée → onglet "Add Webhook"
 2. URL : `https://<votre-domaine>/api/payments/webhook`
-3. Événements à écouter : `payment_intent.succeeded`, `payment_intent.payment_failed`
-4. Copier le "Signing secret"
+3. Événements : `PAYMENT.CAPTURE.COMPLETED`, `PAYMENT.CAPTURE.DENIED`, `CHECKOUT.ORDER.VOIDED`
+4. Copier le **Webhook ID** (pas un secret — un identifiant).
 
 ```env
-STRIPE_WEBHOOK_SECRET="whsec_..."
+PAYPAL_WEBHOOK_ID="WH-..."
 ```
 
-> Sans ces 3 variables Stripe, le bouton "Payer par carte" n'apparaît pas (le composant se cache automatiquement si `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` est vide).
+> Sans `NEXT_PUBLIC_PAYPAL_CLIENT_ID`, le bouton PayPal n'apparaît pas (le composant se cache automatiquement).
+
+**Tester en local (sandbox)** :
+- En sandbox, PayPal te fournit des comptes acheteurs de test sur [developer.paypal.com/dashboard/accounts](https://developer.paypal.com/dashboard/accounts).
+- Pour tester le webhook localement, soit utiliser ngrok / cloudflared pour exposer `localhost:3000`, soit utiliser le simulateur d'événements de [developer.paypal.com](https://developer.paypal.com) (Webhook Simulator).
 
 ### Email (optionnel — pour les envois admin)
 ```env
@@ -127,8 +148,9 @@ pm2 start "pnpm start" --name congres-champetre
 
 - [ ] La page `/auth/signin` s'affiche et les 3 boutons OAuth fonctionnent
 - [ ] Un nouveau compte → l'onboarding s'affiche → toutes les étapes se sauvegardent
-- [ ] Sélectionner des repas payants → bouton "Payer par carte" apparaît → paiement Stripe test
-- [ ] Webhook Stripe reçu → `hasPaid = true` dans la DB (vérifier via `pnpm db:studio`)
+- [ ] Sélectionner des repas payants → bouton PayPal apparaît → paiement sandbox réussi (compte PayPal de test ou carte invité)
+- [ ] Après capture → `hasPaid = true` dans la DB (vérifier via `pnpm db:studio`)
+- [ ] Webhook PayPal reçu (vérif via le journal d'audit `PaymentIntent.status = "succeeded"`)
 - [ ] La page admin `/admin` est accessible avec un compte ADMIN
 - [ ] Les emails admin s'envoient correctement
 
@@ -139,8 +161,8 @@ pm2 start "pnpm start" --name congres-champetre
 - [ ] `NEXTAUTH_SECRET` est unique et aléatoire (jamais la valeur par défaut)
 - [ ] `.env` est dans `.gitignore` (déjà configuré)
 - [ ] La DB n'est pas exposée publiquement (port 5432 fermé au réseau)
-- [ ] HTTPS activé (Stripe l'exige pour les webhooks en production)
-- [ ] Les clés Stripe utilisées sont bien les clés **live**, pas **test**
+- [ ] HTTPS activé (PayPal l'exige pour les webhooks en production)
+- [ ] `PAYPAL_ENV="live"` et les clés utilisées sont bien les clés **Live**, pas **Sandbox**
 
 ---
 

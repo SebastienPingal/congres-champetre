@@ -1,23 +1,32 @@
 # src/app/api/payments
 
-Stripe payment API routes.
+PayPal payment API routes (Orders v2 + Webhooks).
 
 | Route | File | Purpose |
 |---|---|---|
-| `POST /api/payments/intent` | `intent/route.ts` | Compute total from PRESENT meals, create/reuse Stripe PaymentIntent, return `clientSecret` |
-| `POST /api/payments/webhook` | `webhook/route.ts` | Handle Stripe events: set `hasPaid=true` on `payment_intent.succeeded` |
+| `POST /api/payments/order` | `order/route.ts` | Compute total from PRESENT meals, create a PayPal Order, return `orderId`. Persists the order id on the participation. |
+| `POST /api/payments/capture` | `capture/route.ts` | After buyer approves in the PayPal popup, capture the order, mark `hasPaid=true`. Body: `{ orderId }`. |
+| `POST /api/payments/webhook` | `webhook/route.ts` | Backup confirmation: handles `PAYMENT.CAPTURE.COMPLETED`, `PAYMENT.CAPTURE.DENIED`, `CHECKOUT.ORDER.VOIDED`. Verifies signature via PayPal's `/v1/notifications/verify-webhook-signature`. |
 
-**Security:** Amount is always computed server-side from DB (never trusted from client). Webhook signature verified via `stripe.webhooks.constructEvent()` using raw request body (`request.text()` — do NOT use `request.json()`).
+**Security:**
+- Amount is always computed server-side from DB (never trusted from client).
+- Capture route checks that `orderId` belongs to the authenticated user before capturing.
+- Webhook signature verified against `PAYPAL_WEBHOOK_ID` using raw request body (`request.text()` — never `request.json()`).
+- `custom_id` on the order encodes `userId:editionId` so the webhook can locate the participation without trusting the client.
 
-**Registration deadline:** `/api/payments/intent` deliberately stays open after registrations close (`isRegistrationClosed`), so users who confirmed before the cut-off can still pay late. Meal/participation/conference mutations on other routes return 409 once the deadline has passed.
+**Registration deadline:** `/api/payments/order` and `/api/payments/capture` deliberately stay open after registrations close (`isRegistrationClosed`), so users who confirmed before the cut-off can still pay late. Meal/participation/conference mutations on other routes return 409 once the deadline has passed.
 
-**UI entry point:** `src/features/meals/payment-section.tsx` is the only client surface that calls `/api/payments/intent` — there is no cash / bank-transfer fallback in the participant UX anymore.
+**UI entry point:** `src/features/meals/payment-section.tsx` is the only client surface — it uses `@paypal/react-paypal-js` (`<PayPalScriptProvider>` + `<PayPalButtons>`). The buyer can pay via PayPal account or as a guest with a card (PayPal's "Debit or Credit Card" option in the popup).
 
 **Env vars required:**
-- `STRIPE_SECRET_KEY` — server-side only
-- `STRIPE_WEBHOOK_SECRET` — for webhook signature verification
-- `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` — client-side (exposed to browser)
+- `PAYPAL_CLIENT_ID` — server-side
+- `PAYPAL_CLIENT_SECRET` — server-side
+- `PAYPAL_WEBHOOK_ID` — server-side, for webhook signature verification
+- `PAYPAL_ENV` — `"live"` for production, anything else (or unset) routes to sandbox
+- `NEXT_PUBLIC_PAYPAL_CLIENT_ID` — client-side (same value as `PAYPAL_CLIENT_ID`)
 
-**Stripe library:** `src/lib/stripe.ts` — singleton `Stripe` instance.
+**PayPal library:** `src/lib/paypal.ts` — thin fetch wrapper over PayPal REST (OAuth token cached in-process).
 
-**DB tracking:** `EditionParticipation.stripePaymentIntentId` + `stripePaymentStatus`. Audit trail in `PaymentIntent` model.
+**DB tracking:**
+- `EditionParticipation.paymentProviderId` + `paymentStatus` track the latest order.
+- `PaymentIntent` model is the audit trail (one row per order created, `providerId` = PayPal order id).
