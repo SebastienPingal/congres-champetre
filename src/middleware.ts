@@ -9,7 +9,7 @@ export default auth((req) => {
   if (pathname === '/') {
     if (req.auth) {
       // User is authenticated, redirect to dashboard
-      return NextResponse.redirect(new URL('/dashboard', req.url))
+      return NextResponse.redirect(new URL('/programme', req.url))
     } else {
       // User is not authenticated, redirect to login
       return NextResponse.redirect(new URL('/auth/signin', req.url))
@@ -17,7 +17,7 @@ export default auth((req) => {
   }
 
   // 🔒 Protect routes that require authentication
-  const protectedRoutes = ['/dashboard', '/admin']
+  const protectedRoutes = ['/programme', '/presence', '/repas', '/conferences', '/paiement', '/dashboard', '/admin']
   const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route))
   
   if (isProtectedRoute && !req.auth) {

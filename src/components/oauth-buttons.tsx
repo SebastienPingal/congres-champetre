@@ -10,7 +10,7 @@ interface OAuthButtonsProps {
   setIsLoading?: (loading: boolean) => void
 }
 
-export function OAuthButtons({ callbackUrl = "/dashboard", isLoading, setIsLoading }: OAuthButtonsProps) {
+export function OAuthButtons({ callbackUrl = "/programme", isLoading, setIsLoading }: OAuthButtonsProps) {
   const [loadingProvider, setLoadingProvider] = useState<string | null>(null)
 
   const handleOAuthSignIn = async (provider: string) => {

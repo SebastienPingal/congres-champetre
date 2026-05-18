@@ -2,6 +2,7 @@
 
 import { useSession, signOut } from "next-auth/react"
 import Link from "next/link"
+import { usePathname } from "next/navigation"
 import type { User } from "next-auth"
 import {
   CalendarDays,
@@ -15,24 +16,19 @@ import {
 import { useUserProfile } from "@/hooks/use-user-profile"
 import { cn } from "@/lib/utils"
 
-export type DashboardSection = "program" | "presence" | "meals" | "conferences" | "payment"
+export type SectionKey = "programme" | "presence" | "repas" | "conferences" | "paiement"
 
-type NavItem = { key: DashboardSection; label: string; icon: LucideIcon }
+type NavItem = { key: SectionKey; href: string; label: string; icon: LucideIcon }
 
-const NAV_ITEMS: NavItem[] = [
-  { key: "program",     label: "Programme",   icon: CalendarDays },
-  { key: "presence",    label: "Présence",    icon: UserCheck },
-  { key: "meals",       label: "Repas",       icon: UtensilsCrossed },
-  { key: "conferences", label: "Conférences", icon: Mic },
-  { key: "payment",     label: "Paiement",    icon: CreditCard },
+export const NAV_ITEMS: NavItem[] = [
+  { key: "programme",   href: "/programme",   label: "Programme",   icon: CalendarDays },
+  { key: "presence",    href: "/presence",    label: "Présence",    icon: UserCheck },
+  { key: "repas",       href: "/repas",       label: "Repas",       icon: UtensilsCrossed },
+  { key: "conferences", href: "/conferences", label: "Conférences", icon: Mic },
+  { key: "paiement",    href: "/paiement",    label: "Paiement",    icon: CreditCard },
 ]
 
 const WHATSAPP_URL = "https://chat.whatsapp.com/DJSVxLFkb7J6svyoBsenQu?mode=gi_t"
-
-interface NavbarProps {
-  activeSection?: DashboardSection
-  onSectionChange?: (key: DashboardSection) => void
-}
 
 function getInitials(name?: string | null) {
   if (!name) return "?"
@@ -62,9 +58,10 @@ function AdminBar() {
   )
 }
 
-export function Navbar({ activeSection, onSectionChange }: NavbarProps) {
+export function Navbar() {
   const { data: session } = useSession()
   const { data: profile } = useUserProfile()
+  const pathname = usePathname()
 
   if (!session) return null
 
@@ -83,9 +80,8 @@ export function Navbar({ activeSection, onSectionChange }: NavbarProps) {
         style={{ background: "var(--paper)", borderColor: "var(--line)" }}
       >
         <div className="mx-auto flex items-center gap-5 px-6 py-3.5" style={{ maxWidth: 1400 }}>
-          {/* Brand */}
           <Link
-            href="/dashboard"
+            href="/programme"
             className="block leading-none no-underline shrink-0 whitespace-nowrap"
             style={{ color: "inherit" }}
           >
@@ -112,40 +108,22 @@ export function Navbar({ activeSection, onSectionChange }: NavbarProps) {
             </div>
           </Link>
 
-          {/* Main navigation */}
           <nav className="flex flex-wrap gap-0.5 flex-1 ml-2">
             {NAV_ITEMS.map(item => {
               const Icon = item.icon
-              const active = activeSection === item.key
-              const className = cn(
-                "flex items-center gap-1.5 px-2.5 py-2 rounded-lg no-underline whitespace-nowrap font-sans text-[13.5px]",
-                active ? "font-semibold" : "font-medium",
-              )
-              const style = {
-                color: active ? "var(--green)" : "var(--ink-2)",
-                background: active ? "var(--green-soft)" : "transparent",
-              } as const
-
-              if (onSectionChange) {
-                return (
-                  <button
-                    key={item.key}
-                    type="button"
-                    onClick={() => onSectionChange(item.key)}
-                    className={cn(className, "border-0 cursor-pointer")}
-                    style={style}
-                  >
-                    <Icon width={15} height={15} />
-                    {item.label}
-                  </button>
-                )
-              }
+              const active = pathname === item.href || pathname?.startsWith(item.href + "/")
               return (
                 <Link
                   key={item.key}
-                  href={`/dashboard?section=${item.key}`}
-                  className={className}
-                  style={style}
+                  href={item.href}
+                  className={cn(
+                    "flex items-center gap-1.5 px-2.5 py-2 rounded-lg no-underline whitespace-nowrap font-sans text-[13.5px]",
+                    active ? "font-semibold" : "font-medium",
+                  )}
+                  style={{
+                    color: active ? "var(--green)" : "var(--ink-2)",
+                    background: active ? "var(--green-soft)" : "transparent",
+                  }}
                 >
                   <Icon width={15} height={15} />
                   {item.label}
@@ -154,7 +132,6 @@ export function Navbar({ activeSection, onSectionChange }: NavbarProps) {
             })}
           </nav>
 
-          {/* WhatsApp */}
           <a
             href={WHATSAPP_URL}
             target="_blank"
@@ -166,7 +143,6 @@ export function Navbar({ activeSection, onSectionChange }: NavbarProps) {
             WhatsApp
           </a>
 
-          {/* User / logout */}
           <button
             type="button"
             onClick={() => signOut()}
