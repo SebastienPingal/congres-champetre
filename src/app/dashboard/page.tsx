@@ -1,20 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Navbar } from "@/components/navbar"
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarInset,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarProvider,
-  SidebarTrigger,
-} from "@/components/ui/sidebar"
+import { Navbar, type DashboardSection } from "@/components/navbar"
 import { useUserProfile } from "@/hooks/use-user-profile"
 import { useMeals } from "@/hooks/use-meals"
 import { AlertBanner } from "@/features/participation/alert-banner"
@@ -34,18 +21,25 @@ import {
   type LucideIcon,
 } from "lucide-react"
 
-type SectionKey = "presence" | "meals" | "payment" | "conferences" | "program"
-
-type NavItem = {
-  key: SectionKey
-  label: string
-  icon: LucideIcon
+const SECTION_LABELS: Record<DashboardSection, { label: string; icon: LucideIcon }> = {
+  program:     { label: "Programme",   icon: CalendarDays },
+  presence:    { label: "Présence",    icon: UserCheck },
+  meals:       { label: "Repas",       icon: UtensilsCrossed },
+  conferences: { label: "Conférences", icon: Mic },
+  payment:     { label: "Paiement",    icon: CreditCard },
 }
+
+const VALID_SECTIONS: DashboardSection[] = ["program", "presence", "meals", "conferences", "payment"]
 
 export default function Dashboard() {
   const { data: user, isLoading, error } = useUserProfile()
   const { data: meals = [] } = useMeals()
-  const [active, setActive] = useState<SectionKey>("presence")
+
+  const [active, setActive] = useState<DashboardSection>(() => {
+    if (typeof window === "undefined") return "presence"
+    const s = new URLSearchParams(window.location.search).get("section") as DashboardSection | null
+    return s && VALID_SECTIONS.includes(s) ? s : "presence"
+  })
 
   if (isLoading) {
     return (
@@ -73,79 +67,36 @@ export default function Dashboard() {
   const showPayment = user.isAttending && !!user.onboardingCompletedAt
   const showConferences = user.isAttending
 
-  const items: NavItem[] = [
-    { key: "program", label: "Programme", icon: CalendarDays },
-    { key: "presence", label: "Présence", icon: UserCheck },
-    ...(showMeals ? [{ key: "meals" as const, label: "Repas", icon: UtensilsCrossed }] : []),
-    ...(showConferences ? [{ key: "conferences" as const, label: "Conférences", icon: Mic }] : []),
-    ...(showPayment ? [{ key: "payment" as const, label: "Paiement", icon: CreditCard }] : []),
-  ]
-
-  const currentItem = items.find((item) => item.key === active) ?? items[0]
+  const currentItem = SECTION_LABELS[active]
   const CurrentIcon = currentItem.icon
 
   return (
     <div className="min-h-screen">
-      <Navbar />
+      <Navbar activeSection={active} onSectionChange={setActive} />
 
       <OnboardingModal />
 
-      <SidebarProvider className="min-h-[calc(100svh-4rem)]">
-        <Sidebar variant="inset" className="top-16 h-[calc(100svh-4rem)]">
-          <SidebarContent>
-            <SidebarGroup>
-              <SidebarGroupLabel>Ma participation</SidebarGroupLabel>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  {items.map((item) => {
-                    const Icon = item.icon
-                    return (
-                      <SidebarMenuItem key={item.key}>
-                        <SidebarMenuButton
-                          tooltip={item.label}
-                          isActive={item.key === active}
-                          onClick={() => setActive(item.key)}
-                        >
-                          <Icon />
-                          <span>{item.label}</span>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                    )
-                  })}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
-          </SidebarContent>
-        </Sidebar>
+      {active === "program" ? (
+        <div className="container mx-auto px-4 py-6 lg:py-8 flex flex-col gap-4">
+          <ProgramSection user={user} meals={meals} onNavigate={setActive} />
+        </div>
+      ) : (
+        <div className="container mx-auto px-4 py-6 lg:py-8 flex flex-col gap-6">
+          <div className="flex items-center gap-2 text-2xl lg:text-3xl font-bold text-foreground">
+            <CurrentIcon className="h-6 w-6 lg:h-7 lg:w-7 text-primary" />
+            <h1>{currentItem.label}</h1>
+          </div>
 
-        <SidebarInset className="bg-transparent">
-          {active === "program" ? (
-            <div className="container mx-auto px-4 py-6 lg:py-8 flex flex-col gap-4">
-              <SidebarTrigger className="md:hidden self-start" />
-              <ProgramSection user={user} meals={meals} onNavigate={setActive} />
-            </div>
-          ) : (
-            <div className="container mx-auto px-4 py-6 lg:py-8 flex flex-col gap-6">
-              <div className="flex items-center gap-3">
-                <SidebarTrigger className="md:hidden" />
-                <div className="flex items-center gap-2 text-2xl lg:text-3xl font-bold text-foreground">
-                  <CurrentIcon className="h-6 w-6 lg:h-7 lg:w-7 text-primary" />
-                  <h1>{currentItem.label}</h1>
-                </div>
-              </div>
+          <EditionInfoCard edition={user.edition} />
 
-              <EditionInfoCard edition={user.edition} />
+          <AlertBanner user={user} meals={meals} />
 
-              <AlertBanner user={user} meals={meals} />
-
-              {active === "presence" && <PresenceSection user={user} />}
-              {active === "meals" && showMeals && <MealsSection user={user} />}
-              {active === "payment" && showPayment && <PaymentSection user={user} />}
-              {active === "conferences" && showConferences && <ConferencesSection user={user} />}
-            </div>
-          )}
-        </SidebarInset>
-      </SidebarProvider>
+          {active === "presence" && <PresenceSection user={user} />}
+          {active === "meals" && showMeals && <MealsSection user={user} />}
+          {active === "payment" && showPayment && <PaymentSection user={user} />}
+          {active === "conferences" && showConferences && <ConferencesSection user={user} />}
+        </div>
+      )}
     </div>
   )
 }
