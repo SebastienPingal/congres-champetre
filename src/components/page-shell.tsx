@@ -41,7 +41,7 @@ export function PageShell({ title, icon: Icon, children }: PageShellProps) {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 lg:py-10 flex flex-col gap-6">
+    <div className="mx-auto w-full max-w-5xl px-4 py-8 lg:py-10 flex flex-col gap-6">
       <div className="flex items-center gap-3">
         <Icon className="h-7 w-7 lg:h-8 lg:w-8" style={{ color: "var(--green)" }} />
         <h1
