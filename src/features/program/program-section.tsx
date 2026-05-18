@@ -77,7 +77,7 @@ function IlluminatedNumeral({ n }: { n: string }) {
   return (
     <div
       className="relative flex items-center justify-center shrink-0"
-      style={{ width: 74, height: 74, border: `1.5px solid ${accent}` }}
+      style={{ width: 54, height: 54, border: `1.5px solid ${accent}` }}
     >
       {([
         ["top", "left"], ["top", "right"],
@@ -97,7 +97,7 @@ function IlluminatedNumeral({ n }: { n: string }) {
       <span
         style={{
           fontFamily: "var(--font-display), 'Newsreader', serif",
-          fontSize: 54, fontWeight: 400, fontStyle: "italic", lineHeight: 1,
+          fontSize: 40, fontWeight: 400, fontStyle: "italic", lineHeight: 1,
           color: accent, transform: "translateY(2px)",
         }}
       >
@@ -110,25 +110,25 @@ function IlluminatedNumeral({ n }: { n: string }) {
 // ── Title block + meta ───────────────────────────────────────────────
 
 function TitleBlock({
-  year, dateOrnament, subtitle,
-}: { year: number; dateOrnament: string; subtitle: string }) {
+  editionName, dateOrnament, subtitle,
+}: { editionName: string; dateOrnament: string; subtitle: string }) {
   return (
-    <div className="text-center mb-8">
+    <div className="text-center mb-5">
       <div
-        className="uppercase mb-4"
+        className="uppercase mb-2"
         style={{
           fontFamily: "var(--font-mono), monospace",
           fontSize: 11, letterSpacing: "0.34em", color: "var(--ink-3)",
         }}
       >
-        Édition&nbsp;{year}
+        {editionName}
       </div>
       <h1
         style={{
           fontFamily: "var(--font-display), 'Newsreader', serif",
-          fontSize: "clamp(64px, 9vw, 108px)",
+          fontSize: "clamp(32px, 4.5vw, 52px)",
           fontWeight: 400,
-          letterSpacing: "-0.04em",
+          letterSpacing: "-0.03em",
           lineHeight: 1,
           margin: 0,
         }}
@@ -136,16 +136,16 @@ function TitleBlock({
         Programme
       </h1>
       <div
-        className="mt-3.5"
+        className="mt-2"
         style={{
           fontFamily: "var(--font-serif), serif",
-          fontStyle: "italic", fontSize: 21,
+          fontStyle: "italic", fontSize: 16,
           color: "var(--ink-2)", fontWeight: 400,
         }}
       >
         {subtitle}
       </div>
-      <div className="mt-4">
+      <div className="mt-3">
         <Ornament lineWidth={70}>
           <Fleuron size={9} />
           <span
@@ -168,7 +168,7 @@ function TitleBlock({
 function MetaLine({ location, participants }: { location: string; participants: string }) {
   return (
     <div
-      className="flex justify-center flex-wrap gap-x-7 gap-y-2 mb-6"
+      className="flex justify-center flex-wrap gap-x-7 gap-y-2 mb-4"
       style={{ fontSize: 13.5, color: "var(--ink-2)" }}
     >
       <span className="inline-flex items-center gap-2">
@@ -328,10 +328,10 @@ function SceneEntry({
     <div
       className="grid"
       style={{
-        gridTemplateColumns: "96px 1fr",
-        gap: 24,
-        paddingBottom: isLast ? 0 : 22,
-        marginBottom: isLast ? 0 : 22,
+        gridTemplateColumns: "84px 1fr",
+        gap: 20,
+        paddingBottom: isLast ? 0 : 12,
+        marginBottom: isLast ? 0 : 12,
         borderBottom: isLast ? "none" : "1px dashed var(--line-2)",
       }}
     >
@@ -339,7 +339,7 @@ function SceneEntry({
         <div
           style={{
             fontFamily: "var(--font-display), 'Newsreader', serif",
-            fontSize: 34, fontWeight: 500, lineHeight: 1,
+            fontSize: 26, fontWeight: 500, lineHeight: 1,
             color: "var(--ink)",
             fontFeatureSettings: "'lnum'",
           }}
@@ -377,7 +377,7 @@ function SceneEntry({
             <div
               style={{
                 fontFamily: "var(--font-serif), serif",
-                fontSize: 23, fontWeight: 600,
+                fontSize: 17, fontWeight: 600,
                 color: "var(--ink)", lineHeight: 1.22,
                 letterSpacing: "-0.015em",
               }}
@@ -403,7 +403,7 @@ function SceneEntry({
           <div
             style={{
               fontFamily: "var(--font-serif), serif",
-              fontSize: 23, fontStyle: "italic",
+              fontSize: 17, fontStyle: "italic",
               fontWeight: 500, color: "var(--ink)",
               lineHeight: 1.2, letterSpacing: "-0.01em",
             }}
@@ -430,7 +430,7 @@ function Act({
 
   return (
     <section className="flex-1 min-w-0 px-2">
-      <div className="text-center mb-7">
+      <div className="text-center mb-4">
         <div
           className="flex items-center justify-center uppercase"
           style={{
@@ -445,13 +445,13 @@ function Act({
           <span style={{ flex: 1, maxWidth: 80, height: 1, background: "var(--line-2)" }} />
         </div>
 
-        <div className="flex items-center justify-center mt-4" style={{ gap: 22 }}>
+        <div className="flex items-center justify-center mt-3" style={{ gap: 18 }}>
           <IlluminatedNumeral n={["", "I", "II", "III", "IV", "V"][dayNumber] ?? String(dayNumber)} />
           <div className="text-left">
             <div
               style={{
                 fontFamily: "var(--font-display), 'Newsreader', serif",
-                fontSize: 50, fontWeight: 600,
+                fontSize: 36, fontWeight: 600,
                 lineHeight: 1, letterSpacing: "-0.025em",
               }}
             >
@@ -460,8 +460,8 @@ function Act({
             <div
               style={{
                 fontFamily: "var(--font-serif), serif",
-                fontStyle: "italic", fontSize: 20,
-                color: "var(--ink-2)", fontWeight: 400, marginTop: 4,
+                fontStyle: "italic", fontSize: 15,
+                color: "var(--ink-2)", fontWeight: 400, marginTop: 3,
               }}
             >
               {dayNum} {month} {year}
@@ -470,7 +470,7 @@ function Act({
         </div>
 
         <div
-          className="flex items-center justify-center mt-4"
+          className="flex items-center justify-center mt-3"
           style={{ gap: 10, color: "var(--line-2)" }}
         >
           <Fleuron />
@@ -507,14 +507,14 @@ function SpeakersList({ slots }: { slots: TimeSlot[] }) {
 
   return (
     <section
-      className="mt-12 pt-8"
+      className="mt-6 pt-4"
       style={{ borderTop: "1px solid var(--line)" }}
     >
-      <div className="text-center mb-6">
+      <div className="text-center mb-3">
         <h2
           style={{
             fontFamily: "var(--font-display), 'Newsreader', serif",
-            fontSize: 34, fontWeight: 600,
+            fontSize: 22, fontWeight: 600,
             margin: 0, letterSpacing: "-0.02em",
           }}
         >
@@ -525,7 +525,7 @@ function SpeakersList({ slots }: { slots: TimeSlot[] }) {
         className="grid mx-auto"
         style={{
           gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-          gap: "14px 56px",
+          gap: "6px 56px",
           maxWidth: 880,
         }}
       >
@@ -538,7 +538,7 @@ function SpeakersList({ slots }: { slots: TimeSlot[] }) {
             <span
               style={{
                 fontFamily: "var(--font-display), 'Newsreader', serif",
-                fontSize: 20, fontWeight: 600,
+                fontSize: 15, fontWeight: 600,
                 color: "var(--ink)", letterSpacing: "-0.01em",
               }}
             >
@@ -594,7 +594,7 @@ export function ProgramSection({ user, meals, onNavigate }: ProgramSectionProps)
   const participants = `${count} ${count > 1 ? "participants inscrits" : "participant inscrit"}`
 
   return (
-    <div className="bg-card text-foreground rounded-2xl px-6 sm:px-10 lg:px-16 py-12 lg:py-14 relative overflow-hidden">
+    <div className="bg-card text-foreground rounded-2xl px-6 sm:px-8 lg:px-12 py-6 lg:py-8 relative overflow-hidden">
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-0"
@@ -616,7 +616,7 @@ export function ProgramSection({ user, meals, onNavigate }: ProgramSectionProps)
       />
 
       <div className="relative mx-auto" style={{ maxWidth: 1180 }}>
-        <TitleBlock year={year} dateOrnament={dateOrnament} subtitle={subtitle} />
+        <TitleBlock editionName={user.edition.name} dateOrnament={dateOrnament} subtitle={subtitle} />
         <MetaLine location={location} participants={participants} />
         <AlertParchemin user={user} meals={meals} onNavigate={onNavigate} />
 
@@ -669,7 +669,7 @@ export function ProgramSection({ user, meals, onNavigate }: ProgramSectionProps)
 
         {days.length > 0 && <SpeakersList slots={timeSlots} />}
 
-        <div className="mt-12" style={{ color: "var(--line-2)" }}>
+        <div className="mt-6" style={{ color: "var(--line-2)" }}>
           <Ornament lineWidth={100}>
             <Fleuron />
             <Fleuron color="var(--talk)" />
@@ -689,7 +689,7 @@ export function ProgramSection({ user, meals, onNavigate }: ProgramSectionProps)
           Fin du programme.
         </div>
         <div
-          className="flex justify-between mt-9 uppercase"
+          className="flex justify-between mt-5 uppercase"
           style={{
             fontFamily: "var(--font-mono), monospace",
             fontSize: 10.5, color: "var(--ink-3)",
