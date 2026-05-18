@@ -37,7 +37,7 @@ function CheckoutForm({ onSuccess }: { onSuccess: () => void }) {
     const { error: submitError } = await stripe.confirmPayment({
       elements,
       confirmParams: {
-        return_url: `${window.location.origin}/dashboard`,
+        return_url: `${window.location.origin}/paiement`,
       },
       redirect: "if_required",
     })
@@ -142,17 +142,19 @@ export function PaymentSection({ user }: PaymentSectionProps) {
 
   return (
     <section id="section-validation" className="flex flex-col gap-5">
-      <div className="flex items-start justify-between gap-3">
-        <p className="text-sm text-muted-foreground">
+      <div className="flex flex-col gap-2">
+        <div>
+          {locked ? (
+            <Badge variant="outline" className="border-destructive/40 text-destructive">
+              <Lock className="h-3 w-3 mr-1" />Inscriptions fermées
+            </Badge>
+          ) : (
+            <Badge variant="outline" className="border-warn-border text-warn">Non validée</Badge>
+          )}
+        </div>
+        <p className="text-sm text-muted-foreground max-w-prose">
           Réglez votre participation aux repas pour confirmer votre place. Tant que le paiement n&apos;est pas reçu, votre inscription reste provisoire.
         </p>
-        {locked ? (
-          <Badge variant="outline" className="border-destructive/40 text-destructive">
-            <Lock className="h-3 w-3 mr-1" />Inscriptions fermées
-          </Badge>
-        ) : (
-          <Badge variant="outline" className="border-warn-border text-warn">Non validée</Badge>
-        )}
       </div>
 
       <div className="rounded-lg border bg-white/60">

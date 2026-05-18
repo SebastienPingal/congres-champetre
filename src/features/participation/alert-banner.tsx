@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import { AlertTriangle, CircleDot, Lock } from "lucide-react"
 import type { UserProfile, MealSlot } from "@/types"
 
@@ -44,10 +45,7 @@ export function AlertBanner({ user, meals }: AlertBannerProps) {
 
   if (!needsPresenceAction && !needsMealAction && !needsConferenceAction && !needsPayment) return null
 
-  const scrollTo = (id: string) => (e: React.MouseEvent) => {
-    e.preventDefault()
-    document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "center" })
-  }
+  const linkCls = "inline-flex items-center gap-1.5 text-sm text-warn underline underline-offset-2 hover:text-warn transition-colors"
 
   return (
     <div className="mb-6 rounded-xl border border-warn-border bg-warn-bg p-4 shadow-sm animate-fade-in">
@@ -60,50 +58,34 @@ export function AlertBanner({ user, meals }: AlertBannerProps) {
           <ul className="flex flex-col gap-1.5">
             {needsPresenceAction && (
               <li>
-                <a
-                  href="#section-presence"
-                  className="inline-flex items-center gap-1.5 text-sm text-warn underline underline-offset-2 hover:text-warn transition-colors"
-                  onClick={scrollTo("section-presence")}
-                >
+                <Link href="/presence" className={linkCls}>
                   <CircleDot className="h-3.5 w-3.5 text-primary" />
                   Confirmez votre présence au weekend
-                </a>
+                </Link>
               </li>
             )}
             {needsMealAction && (
               <li>
-                <a
-                  href="#section-repas"
-                  className="inline-flex items-center gap-1.5 text-sm text-warn underline underline-offset-2 hover:text-warn transition-colors"
-                  onClick={scrollTo("section-repas")}
-                >
+                <Link href="/repas" className={linkCls}>
                   <CircleDot className="h-3.5 w-3.5 text-warn" />
                   Indiquez votre présence aux repas
-                </a>
+                </Link>
               </li>
             )}
             {needsPayment && (
               <li>
-                <a
-                  href="#section-validation"
-                  className="inline-flex items-center gap-1.5 text-sm text-warn underline underline-offset-2 hover:text-warn transition-colors"
-                  onClick={scrollTo("section-validation")}
-                >
+                <Link href="/paiement" className={linkCls}>
                   <CircleDot className="h-3.5 w-3.5 text-warn" />
                   Validez votre participation ({totalToPay} €)
-                </a>
+                </Link>
               </li>
             )}
             {needsConferenceAction && (
               <li>
-                <a
-                  href="#section-conferences"
-                  className="inline-flex items-center gap-1.5 text-sm text-warn underline underline-offset-2 hover:text-warn transition-colors"
-                  onClick={scrollTo("section-conferences")}
-                >
+                <Link href="/conferences" className={linkCls}>
                   <CircleDot className="h-3.5 w-3.5 text-talk" />
                   Proposez votre conférence
-                </a>
+                </Link>
               </li>
             )}
           </ul>

@@ -20,7 +20,7 @@ export default function SignIn() {
           {/* Connexion OAuth uniquement */}
           <div className="space-y-4">
             <OAuthButtons 
-              callbackUrl="/dashboard" 
+              callbackUrl="/programme" 
               isLoading={isLoading}
               setIsLoading={setIsLoading}
             />
