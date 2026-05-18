@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
-import { getStripe } from "@/lib/stripe"
+import { createOrder } from "@/lib/paypal"
 import { getActiveEdition, NoActiveEditionError } from "@/lib/edition"
 
 export async function POST() {
@@ -13,7 +13,6 @@ export async function POST() {
 
     const activeEdition = await getActiveEdition()
 
-    // Compute total from PRESENT meal registrations with a price
     const mealRegistrations = await prisma.mealRegistration.findMany({
       where: {
         userId: session.user.id,
@@ -36,41 +35,22 @@ export async function POST() {
       return NextResponse.json({ error: "Aucun repas payant sélectionné" }, { status: 400 })
     }
 
-    const participation = await prisma.editionParticipation.findUnique({
-      where: { userId_editionId: { userId: session.user.id, editionId: activeEdition.id } },
+    const order = await createOrder(totalEuros, {
+      userId: session.user.id,
+      editionId: activeEdition.id,
     })
 
-    const stripe = getStripe()
-
-    // Reuse existing intent if it exists and amount matches
-    if (participation?.stripePaymentIntentId && participation.stripePaymentStatus === "pending") {
-      const existing = await stripe.paymentIntents.retrieve(participation.stripePaymentIntentId)
-      if (existing.amount === amountCents && existing.status === "requires_payment_method") {
-        return NextResponse.json({ clientSecret: existing.client_secret, amount: totalEuros })
-      }
-    }
-
-    const intent = await stripe.paymentIntents.create({
-      amount: amountCents,
-      currency: "eur",
-      metadata: {
-        userId: session.user.id,
-        editionId: activeEdition.id,
-      },
-    })
-
-    // Record the intent
     const upsertedParticipation = await prisma.editionParticipation.upsert({
       where: { userId_editionId: { userId: session.user.id, editionId: activeEdition.id } },
       create: {
         userId: session.user.id,
         editionId: activeEdition.id,
-        stripePaymentIntentId: intent.id,
-        stripePaymentStatus: "pending",
+        paymentProviderId: order.id,
+        paymentStatus: "pending",
       },
       update: {
-        stripePaymentIntentId: intent.id,
-        stripePaymentStatus: "pending",
+        paymentProviderId: order.id,
+        paymentStatus: "pending",
       },
     })
 
@@ -79,19 +59,19 @@ export async function POST() {
         userId: session.user.id,
         editionId: activeEdition.id,
         participationId: upsertedParticipation.id,
-        stripeId: intent.id,
+        providerId: order.id,
         amount: amountCents,
         currency: "eur",
         status: "pending",
       },
     })
 
-    return NextResponse.json({ clientSecret: intent.client_secret, amount: totalEuros })
+    return NextResponse.json({ orderId: order.id, amount: totalEuros })
   } catch (error) {
     if (error instanceof NoActiveEditionError) {
       return NextResponse.json({ error: "Aucune édition active" }, { status: 503 })
     }
-    console.error("🚨 Erreur création intent:", error)
+    console.error("🚨 Erreur création order PayPal:", error)
     return NextResponse.json({ error: "❌ Erreur lors de la création du paiement" }, { status: 500 })
   }
 }

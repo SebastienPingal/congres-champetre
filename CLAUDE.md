@@ -4,7 +4,7 @@ Guide de navigation pour Claude Code dans ce dépôt. Pour comprendre l'architec
 
 ## TL;DR
 
-App Next.js 15 (App Router) + PostgreSQL/Prisma + NextAuth (OAuth) + TanStack Query + Stripe + Nodemailer. UI **en français**, code en anglais. Une seule `Edition` active à la fois — tout le métier est scopé à l'édition active via `getActiveEdition()` (`src/lib/edition.ts`).
+App Next.js 15 (App Router) + PostgreSQL/Prisma + NextAuth (OAuth) + TanStack Query + PayPal + Nodemailer. UI **en français**, code en anglais. Une seule `Edition` active à la fois — tout le métier est scopé à l'édition active via `getActiveEdition()` (`src/lib/edition.ts`).
 
 ## Commandes
 
@@ -41,7 +41,7 @@ src/app/
 
 src/features/               # UI feature-sliced — chaque dossier a un CLAUDE.md
 ├── participation/          # presence-section, edition-info-card, alert-banner
-├── meals/                  # meals-section, payment-section (Stripe-only)
+├── meals/                  # meals-section, payment-section (PayPal-only)
 ├── conferences/            # conferences-section, conference-edit-form, conference-delete-button
 ├── onboarding/             # onboarding-modal + steps/ (attending/days/sleeping/meals/speaking/conference)
 └── program/                # program-section (lecture seule)
@@ -55,7 +55,7 @@ src/hooks/                  # React Query hooks (un CLAUDE.md ici)
 src/lib/
 ├── auth.ts                 # NextAuth config (JWT strategy, Google/GitHub/Discord)
 ├── prisma.ts               # singleton (globalThis en dev)
-├── stripe.ts               # singleton lazy via getStripe()
+├── paypal.ts               # wrapper REST PayPal (token OAuth caché en mémoire) — createOrder / captureOrder / verifyWebhook
 ├── edition.ts              # getActiveEdition() / getActiveEditionId() / isRegistrationClosed() / getRegistrationDeadline() — THROW si aucune active
 ├── mail.ts                 # sendBroadcastEmail + markdown → HTML safe
 ├── query-keys.ts           # factory typée pour React Query
@@ -107,11 +107,11 @@ Détail dans `ARCHITECTURE.md §3` ; source de vérité : `prisma/schema.prisma`
 Points à retenir :
 
 - `Edition.isActive` : au plus une `true` à un instant donné, garanti applicativement par `PATCH /api/editions/[id]` dans une transaction Prisma.
-- `EditionParticipation` (`@@unique([userId, editionId])`) porte **toutes** les réponses du participant : `isAttending`, `attendanceDays`, `sleepsOnSite`, `hasPaid`, `willPayInCash`, `onboardingCompletedAt`, `stripePaymentIntentId/Status`, `paidAmount`. `onboardingCompletedAt = null` → la modal s'affiche.
+- `EditionParticipation` (`@@unique([userId, editionId])`) porte **toutes** les réponses du participant : `isAttending`, `attendanceDays`, `sleepsOnSite`, `hasPaid`, `willPayInCash`, `onboardingCompletedAt`, `paymentProviderId/paymentStatus`, `paidAmount`. `onboardingCompletedAt = null` → la modal s'affiche.
 - `Conference.timeSlotId` est `String? @unique` → un slot a au plus une conférence.
 - `TimeSlot.kind` : `CONFERENCE | MEAL | BREAK | OTHER`. Les `MEAL` ont `description`, `price`, `showInRegistration` en plus.
 - `MealRegistration` n'existe que si le user a coché PRESENT/ABSENT. Pas de ligne = pas répondu.
-- `PaymentIntent` est un journal d'audit Stripe, distinct des champs `stripePaymentIntentId/Status` qui pointent vers le dernier intent en cours.
+- `PaymentIntent` est un journal d'audit PayPal (un row par order PayPal créé), distinct des champs `paymentProviderId/paymentStatus` qui pointent vers le dernier order en cours.
 
 ## API en un coup d'œil
 
@@ -121,8 +121,9 @@ Voir `ARCHITECTURE.md §6` pour le tableau exhaustif. Quelques routes critiques 
 |---|---|---|
 | `/api/user/profile` | GET/PATCH | Le moteur central — fusionne updates User et EditionParticipation |
 | `/api/onboarding` | POST | Distinct de PATCH profile : pose `onboardingCompletedAt` |
-| `/api/payments/intent` | POST | Montant **toujours** recalculé en DB, jamais accepté du client. Reste ouvert après la fermeture des inscriptions. |
-| `/api/payments/webhook` | POST | **`request.text()` pour le body brut** — vital pour `constructEvent` |
+| `/api/payments/order` | POST | Crée un Order PayPal. Montant **toujours** recalculé en DB, jamais accepté du client. Reste ouvert après la fermeture des inscriptions. |
+| `/api/payments/capture` | POST | Capture l'order après approbation côté PayPal. Vérifie que l'`orderId` appartient bien à l'utilisateur. |
+| `/api/payments/webhook` | POST | **`request.text()` pour le body brut** — vital pour `verifyWebhook` PayPal (filet de sécurité si le capture front échoue) |
 | `/api/editions/[id]` | PATCH | `isActive: true` désactive les autres dans une transaction |
 | `/api/admin/users` | DELETE | Supprime la **participation**, pas le User |
 
@@ -152,9 +153,9 @@ if (me?.role !== "ADMIN") return NextResponse.json({ error: "⚠️ Accès refus
 
 **Composant client/serveur** : tout ce qui consomme `useSession`, `useQuery`, ou un hook Radix doit être `"use client"`. Les pages `/dashboard` et `/admin/*` le sont déjà.
 
-**Stripe** : ne jamais accepter le montant depuis le client. Toujours recalculer côté serveur depuis `MealRegistration.status === "PRESENT"` et `TimeSlot.price`. Le dashboard utilise `PaymentSection` (`features/meals/payment-section.tsx`) — c'est le seul moyen de payer côté participant (pas de virement/IBAN/liquide dans l'UI). Le champ `willPayInCash` reste accessible uniquement depuis `/admin/users` pour marquer manuellement les paiements en espèces.
+**PayPal** : ne jamais accepter le montant depuis le client. Toujours recalculer côté serveur depuis `MealRegistration.status === "PRESENT"` et `TimeSlot.price`. Le dashboard utilise `PaymentSection` (`features/meals/payment-section.tsx`) avec `@paypal/react-paypal-js` — c'est le seul moyen de payer côté participant. Le bouton PayPal expose `compte PayPal` **et** `Carte bancaire invité` (pas besoin de compte PayPal pour payer). Le champ `willPayInCash` reste accessible uniquement depuis `/admin/users` pour marquer manuellement les paiements en espèces. Mode sandbox vs live contrôlé par `PAYPAL_ENV`.
 
-**Fermeture des inscriptions** : par défaut 7 jours avant `edition.startDate`. Tout endpoint qui modifie la participation (`/api/user/profile` PATCH, `/api/meals` POST, `/api/onboarding` POST, `/api/conferences` POST + `[id]` PATCH/DELETE) renvoie `409` après ce délai pour les non-admins. L'UI passe en read-only et affiche un badge « Inscriptions fermées ». `/api/payments/intent` reste ouvert pour permettre aux utilisateurs déjà inscrits de payer en retard.
+**Fermeture des inscriptions** : par défaut 7 jours avant `edition.startDate`. Tout endpoint qui modifie la participation (`/api/user/profile` PATCH, `/api/meals` POST, `/api/onboarding` POST, `/api/conferences` POST + `[id]` PATCH/DELETE) renvoie `409` après ce délai pour les non-admins. L'UI passe en read-only et affiche un badge « Inscriptions fermées ». `/api/payments/order` et `/api/payments/capture` restent ouverts pour permettre aux utilisateurs déjà inscrits de payer en retard.
 
 **Email** : passer par `sendBroadcastEmail()`. Le markdown est converti via un parser maison (lignes, listes `-`/`*`, `**bold**`, `*italic*`, `[link](url)`, `` `code` ``) avec `escapeHtml` au préalable.
 
@@ -166,7 +167,7 @@ if (me?.role !== "ADMIN") return NextResponse.json({ error: "⚠️ Accès refus
 
 1. **Sans édition active**, presque toutes les pages user et tous les endpoints `/api/*` (sauf auth, editions list, et admin/emails avec `filter=all`) retournent une 500. Toujours seeder ou créer une édition active avant la première utilisation.
 2. **`pnpm db:seed`** ne crée **pas** d'admin (malgré le commentaire dans `package.json` et `SETUP.md`). Promouvoir un user en ADMIN via Prisma Studio ou SQL direct après son premier login OAuth.
-3. **`webhook` Stripe** : utiliser `request.text()`, jamais `request.json()` — sinon la signature ne vérifie pas. Et la route est en `dynamic = "force-dynamic"`.
+3. **Webhook PayPal** : utiliser `request.text()`, jamais `request.json()` — la vérification de signature appelle l'endpoint PayPal `/v1/notifications/verify-webhook-signature` avec le `webhook_event` parsé depuis le brut. Route en `dynamic = "force-dynamic"`.
 4. **Composants `conference-form` / `conference-edit-form` / `conference-delete-button`** existent en double (dans `components/` et `features/conferences/`). Les versions `features/*` utilisent les hooks React Query ; les versions `components/*` utilisent du fetch direct et sont consommées par l'admin. Voir `REFACTOR.md`.
 5. **`/admin/page.tsx`** n'utilise pas React Query — il fait des `fetch` + `useState` directement. Si tu y ajoutes des données, suis le pattern existant ou migre l'ensemble vers les hooks (mais c'est un refactor non trivial).
 6. **PostgreSQL en local** sur le port **5434** (pas 5432) via `docker-compose.yml`.
@@ -178,5 +179,5 @@ if (me?.role !== "ADMIN") return NextResponse.json({ error: "⚠️ Accès refus
 - [`REFACTOR.md`](./REFACTOR.md) — inconsistances et opportunités de refactor identifiées
 - [`README.md`](./README.md) — présentation publique (⚠ contient des infos obsolètes sur l'auth email/password)
 - [`SETUP.md`](./SETUP.md) — setup local (⚠ contient des infos obsolètes sur l'admin seedé)
-- [`PROD.md`](./PROD.md) — checklist de mise en prod (à jour pour Stripe)
+- [`PROD.md`](./PROD.md) — checklist de mise en prod (à jour pour PayPal)
 - [`oauth-setup.md`](./oauth-setup.md) — config OAuth Google/Discord/GitHub

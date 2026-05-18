@@ -1,69 +1,16 @@
 "use client"
 
 import { useState } from "react"
-import { loadStripe } from "@stripe/stripe-js"
-import {
-  Elements,
-  PaymentElement,
-  useStripe,
-  useElements,
-} from "@stripe/react-stripe-js"
+import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js"
 import { useQueryClient } from "@tanstack/react-query"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { CheckCircle2, CreditCard, Lock, ShieldCheck } from "lucide-react"
+import { CheckCircle2, Lock, ShieldCheck } from "lucide-react"
 import { useMeals } from "@/hooks/use-meals"
 import { queryKeys } from "@/lib/query-keys"
 import type { UserProfile } from "@/types"
 
-const stripePromise = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
-  ? loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY)
-  : null
-
-function CheckoutForm({ onSuccess }: { onSuccess: () => void }) {
-  const stripe = useStripe()
-  const elements = useElements()
-  const [error, setError] = useState<string | null>(null)
-  const [isProcessing, setIsProcessing] = useState(false)
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!stripe || !elements) return
-
-    setIsProcessing(true)
-    setError(null)
-
-    const { error: submitError } = await stripe.confirmPayment({
-      elements,
-      confirmParams: {
-        return_url: `${window.location.origin}/paiement`,
-      },
-      redirect: "if_required",
-    })
-
-    if (submitError) {
-      setError(submitError.message ?? "Erreur lors du paiement")
-      setIsProcessing(false)
-    } else {
-      onSuccess()
-    }
-  }
-
-  return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-      <PaymentElement />
-      {error && <p className="text-sm text-destructive">{error}</p>}
-      <Button type="submit" disabled={!stripe || isProcessing} className="w-full">
-        {isProcessing ? "Traitement..." : "Confirmer le paiement"}
-      </Button>
-      <p className="text-xs text-muted-foreground text-center flex items-center justify-center gap-1">
-        <ShieldCheck className="h-3 w-3" />
-        Paiement sécurisé par Stripe
-      </p>
-    </form>
-  )
-}
+const paypalClientId = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID
 
 function formatDeadline(deadlineIso: string): { label: string; daysLeft: number } {
   const deadline = new Date(deadlineIso)
@@ -80,9 +27,6 @@ interface PaymentSectionProps {
 
 export function PaymentSection({ user }: PaymentSectionProps) {
   const { data: meals = [] } = useMeals()
-  const [clientSecret, setClientSecret] = useState<string | null>(null)
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [deferred, setDeferred] = useState(false)
   const qc = useQueryClient()
@@ -91,36 +35,9 @@ export function PaymentSection({ user }: PaymentSectionProps) {
   const total = payableMeals.reduce((sum, m) => sum + (m.price ?? 0), 0)
   const hasPaid = user.hasPaid
   const locked = user.edition.isRegistrationClosed
-  const stripeConfigured = !!stripePromise
+  const paypalConfigured = !!paypalClientId
 
   if (total === 0 && !hasPaid) return null
-
-  const handleOpenPayment = async () => {
-    setIsLoading(true)
-    setErrorMessage(null)
-    try {
-      const res = await fetch("/api/payments/intent", { method: "POST" })
-      const data = await res.json()
-      if (!res.ok) {
-        setErrorMessage(data.error ?? "Erreur lors de la création du paiement")
-        return
-      }
-      if (data.clientSecret) {
-        setClientSecret(data.clientSecret)
-        setIsDialogOpen(true)
-      }
-    } catch {
-      setErrorMessage("Erreur réseau, réessayez")
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const handlePaymentSuccess = () => {
-    setIsDialogOpen(false)
-    setClientSecret(null)
-    qc.invalidateQueries({ queryKey: queryKeys.userProfile })
-  }
 
   if (hasPaid) {
     return (
@@ -139,6 +56,32 @@ export function PaymentSection({ user }: PaymentSectionProps) {
   const deadline = user.edition.registrationDeadline
     ? formatDeadline(user.edition.registrationDeadline)
     : null
+
+  const createOrder = async () => {
+    setErrorMessage(null)
+    const res = await fetch("/api/payments/order", { method: "POST" })
+    const data = await res.json()
+    if (!res.ok) {
+      setErrorMessage(data.error ?? "Erreur lors de la création du paiement")
+      throw new Error(data.error ?? "create order failed")
+    }
+    return data.orderId as string
+  }
+
+  const onApprove = async (data: { orderID: string }) => {
+    setErrorMessage(null)
+    const res = await fetch("/api/payments/capture", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ orderId: data.orderID }),
+    })
+    const json = await res.json()
+    if (!res.ok || json.status !== "succeeded") {
+      setErrorMessage(json.error ?? "Le paiement n'a pas pu être confirmé")
+      return
+    }
+    qc.invalidateQueries({ queryKey: queryKeys.userProfile })
+  }
 
   return (
     <section id="section-validation" className="flex flex-col gap-5">
@@ -189,27 +132,31 @@ export function PaymentSection({ user }: PaymentSectionProps) {
 
       {errorMessage && <p className="text-sm text-destructive">{errorMessage}</p>}
 
-      {!stripeConfigured ? (
+      {!paypalConfigured ? (
         <p className="text-sm text-muted-foreground">
           Le paiement en ligne n&apos;est pas configuré sur cet environnement.
         </p>
       ) : (
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-          <Button
-            type="button"
-            onClick={handleOpenPayment}
-            disabled={isLoading || total === 0}
-            className="flex-1"
-          >
-            <CreditCard className="h-4 w-4 mr-2" />
-            {isLoading ? "Préparation..." : `Payer maintenant — ${total} €`}
-          </Button>
+        <div className="flex flex-col gap-3">
+          <PayPalScriptProvider options={{ clientId: paypalClientId!, currency: "EUR", intent: "capture" }}>
+            <PayPalButtons
+              style={{ layout: "vertical", label: "pay" }}
+              createOrder={createOrder}
+              onApprove={onApprove}
+              onError={(err) => setErrorMessage(err instanceof Error ? err.message : "Erreur PayPal")}
+              onCancel={() => setErrorMessage("Paiement annulé")}
+            />
+          </PayPalScriptProvider>
+          <p className="text-xs text-muted-foreground text-center flex items-center justify-center gap-1">
+            <ShieldCheck className="h-3 w-3" />
+            Paiement sécurisé par PayPal — carte bancaire acceptée sans compte
+          </p>
           {!deferred && !locked && (
             <Button
               type="button"
               variant="ghost"
               onClick={() => setDeferred(true)}
-              className="text-muted-foreground"
+              className="text-muted-foreground self-center"
             >
               Payer plus tard
             </Button>
@@ -222,19 +169,6 @@ export function PaymentSection({ user }: PaymentSectionProps) {
           Vous pourrez revenir payer à tout moment depuis cet écran avant la fermeture des inscriptions.
         </p>
       )}
-
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Paiement — {total} €</DialogTitle>
-          </DialogHeader>
-          {clientSecret && stripePromise && (
-            <Elements stripe={stripePromise} options={{ clientSecret }}>
-              <CheckoutForm onSuccess={handlePaymentSuccess} />
-            </Elements>
-          )}
-        </DialogContent>
-      </Dialog>
     </section>
   )
 }

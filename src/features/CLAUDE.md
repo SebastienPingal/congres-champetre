@@ -5,7 +5,7 @@ Feature-sliced folder. Each subfolder owns one domain: components, helpers, and 
 | Folder | Domain |
 |---|---|
 | `participation/` | Presence RSVP, attendance days, sleeping on-site, edition info card, alert banner |
-| `meals/` | Meal registration toggles (PRESENT/ABSENT), payment mode selector, Stripe card payment |
+| `meals/` | Meal registration toggles (PRESENT/ABSENT), PayPal payment (compte PayPal ou carte invité) |
 | `conferences/` | Conference proposal form, edit form, delete button, speaker toggle section |
 | `onboarding/` | First-visit step-by-step modal (4 questions, "je ne sais pas encore" on each) |
 | `program/` | Weekend schedule display (read-only, grouped by day) |
