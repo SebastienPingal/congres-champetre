@@ -41,7 +41,9 @@ export function PageShell({ title, icon: Icon, children }: PageShellProps) {
   }
 
   return (
-    <div className="mx-auto w-full max-w-5xl px-4 py-8 lg:py-10 flex flex-col gap-6">
+    <div className="mx-auto w-full max-w-5xl px-4 py-6 lg:py-8 flex flex-col gap-6">
+      <AlertBanner user={user} meals={meals} />
+
       <div className="flex items-center gap-3">
         <Icon className="h-7 w-7 lg:h-8 lg:w-8" style={{ color: "var(--green)" }} />
         <h1
@@ -59,7 +61,6 @@ export function PageShell({ title, icon: Icon, children }: PageShellProps) {
       </div>
 
       <EditionInfoCard edition={user.edition} />
-      <AlertBanner user={user} meals={meals} />
 
       {children({ user, meals })}
     </div>
