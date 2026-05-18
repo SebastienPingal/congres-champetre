@@ -597,9 +597,9 @@ export function ProgramSection({ user, meals, onNavigate }: ProgramSectionProps)
     <div className="text-foreground px-2 sm:px-4 lg:px-6 py-6 lg:py-8 relative">
 
       <div className="relative mx-auto" style={{ maxWidth: 1180 }}>
+        <AlertParchemin user={user} meals={meals} onNavigate={onNavigate} />
         <TitleBlock editionName={user.edition.name} dateOrnament={dateOrnament} subtitle={subtitle} />
         <MetaLine location={location} participants={participants} />
-        <AlertParchemin user={user} meals={meals} onNavigate={onNavigate} />
 
         {isLoading ? (
           <p className="text-center" style={{ color: "var(--ink-3)" }}>
