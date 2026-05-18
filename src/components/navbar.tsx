@@ -40,20 +40,20 @@ function getInitials(name?: string | null) {
 function AdminBar() {
   return (
     <div
-      className="flex items-center gap-4 px-4 py-1 text-[12px] font-sans"
+      className="flex items-center gap-2 sm:gap-4 px-3 sm:px-4 py-1 text-[12px] font-sans overflow-x-auto"
       style={{ background: "#2b2a27", color: "#cfcbbf" }}
     >
       <span
-        className="font-bold uppercase tracking-wider text-[10px] rounded-sm px-1.5 py-0.5 text-white"
+        className="font-bold uppercase tracking-wider text-[10px] rounded-sm px-1.5 py-0.5 text-white shrink-0"
         style={{ background: "#d34a3b", letterSpacing: "0.08em" }}
       >
         Admin
       </span>
-      <span className="opacity-60">Outils internes —</span>
-      <nav className="flex gap-4">
-        <Link href="/admin"        className="no-underline" style={{ color: "#e8e4d6" }}>Administration</Link>
-        <Link href="/admin/users"  className="no-underline" style={{ color: "#e8e4d6" }}>Utilisateurs</Link>
-        <Link href="/admin/emails" className="no-underline" style={{ color: "#e8e4d6" }}>Email global</Link>
+      <span className="opacity-60 hidden sm:inline shrink-0">Outils internes —</span>
+      <nav className="flex gap-3 sm:gap-4 shrink-0">
+        <Link href="/admin"        className="no-underline whitespace-nowrap" style={{ color: "#e8e4d6" }}>Administration</Link>
+        <Link href="/admin/users"  className="no-underline whitespace-nowrap" style={{ color: "#e8e4d6" }}>Utilisateurs</Link>
+        <Link href="/admin/emails" className="no-underline whitespace-nowrap" style={{ color: "#e8e4d6" }}>Email global</Link>
       </nav>
     </div>
   )
@@ -80,7 +80,7 @@ export function Navbar() {
         className="border-b"
         style={{ background: "var(--paper)", borderColor: "var(--line)" }}
       >
-        <div className="mx-auto flex items-center gap-5 px-6 py-3.5" style={{ maxWidth: 1400 }}>
+        <div className="mx-auto flex flex-wrap items-center gap-x-3 gap-y-2 sm:gap-5 px-3 sm:px-6 py-2.5 sm:py-3.5" style={{ maxWidth: 1400 }}>
           <Link
             href="/programme"
             className="block leading-none no-underline shrink-0 whitespace-nowrap"
@@ -89,17 +89,15 @@ export function Navbar() {
             <div
               className="font-mono uppercase mb-1"
               style={{
-                fontSize: 10,
                 letterSpacing: "0.22em",
                 color: "var(--ink-3)",
               }}
             >
-              Congrès Champêtre
+              <span className="text-[9px] sm:text-[10px]">Congrès Champêtre</span>
             </div>
             <div
-              className="font-display"
+              className="font-display text-[18px] sm:text-[24px]"
               style={{
-                fontSize: 24,
                 fontWeight: 600,
                 letterSpacing: "-0.02em",
                 color: "var(--ink)",
@@ -109,7 +107,7 @@ export function Navbar() {
             </div>
           </Link>
 
-          <nav className="flex flex-wrap gap-0.5 flex-1 ml-2">
+          <nav className="flex gap-0.5 flex-1 order-last sm:order-none ml-0 sm:ml-2 -mx-3 sm:mx-0 px-3 sm:px-0 overflow-x-auto basis-full sm:basis-auto">
             {NAV_ITEMS.map(item => {
               const Icon = item.icon
               const active = pathname === item.href || pathname?.startsWith(item.href + "/")
@@ -137,18 +135,19 @@ export function Navbar() {
             href={WHATSAPP_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="animate-whatsapp-pulse flex items-center gap-[7px] text-white no-underline font-semibold shrink-0 whitespace-nowrap rounded-[10px] px-3.5 py-[9px] text-[13px] transition-transform hover:scale-105"
+            aria-label="WhatsApp"
+            className="animate-whatsapp-pulse ml-auto sm:ml-0 flex items-center gap-[7px] text-white no-underline font-semibold shrink-0 whitespace-nowrap rounded-[10px] px-2.5 sm:px-3.5 py-[9px] text-[13px] transition-transform hover:scale-105"
             style={{ background: "#22a463" }}
           >
             <MessageCircle width={16} height={16} />
-            WhatsApp
+            <span className="hidden sm:inline">WhatsApp</span>
           </a>
 
           <button
             type="button"
             onClick={() => signOut()}
             aria-label="Se déconnecter"
-            className="navbar-logout group flex items-center gap-[9px] bg-transparent cursor-pointer shrink-0 whitespace-nowrap rounded-[10px] py-1.5 pl-2.5 pr-3 text-[13px] font-sans transition-colors"
+            className="navbar-logout group flex items-center gap-[9px] bg-transparent cursor-pointer shrink-0 whitespace-nowrap rounded-[10px] py-1.5 pl-2.5 pr-2.5 sm:pr-3 text-[13px] font-sans transition-colors"
             style={{
               border: "1px solid var(--line-2)",
               color: "var(--ink)",
@@ -167,7 +166,7 @@ export function Navbar() {
               <span className="navbar-logout__initials">{initials}</span>
               <LogOut className="navbar-logout__icon" width={14} height={14} />
             </span>
-            <span className="flex flex-col items-start leading-[1.15]">
+            <span className="hidden sm:flex flex-col items-start leading-[1.15]">
               <span
                 className="navbar-logout__kicker"
                 style={{ fontSize: 10.5, color: "var(--ink-3)" }}
