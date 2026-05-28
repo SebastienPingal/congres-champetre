@@ -5,10 +5,145 @@
 
 import Link from "next/link"
 import { LandingHeader } from "@/components/landing-header"
+import { prisma } from "@/lib/prisma"
 
-const DATES_LABEL = "17 & 18 octobre 2026"
-const DATES_ROMAN = "XVII — XVIII OCTOBRE MMXXVI"
-const EDITION = "II"
+import {
+  formatEditionDatesBanner,
+  formatEditionDatesLabel,
+  formatFrenchDate,
+  formatPrice,
+  getActiveEdition,
+  getActiveEditionNumber,
+  getEditionSeasonLabel,
+  getRegistrationDeadline,
+  NoActiveEditionError,
+  toRoman,
+} from "@/lib/edition"
+
+const MIN_ATTENDING_TO_SHOW = 7
+
+type EditionNameParts = { left: string; sep: string | null; right: string | null }
+
+function splitEditionName(name: string): EditionNameParts {
+  for (const sep of [" & ", " et "] as const) {
+    const i = name.indexOf(sep)
+    if (i > 0) return { left: name.slice(0, i), sep, right: name.slice(i + sep.length) }
+  }
+  return { left: name, sep: null, right: null }
+}
+
+type PastConference = {
+  id: string
+  title: string
+  speakerName: string
+  editionName: string
+  editionYear: number | null
+}
+
+type LandingData = {
+  datesLabel: string
+  datesBanner: string
+  edition: string
+  year: number
+  seasonKicker: string
+  editionName: string
+  nameParts: EditionNameParts
+  attendingCount: number | null
+  conferenceCount: number
+  registrationDeadlineLabel: string | null
+  priceRange: { min: number; max: number } | null
+  pastConferences: PastConference[]
+}
+
+const FALLBACK: LandingData = {
+  datesLabel: "Bientôt annoncé",
+  datesBanner: "ÉDITION À VENIR",
+  edition: "—",
+  year: new Date().getFullYear(),
+  seasonKicker: "Prochaine édition",
+  editionName: "Contes & Légendes",
+  nameParts: splitEditionName("Contes & Légendes"),
+  attendingCount: null,
+  conferenceCount: 0,
+  registrationDeadlineLabel: null,
+  priceRange: null,
+  pastConferences: [],
+}
+
+async function getLandingData(): Promise<LandingData> {
+  try {
+    const edition = await getActiveEdition()
+    const now = new Date()
+    const [editionNumber, attendingCount, conferenceCount, mealSlots, pastConferencesRaw] = await Promise.all([
+      getActiveEditionNumber(),
+      prisma.editionParticipation.count({
+        where: { editionId: edition.id, isAttending: true },
+      }),
+      prisma.conference.count({ where: { editionId: edition.id } }),
+      prisma.timeSlot.findMany({
+        where: { editionId: edition.id, kind: "MEAL", price: { not: null } },
+        select: { price: true },
+      }),
+      prisma.conference.findMany({
+        where: {
+          editionId: { not: edition.id },
+          edition: {
+            OR: [
+              { endDate: { lt: now } },
+              { AND: [{ endDate: null }, { startDate: { lt: now } }] },
+            ],
+          },
+        },
+        select: {
+          id: true,
+          title: true,
+          speaker: { select: { name: true } },
+          edition: { select: { name: true, startDate: true } },
+        },
+        orderBy: { createdAt: "desc" },
+        take: 24,
+      }),
+    ])
+
+    const season = getEditionSeasonLabel(edition)
+    const year =
+      edition.startDate?.getFullYear() ??
+      edition.endDate?.getFullYear() ??
+      new Date().getFullYear()
+
+    const prices = mealSlots.map((s) => s.price).filter((p): p is number => typeof p === "number" && p > 0)
+    const priceRange = prices.length > 0
+      ? { min: Math.min(...prices), max: prices.reduce((a, b) => a + b, 0) }
+      : null
+
+    const deadline = getRegistrationDeadline(edition)
+    const registrationDeadlineLabel = deadline ? formatFrenchDate(deadline) : null
+
+    return {
+      datesLabel: formatEditionDatesLabel(edition) ?? FALLBACK.datesLabel,
+      datesBanner: formatEditionDatesBanner(edition) ?? FALLBACK.datesBanner,
+      edition: editionNumber ? toRoman(editionNumber) : FALLBACK.edition,
+      year,
+      seasonKicker: season ? `Édition de ${season} ${year}` : `Édition ${year}`,
+      editionName: edition.name,
+      nameParts: splitEditionName(edition.name),
+      attendingCount: attendingCount >= MIN_ATTENDING_TO_SHOW ? attendingCount : null,
+      conferenceCount,
+      registrationDeadlineLabel,
+      priceRange,
+      pastConferences: pastConferencesRaw.map((c) => ({
+        id: c.id,
+        title: c.title,
+        speakerName: c.speaker?.name ?? "Anonyme",
+        editionName: c.edition.name,
+        editionYear: c.edition.startDate?.getFullYear() ?? null,
+      })),
+    }
+  } catch (err) {
+    if (err instanceof NoActiveEditionError) return FALLBACK
+    throw err
+  }
+}
 
 const SPARKS = [
   { title: "Mythes & cosmogonies", note: "Les histoires d'origine — d'un peuple, d'un fleuve, d'une étoile." },
@@ -26,14 +161,24 @@ const STEPS = [
   { n: "IV", title: "On se retrouve", body: "Tu arrives le samedi midi. Repas, conférences, soirée, dimanche brunch, encore des récits, et au revoir le dimanche soir." },
 ]
 
-const FACTS = [
+const STATIC_FACTS = [
   { k: "Lieu", v: "Chez nous, à Veneux-les-Sablons (Moret-Loing-et-Orvanne, Seine-et-Marne). À 1h de Paris en Transilien depuis Gare de Lyon." },
   { k: "Durée", v: "Du samedi midi au dimanche soir. Tu peux venir pour un seul jour, c'est aussi très bien." },
   { k: "Tablée", v: "Entre 10 et 15 personnes selon les jours. On reste à taille de salon." },
   { k: "Nuit sur place", v: "Possible — quelques matelas et canapés, premiers arrivés premiers servis. Sinon, hôtels et gîtes à 10 minutes." },
   { k: "+1", v: "Tu peux venir accompagné·e. Ton +1 doit s'inscrire de son côté pour qu'on l'ait sur le livret." },
-  { k: "Participation", v: "On s'occupe des courses, des repas, des boissons et de l'intendance. On demande une petite participation aux frais (~5 €) à régler en ligne." },
 ]
+
+function buildParticipationFact(priceRange: { min: number; max: number } | null): string {
+  if (!priceRange) {
+    return "On s'occupe des courses, des repas, des boissons et de l'intendance. Une petite participation aux frais te sera demandée à l'inscription."
+  }
+  const { min, max } = priceRange
+  if (min === max) {
+    return `On s'occupe des courses, des repas, des boissons et de l'intendance. Participation aux frais : ${formatPrice(min)} (un repas), à régler en ligne.`
+  }
+  return `On s'occupe des courses, des repas, des boissons et de l'intendance. Participation aux frais : à partir de ${formatPrice(min)} (un seul repas) jusqu'à ${formatPrice(max)} (week-end complet), à régler en ligne.`
+}
 
 function Fleuron({ size = 10, color = "currentColor", style }: { size?: number; color?: string; style?: React.CSSProperties }) {
   return (
@@ -119,7 +264,40 @@ function SectionTitle({ kicker, title, subtitle, italic }: { kicker: string; tit
   )
 }
 
-export default function LandingPage() {
+export default async function LandingPage() {
+  const {
+    datesLabel: DATES_LABEL,
+    datesBanner: DATES_ROMAN,
+    edition: EDITION,
+    year: EDITION_YEAR,
+    seasonKicker: SEASON_KICKER,
+    editionName: EDITION_NAME,
+    nameParts: NAME_PARTS,
+    attendingCount: ATTENDING_COUNT,
+    conferenceCount: CONFERENCE_COUNT,
+    registrationDeadlineLabel: DEADLINE_LABEL,
+    priceRange: PRICE_RANGE,
+    pastConferences: PAST_CONFERENCES,
+  } = await getLandingData()
+
+  const heroFacts: { k: string; v: string }[] = [
+    { k: "Quand", v: DATES_LABEL },
+    { k: "Où", v: "Veneux-les-Sablons (77)" },
+    { k: "Tablée", v: "10 à 15 convives" },
+  ]
+  if (ATTENDING_COUNT !== null) {
+    heroFacts.push({ k: "Inscrits", v: `${ATTENDING_COUNT} pour l’instant` })
+  }
+  if (CONFERENCE_COUNT > 0) {
+    heroFacts.push({ k: "Au programme", v: `${CONFERENCE_COUNT} conférence${CONFERENCE_COUNT > 1 ? "s" : ""} proposée${CONFERENCE_COUNT > 1 ? "s" : ""}` })
+  }
+
+  const facts: { k: string; v: string }[] = [...STATIC_FACTS]
+  if (DEADLINE_LABEL) {
+    facts.push({ k: "Date limite", v: `Inscriptions ouvertes jusqu'au ${DEADLINE_LABEL}.` })
+  }
+  facts.push({ k: "Participation", v: buildParticipationFact(PRICE_RANGE) })
+
   return (
     <div style={{
       background: "var(--paper)",
@@ -164,8 +342,16 @@ export default function LandingPage() {
             margin: "22px 0 0", letterSpacing: "-0.045em", lineHeight: 0.92,
             color: "var(--ink)", textWrap: "balance",
           }}>
-            Contes<br />
-            <span style={{ fontStyle: "italic", fontWeight: 400, color: "var(--talk)" }}>&amp;&nbsp;Légendes</span>
+            {NAME_PARTS.right ? (
+              <>
+                {NAME_PARTS.left}<br />
+                <span style={{ fontStyle: "italic", fontWeight: 400, color: "var(--talk)" }}>
+                  {NAME_PARTS.sep?.trim()}&nbsp;{NAME_PARTS.right}
+                </span>
+              </>
+            ) : (
+              <span style={{ fontStyle: "italic", fontWeight: 400, color: "var(--talk)" }}>{NAME_PARTS.left}</span>
+            )}
           </h1>
 
           <div style={{
@@ -183,11 +369,7 @@ export default function LandingPage() {
               background: "color-mix(in srgb, var(--paper) 60%, transparent)",
               backdropFilter: "blur(2px)",
             }}>
-              {[
-                { k: "Quand", v: DATES_LABEL },
-                { k: "Où", v: "Veneux-les-Sablons (77)" },
-                { k: "Tablée", v: "10 à 15 convives" },
-              ].map((item, i, arr) => (
+              {heroFacts.map((item, i, arr) => (
                 <div key={item.k} style={{
                   padding: "14px 22px",
                   borderRight: i < arr.length - 1 ? "1px solid var(--line-2)" : "none",
@@ -282,8 +464,14 @@ export default function LandingPage() {
       }}>
         <div style={{ maxWidth: 1080, margin: "0 auto" }}>
           <SectionTitle
-            kicker="Édition de l'automne MMXXVI"
-            title={<>Contes &amp; <em>Légendes</em></>}
+            kicker={SEASON_KICKER}
+            title={
+              NAME_PARTS.right ? (
+                <>{NAME_PARTS.left} {NAME_PARTS.sep?.trim()} <em>{NAME_PARTS.right}</em></>
+              ) : (
+                <em>{NAME_PARTS.left}</em>
+              )
+            }
             subtitle="Le fil rouge de cette seconde édition. Une boussole, pas une cage : à interpréter avec largesse."
           />
           <div style={{
@@ -364,7 +552,7 @@ export default function LandingPage() {
             border: "1px solid var(--line)", borderRadius: 14,
             background: "var(--paper)", overflow: "hidden",
           }}>
-            {FACTS.map((f, i) => (
+            {facts.map((f, i) => (
               <div
                 key={f.k}
                 className="flex flex-col gap-2 px-5 py-5 sm:grid sm:gap-5 sm:px-7 sm:py-5 sm:items-baseline"
@@ -384,6 +572,51 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+
+      {/* ── Mémoire des veillées (conférences passées) ── */}
+      {PAST_CONFERENCES.length >= 3 && (
+        <section id="memoire" style={{
+          padding: "96px 0 88px", borderBottom: "1px solid var(--line)", overflow: "hidden",
+        }}>
+          <style>{`@keyframes congres-marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }`}</style>
+          <div style={{ padding: "0 32px" }}>
+            <SectionTitle
+              kicker="Mémoire des veillées"
+              title={<>Ce qu&apos;on s&apos;est déjà <em>raconté</em></>}
+              subtitle="Un échantillon des récits portés lors des éditions passées."
+            />
+          </div>
+          <div style={{
+            position: "relative",
+            WebkitMaskImage: "linear-gradient(90deg, transparent, black 8%, black 92%, transparent)",
+            maskImage: "linear-gradient(90deg, transparent, black 8%, black 92%, transparent)",
+          }}>
+            <div style={{
+              display: "flex", gap: 20, width: "max-content",
+              animation: "congres-marquee 60s linear infinite",
+            }}>
+              {[...PAST_CONFERENCES, ...PAST_CONFERENCES].map((c, i) => (
+                <article key={`${c.id}-${i}`} style={{
+                  flex: "0 0 320px",
+                  border: "1px solid var(--line)", borderRadius: 14,
+                  padding: "22px 24px", background: "var(--paper)",
+                  display: "flex", flexDirection: "column", gap: 10,
+                }}>
+                  <div style={{ fontFamily: "var(--font-jetbrains), monospace", fontSize: 10, color: "var(--ink-3)", letterSpacing: "0.18em", textTransform: "uppercase" }}>
+                    {c.editionName}{c.editionYear ? ` · ${c.editionYear}` : ""}
+                  </div>
+                  <div style={{ fontFamily: "var(--font-cormorant), serif", fontSize: 24, fontWeight: 600, lineHeight: 1.15, color: "var(--ink)", letterSpacing: "-0.015em" }}>
+                    {c.title}
+                  </div>
+                  <div style={{ fontFamily: "var(--font-newsreader), serif", fontStyle: "italic", fontSize: 15, color: "var(--ink-2)" }}>
+                    par {c.speakerName}
+                  </div>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* ── Inscription CTA ── */}
       <section id="inscription" style={{
@@ -474,9 +707,9 @@ export default function LandingPage() {
           fontFamily: "var(--font-jetbrains), monospace", fontSize: 10.5,
           color: "var(--ink-3)", letterSpacing: "0.14em", textTransform: "uppercase",
         }}>
-          <span>Congrès Champêtre · MMXXVI</span>
+          <span>Congrès Champêtre · {EDITION_YEAR}</span>
           <span>Veneux-les-Sablons</span>
-          <span>Édition {EDITION} — Contes &amp; Légendes</span>
+          <span>Édition {EDITION} — {EDITION_NAME}</span>
         </div>
       </footer>
     </div>
