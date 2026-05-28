@@ -7,7 +7,7 @@ import Link from "next/link"
 import { LandingHeader } from "@/components/landing-header"
 
 const DATES_LABEL = "17 & 18 octobre 2026"
-const DATES_ROMAN = "XVII — XVIII OCTOBRE MMXXVI"
+const DATES_ROMAN = "17 — 18 OCTOBRE 2026"
 const EDITION = "II"
 
 const SPARKS = [
@@ -282,7 +282,7 @@ export default function LandingPage() {
       }}>
         <div style={{ maxWidth: 1080, margin: "0 auto" }}>
           <SectionTitle
-            kicker="Édition de l'automne MMXXVI"
+            kicker="Édition de l'automne 2026"
             title={<>Contes &amp; <em>Légendes</em></>}
             subtitle="Le fil rouge de cette seconde édition. Une boussole, pas une cage : à interpréter avec largesse."
           />
@@ -474,7 +474,7 @@ export default function LandingPage() {
           fontFamily: "var(--font-jetbrains), monospace", fontSize: 10.5,
           color: "var(--ink-3)", letterSpacing: "0.14em", textTransform: "uppercase",
         }}>
-          <span>Congrès Champêtre · MMXXVI</span>
+          <span>Congrès Champêtre · 2026</span>
           <span>Veneux-les-Sablons</span>
           <span>Édition {EDITION} — Contes &amp; Légendes</span>
         </div>
