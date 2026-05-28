@@ -314,36 +314,66 @@
     animation: fade-in 0.4s ease-out;
   }
 
-  @keyframes leaf-sway {
-    0%, 100% {
-      transform: rotate(-12deg);
-    }
-    50% {
-      transform: rotate(12deg);
-    }
+  @keyframes egg-wobble {
+    30%, 70% { transform: rotate(0deg); }
+    49.99%   { transform: rotate(0.2deg); }
+    50%      { transform: rotate(-0.2deg); }
   }
 
-  .animate-leaf-sway {
-    animation: leaf-sway 2.4s ease-in-out infinite;
-    transform-origin: 50% 92%;
+  .egg-loader {
+    height: 60px;
+    aspect-ratio: 1;
+    position: relative;
+  }
+  .egg-loader::before,
+  .egg-loader::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    transform-origin: bottom;
+  }
+  .egg-loader::after {
+    background:
+      radial-gradient(at 75% 15%, #fffb, #0000 35%),
+      radial-gradient(at 80% 40%, #0000, #0008),
+      radial-gradient(circle 5px, #fff 94%, #0000),
+      radial-gradient(circle 10px, #000 94%, #0000),
+      linear-gradient(#F93318 0 0) top    / 100% calc(50% - 5px),
+      linear-gradient(#fff    0 0) bottom / 100% calc(50% - 5px)
+      #000;
+    background-repeat: no-repeat;
+    animation: egg-wobble 1s infinite cubic-bezier(0.5, 120, 0.5, -120);
+  }
+  .egg-loader::before {
+    background: #ddd;
+    filter: blur(8px);
+    transform: scaleY(0.4) translate(-13px, 0px);
   }
 
-  @keyframes leaf-grow {
-    0% {
-      transform: scaleY(0) translateY(20%);
-      opacity: 0;
-    }
-    60% {
-      opacity: 1;
-    }
-    100% {
-      transform: scaleY(1) translateY(0);
-      opacity: 1;
-    }
+  @keyframes sun-cloud {
+    0%,   20%  { transform: rotate(0); }
+    40%,  60%  { transform: rotate(.5turn); }
+    80%, 100%  { transform: rotate(1turn); }
   }
 
-  .animate-leaf-grow {
-    animation: leaf-grow 1.6s ease-out infinite;
-    transform-origin: 50% 100%;
+  .sky-loader {
+    width: 80px;
+    height: 40px;
+    border-radius: 100px 100px 0 0;
+    position: relative;
+    overflow: hidden;
+  }
+  .sky-loader::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 -100%;
+    background:
+      radial-gradient(farthest-side, #ffd738 80%, #0000) left 70% top    20% / 15px 15px,
+      radial-gradient(farthest-side, #020308 92%, #0000) left 65% bottom 19% / 12px 12px,
+      radial-gradient(farthest-side, #ecfefe 92%, #0000) left 70% bottom 20% / 15px 15px,
+      linear-gradient(#9eddfe 50%, #020308 0);
+    background-repeat: no-repeat;
+    animation: sun-cloud 2s infinite;
   }
 }
