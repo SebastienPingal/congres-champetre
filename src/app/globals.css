@@ -122,6 +122,10 @@
   --meal-soft:    #3a2f1f;
   --green:        #7fae8a;
   --green-soft:   #2a3530;
+  --warn:         #e9c66a;
+  --warn-bg:      #3a2f1a;
+  --warn-border:  #5a4a28;
+  --warn-icon-bg: #6b5530;
 }
 
 :root {
