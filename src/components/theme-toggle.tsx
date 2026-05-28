@@ -9,6 +9,7 @@ const STORAGE_KEY = "theme-mode"
 type Mode = "system" | "light" | "dark"
 
 const ORDER: Mode[] = ["system", "light", "dark"]
+const ICONS = { system: Monitor, light: Sun, dark: Moon } as const
 const LABELS: Record<Mode, string> = {
   system: "Suit le thème système (clic pour passer en clair)",
   light: "Thème clair (clic pour passer en sombre)",
@@ -33,14 +34,16 @@ function applyMode(mode: Mode) {
 export function ThemeToggle({ className }: { className?: string }) {
   const [mode, setMode] = useState<Mode>("system")
   const [mounted, setMounted] = useState(false)
+  const [hover, setHover] = useState(false)
 
   useEffect(() => {
     setMounted(true)
     setMode(readMode())
   }, [])
 
+  const next = ORDER[(ORDER.indexOf(mode) + 1) % ORDER.length]
+
   const cycle = () => {
-    const next = ORDER[(ORDER.indexOf(mode) + 1) % ORDER.length]
     try {
       if (next === "system") localStorage.removeItem(STORAGE_KEY)
       else localStorage.setItem(STORAGE_KEY, next)
@@ -51,13 +54,8 @@ export function ThemeToggle({ className }: { className?: string }) {
     setMode(next)
   }
 
-  const Icon = mounted
-    ? mode === "system"
-      ? Monitor
-      : mode === "dark"
-        ? Sun
-        : Moon
-    : Monitor
+  const displayed = mounted && hover ? next : mode
+  const Icon = ICONS[displayed]
 
   return (
     <Button
@@ -66,6 +64,10 @@ export function ThemeToggle({ className }: { className?: string }) {
       aria-label={LABELS[mode]}
       title={LABELS[mode]}
       onClick={cycle}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+      onFocus={() => setHover(true)}
+      onBlur={() => setHover(false)}
       className={className}
     >
       <Icon />
