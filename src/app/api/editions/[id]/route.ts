@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { requireAdmin } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { isThemeId } from "@/lib/themes"
 
 export async function PATCH(
   request: NextRequest,
@@ -16,7 +17,8 @@ export async function PATCH(
       return NextResponse.json({ error: "📅 Édition non trouvée" }, { status: 404 })
     }
 
-    const { name, startDate, endDate, isActive } = await request.json()
+    const { name, startDate, endDate, isActive, theme } = await request.json()
+    const themePatch = theme !== undefined && isThemeId(theme) ? { theme } : {}
 
     if (isActive === true) {
       await prisma.$transaction([
@@ -31,6 +33,7 @@ export async function PATCH(
             ...(name !== undefined ? { name: name.trim() } : {}),
             ...(startDate !== undefined ? { startDate: startDate ? new Date(startDate) : null } : {}),
             ...(endDate !== undefined ? { endDate: endDate ? new Date(endDate) : null } : {}),
+            ...themePatch,
           },
         }),
       ])
@@ -42,6 +45,7 @@ export async function PATCH(
           ...(startDate !== undefined ? { startDate: startDate ? new Date(startDate) : null } : {}),
           ...(endDate !== undefined ? { endDate: endDate ? new Date(endDate) : null } : {}),
           ...(isActive === false ? { isActive: false } : {}),
+          ...themePatch,
         },
       })
     }

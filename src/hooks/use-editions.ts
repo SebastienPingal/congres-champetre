@@ -9,6 +9,7 @@ export interface EditionListItem {
   endDate: string | null
   startHour?: number | null
   endHour?: number | null
+  theme?: string | null
   _count?: {
     participations: number
     conferences: number

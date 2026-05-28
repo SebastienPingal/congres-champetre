@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Manrope, Cormorant_Garamond, Newsreader, JetBrains_Mono } from "next/font/google";
 import { AuthProvider } from "@/components/providers/auth-provider";
 import { QueryProvider } from "@/components/providers/query-provider";
+import { prisma } from "@/lib/prisma";
+import { isThemeId, type ThemeId } from "@/lib/themes";
 import "./globals.css";
 
 const manrope = Manrope({
@@ -35,13 +37,27 @@ export const metadata: Metadata = {
   description: "Le site officiel du Congrès Champêtre",
 };
 
-export default function RootLayout({
+async function getActiveTheme(): Promise<ThemeId> {
+  try {
+    const active = await prisma.edition.findFirst({
+      where: { isActive: true },
+      select: { theme: true },
+    });
+    if (active && isThemeId(active.theme)) return active.theme;
+  } catch {
+    // DB unreachable at build / first render — fall back to default
+  }
+  return "champetre";
+}
+
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const theme = await getActiveTheme();
   return (
-    <html lang="fr">
+    <html lang="fr" data-theme={theme}>
       <body
         className={`${manrope.variable} ${jetbrains.variable} ${cormorant.variable} ${newsreader.variable} antialiased`}
       >

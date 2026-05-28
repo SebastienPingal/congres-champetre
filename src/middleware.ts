@@ -10,10 +10,9 @@ export default auth((req) => {
     if (req.auth) {
       // User is authenticated, redirect to dashboard
       return NextResponse.redirect(new URL('/programme', req.url))
-    } else {
-      // User is not authenticated, redirect to login
-      return NextResponse.redirect(new URL('/auth/signin', req.url))
     }
+    // Unauthenticated visitors see the public landing page
+    return NextResponse.next()
   }
 
   // 🔒 Protect routes that require authentication
