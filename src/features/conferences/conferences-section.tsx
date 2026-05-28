@@ -86,7 +86,7 @@ export function ConferencesSection({ user }: ConferencesSectionProps) {
               <ConferenceForm />
             )
           ) : (
-            <ul className="divide-y rounded-lg border bg-white/60">
+            <ul className="divide-y rounded-lg border bg-surface">
               {user.conferences.map((conference) => (
                 <li key={conference.id} className="flex flex-col gap-2 p-4">
                   <div className="flex items-start justify-between gap-3">

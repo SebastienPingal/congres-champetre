@@ -38,7 +38,7 @@ export function MealsSection({ user }: MealsSectionProps) {
         )}
       </div>
 
-      <ul className="divide-y rounded-lg border bg-white/60">
+      <ul className="divide-y rounded-lg border bg-surface">
         {meals.map((meal) => {
           const updating = isMealUpdating && mealUpdatingVars?.timeSlotId === meal.id
           return (

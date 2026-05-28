@@ -100,7 +100,7 @@ export function PaymentSection({ user }: PaymentSectionProps) {
         </p>
       </div>
 
-      <div className="rounded-lg border bg-white/60">
+      <div className="rounded-lg border bg-surface">
         <ul className="divide-y">
           {payableMeals.map((m) => (
             <li key={m.id} className="flex items-center justify-between px-4 py-2.5 text-sm">
