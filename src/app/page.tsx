@@ -4,18 +4,11 @@
 // globals.css; switching `[data-theme]` on <html> re-skins everything.
 
 import Link from "next/link"
-import { ThemeToggle } from "@/components/theme-toggle"
+import { LandingHeader } from "@/components/landing-header"
 
 const DATES_LABEL = "17 & 18 octobre 2026"
 const DATES_ROMAN = "XVII — XVIII OCTOBRE MMXXVI"
 const EDITION = "II"
-
-const NAV_ITEMS = [
-  { id: "concept", label: "Le concept" },
-  { id: "theme", label: "Le thème" },
-  { id: "deroule", label: "Déroulé" },
-  { id: "pratique", label: "Pratique" },
-]
 
 const SPARKS = [
   { title: "Mythes & cosmogonies", note: "Les histoires d'origine — d'un peuple, d'un fleuve, d'une étoile." },
@@ -134,44 +127,8 @@ export default function LandingPage() {
       fontFamily: "var(--font-manrope), system-ui, sans-serif",
       minHeight: "100vh",
     }}>
-      {/* ── Header ── */}
-      <header style={{
-        borderBottom: "1px solid var(--line)",
-        background: "var(--paper)",
-        position: "sticky", top: 0, zIndex: 10,
-        backdropFilter: "saturate(1.1)",
-      }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 20, padding: "14px 28px", maxWidth: 1280, margin: "0 auto" }}>
-          <a href="#" style={{ textDecoration: "none", color: "inherit", display: "block", lineHeight: 1.05 }}>
-            <div style={{ fontFamily: "var(--font-jetbrains), monospace", fontSize: 10, letterSpacing: "0.22em", textTransform: "uppercase", color: "var(--ink-3)", marginBottom: 4 }}>
-              Congrès Champêtre · Édition&nbsp;{EDITION}
-            </div>
-            <div style={{ fontFamily: "var(--font-cormorant), serif", fontSize: 22, fontWeight: 600, letterSpacing: "-0.015em", color: "var(--ink)", fontStyle: "italic" }}>
-              Contes &amp; Légendes
-            </div>
-          </a>
-          <div style={{ flex: 1 }} />
-          <nav style={{ display: "flex", gap: 4 }}>
-            {NAV_ITEMS.map((it) => (
-              <a key={it.id} href={`#${it.id}`} style={{
-                padding: "8px 12px", fontFamily: "var(--font-manrope), sans-serif", fontSize: 13.5,
-                color: "var(--ink-2)", textDecoration: "none", borderRadius: 8,
-              }}>{it.label}</a>
-            ))}
-          </nav>
-          <ThemeToggle />
-          <Link href="/auth/signin" style={{
-            display: "inline-flex", alignItems: "center", gap: 8,
-            background: "var(--ink)", color: "var(--paper)",
-            padding: "10px 16px", borderRadius: 10,
-            fontFamily: "var(--font-manrope), sans-serif", fontWeight: 600, fontSize: 13,
-            textDecoration: "none", whiteSpace: "nowrap",
-          }}>
-            S&apos;inscrire
-            <ChevIcon size={14} />
-          </Link>
-        </div>
-      </header>
+      {/* ── Header (responsive, sheet drawer en mobile) ── */}
+      <LandingHeader edition={EDITION} />
 
       {/* ── Hero ── */}
       <section style={{ position: "relative", padding: "96px 32px 88px", borderBottom: "1px solid var(--line)", overflow: "hidden" }}>
