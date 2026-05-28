@@ -5,7 +5,7 @@ import { useUserProfile } from "@/hooks/use-user-profile"
 import { useMeals } from "@/hooks/use-meals"
 import { AlertBanner } from "@/features/participation/alert-banner"
 import { EditionInfoCard } from "@/features/participation/edition-info-card"
-import { LoadingLeaf } from "@/components/loading-leaf"
+import { AppLoader } from "@/components/loaders/app-loader"
 import type { UserProfile, MealSlot } from "@/types"
 import type { LucideIcon } from "lucide-react"
 
@@ -22,7 +22,7 @@ export function PageShell({ title, icon: Icon, children }: PageShellProps) {
   if (isLoading) {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
-        <LoadingLeaf />
+        <AppLoader />
       </div>
     )
   }

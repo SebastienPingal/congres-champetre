@@ -9,7 +9,7 @@ import { ConferenceManager } from "@/components/admin/conference-manager"
 import { Users, UserCheck, CalendarRange } from "lucide-react"
 import { EditionManager } from "@/components/admin/edition-manager"
 import { ThemeSwitcher } from "@/components/admin/theme-switcher"
-import { LoadingLeaf } from "@/components/loading-leaf"
+import { AppLoader } from "@/components/loaders/app-loader"
 import { useTimeSlots } from "@/hooks/use-time-slots"
 import { useConferences } from "@/hooks/use-conferences"
 import { useAdminStats } from "@/hooks/use-admin-stats"
@@ -57,7 +57,7 @@ export default function AdminPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <LoadingLeaf />
+        <AppLoader />
       </div>
     )
   }
