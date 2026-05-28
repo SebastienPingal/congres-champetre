@@ -56,9 +56,23 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const theme = await getActiveTheme();
-  // Pre-hydration: la palette par défaut est claire. Seul le toggle
-  // utilisateur (persisté en localStorage) peut basculer en sombre.
-  const themeBoot = `(()=>{try{var m=localStorage.getItem('theme-mode');if(m==='dark')document.documentElement.setAttribute('data-theme','crepuscule');else if(m==='light')document.documentElement.setAttribute('data-theme','champetre');}catch(e){}})();`;
+  // Pre-hydration theme resolution:
+  // - localStorage 'theme-mode' = 'light' | 'dark' → applique explicitement
+  // - sinon (absent ou 'system') → suit prefers-color-scheme (default).
+  // Le listener matchMedia garde la page synchronisée tant qu'aucune
+  // préférence explicite n'est posée.
+  const themeBoot = `(()=>{try{
+    var d=document.documentElement;
+    var apply=function(mode){d.setAttribute('data-theme', mode==='dark'?'crepuscule':'champetre');};
+    var m=localStorage.getItem('theme-mode');
+    if(m==='dark'||m==='light'){apply(m);return;}
+    var mq=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)');
+    if(mq){
+      apply(mq.matches?'dark':'light');
+      var listener=function(e){var cur=localStorage.getItem('theme-mode');if(cur!=='dark'&&cur!=='light')apply(e.matches?'dark':'light');};
+      mq.addEventListener?mq.addEventListener('change',listener):mq.addListener(listener);
+    }
+  }catch(e){}})();`;
   return (
     <html lang="fr" data-theme={theme}>
       <body
