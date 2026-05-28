@@ -6,9 +6,45 @@
 import Link from "next/link"
 import { LandingHeader } from "@/components/landing-header"
 
-const DATES_LABEL = "17 & 18 octobre 2026"
-const DATES_ROMAN = "17 — 18 OCTOBRE 2026"
-const EDITION = "II"
+import {
+  formatEditionDatesBanner,
+  formatEditionDatesLabel,
+  getActiveEdition,
+  getActiveEditionNumber,
+  getEditionSeasonLabel,
+  NoActiveEditionError,
+  toRoman,
+} from "@/lib/edition"
+
+const FALLBACK = {
+  datesLabel: "Bientôt annoncé",
+  datesBanner: "ÉDITION À VENIR",
+  edition: "—",
+  year: new Date().getFullYear(),
+  seasonKicker: "Prochaine édition",
+}
+
+async function getLandingData() {
+  try {
+    const edition = await getActiveEdition()
+    const editionNumber = await getActiveEditionNumber()
+    const season = getEditionSeasonLabel(edition)
+    const year =
+      edition.startDate?.getFullYear() ??
+      edition.endDate?.getFullYear() ??
+      new Date().getFullYear()
+    return {
+      datesLabel: formatEditionDatesLabel(edition) ?? FALLBACK.datesLabel,
+      datesBanner: formatEditionDatesBanner(edition) ?? FALLBACK.datesBanner,
+      edition: editionNumber ? toRoman(editionNumber) : FALLBACK.edition,
+      year,
+      seasonKicker: season ? `Édition de ${season} ${year}` : `Édition ${year}`,
+    }
+  } catch (err) {
+    if (err instanceof NoActiveEditionError) return FALLBACK
+    throw err
+  }
+}
 
 const SPARKS = [
   { title: "Mythes & cosmogonies", note: "Les histoires d'origine — d'un peuple, d'un fleuve, d'une étoile." },
@@ -119,7 +155,8 @@ function SectionTitle({ kicker, title, subtitle, italic }: { kicker: string; tit
   )
 }
 
-export default function LandingPage() {
+export default async function LandingPage() {
+  const { datesLabel: DATES_LABEL, datesBanner: DATES_ROMAN, edition: EDITION, year: EDITION_YEAR, seasonKicker: SEASON_KICKER } = await getLandingData()
   return (
     <div style={{
       background: "var(--paper)",
@@ -282,7 +319,7 @@ export default function LandingPage() {
       }}>
         <div style={{ maxWidth: 1080, margin: "0 auto" }}>
           <SectionTitle
-            kicker="Édition de l'automne 2026"
+            kicker={SEASON_KICKER}
             title={<>Contes &amp; <em>Légendes</em></>}
             subtitle="Le fil rouge de cette seconde édition. Une boussole, pas une cage : à interpréter avec largesse."
           />
@@ -474,7 +511,7 @@ export default function LandingPage() {
           fontFamily: "var(--font-jetbrains), monospace", fontSize: 10.5,
           color: "var(--ink-3)", letterSpacing: "0.14em", textTransform: "uppercase",
         }}>
-          <span>Congrès Champêtre · 2026</span>
+          <span>Congrès Champêtre · {EDITION_YEAR}</span>
           <span>Veneux-les-Sablons</span>
           <span>Édition {EDITION} — Contes &amp; Légendes</span>
         </div>

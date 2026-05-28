@@ -46,3 +46,55 @@ export class RegistrationClosedError extends Error {
     this.name = "RegistrationClosedError"
   }
 }
+
+type EditionDates = Pick<Edition, "startDate" | "endDate">
+
+export function formatEditionDatesLabel(edition: EditionDates): string | null {
+  if (!edition.startDate) return null
+  const start = new Date(edition.startDate)
+  const end = edition.endDate ? new Date(edition.endDate) : null
+  const startMonth = start.toLocaleDateString("fr-FR", { month: "long" })
+  if (!end) return `${start.getDate()} ${startMonth} ${start.getFullYear()}`
+  const sameMonth = start.getMonth() === end.getMonth() && start.getFullYear() === end.getFullYear()
+  if (sameMonth) return `${start.getDate()} & ${end.getDate()} ${startMonth} ${start.getFullYear()}`
+  const endMonth = end.toLocaleDateString("fr-FR", { month: "long" })
+  return `${start.getDate()} ${startMonth} & ${end.getDate()} ${endMonth} ${end.getFullYear()}`
+}
+
+export function formatEditionDatesBanner(edition: EditionDates): string | null {
+  if (!edition.startDate) return null
+  const start = new Date(edition.startDate)
+  const end = edition.endDate ? new Date(edition.endDate) : null
+  const startMonth = start.toLocaleDateString("fr-FR", { month: "long" }).toUpperCase()
+  if (!end) return `${start.getDate()} ${startMonth} ${start.getFullYear()}`
+  const sameMonth = start.getMonth() === end.getMonth() && start.getFullYear() === end.getFullYear()
+  if (sameMonth) return `${start.getDate()} — ${end.getDate()} ${startMonth} ${start.getFullYear()}`
+  const endMonth = end.toLocaleDateString("fr-FR", { month: "long" }).toUpperCase()
+  return `${start.getDate()} ${startMonth} — ${end.getDate()} ${endMonth} ${end.getFullYear()}`
+}
+
+const SEASON_LABELS = ["l'hiver", "le printemps", "l'été", "l'automne"] as const
+
+export function getEditionSeasonLabel(edition: Pick<Edition, "startDate">): string | null {
+  if (!edition.startDate) return null
+  const m = new Date(edition.startDate).getMonth()
+  if (m <= 1 || m === 11) return SEASON_LABELS[0]
+  if (m <= 4) return SEASON_LABELS[1]
+  if (m <= 7) return SEASON_LABELS[2]
+  return SEASON_LABELS[3]
+}
+
+const ROMAN_NUMERALS = ["", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII"]
+
+export function toRoman(n: number): string {
+  return ROMAN_NUMERALS[n] ?? String(n)
+}
+
+export async function getActiveEditionNumber(): Promise<number | null> {
+  const editions = await prisma.edition.findMany({
+    orderBy: [{ startDate: "asc" }, { createdAt: "asc" }],
+    select: { id: true, isActive: true },
+  })
+  const idx = editions.findIndex((e) => e.isActive)
+  return idx >= 0 ? idx + 1 : null
+}
