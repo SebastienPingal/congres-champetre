@@ -146,12 +146,12 @@ async function getLandingData(): Promise<LandingData> {
 }
 
 const SPARKS = [
-  { title: "Mythes & cosmogonies", note: "Les histoires d'origine — d'un peuple, d'un fleuve, d'une étoile." },
-  { title: "Créatures du folklore", note: "Mélusine, garous, korrigans, et tous les habitants des marges." },
-  { title: "Légendes urbaines", note: "Les rumeurs tenaces qu'on raconte à voix basse aux veillées modernes." },
+  { title: "Mythes", note: "Les origines d'un peuple, d'un lieu, d'une famille…" },
+  { title: "Créatures du folklore", note: "Bêtes étranges, petit peuple, et présences mystérieuses." },
+  { title: "Légendes urbaines", note: "Les rumeurs tenaces qu'on raconte à voix basse au coin du feu." },
   { title: "Contes & morale", note: "Pourquoi raconte-t-on encore Perrault, Andersen, les frères Grimm ?" },
-  { title: "Récits familiaux", note: "Cette histoire que ta grand-mère répète à chaque Noël." },
-  { title: "Mensonges & véridique", note: "Ce qu'on choisit de croire, et pourquoi ça tient si bien." },
+  { title: "Récits familiaux", note: "Cette histoire qui a marqué ta lignée, et qui vit encore à travers toi." },
+  { title: "Mensonges & vérités", note: "Ce qu'on choisit de croire, et pourquoi." },
 ]
 
 const STEPS = [
@@ -359,7 +359,7 @@ export default async function LandingPage() {
             color: "var(--ink-2)", marginTop: 28, fontWeight: 400, textWrap: "balance",
             maxWidth: 640, marginLeft: "auto", marginRight: "auto",
           }}>
-            Un weekend de récits, de feux et de bonne compagnie — chacun y porte une histoire à partager.
+            Un week-end de partage autour des histoires qui nous inspirent.
           </div>
 
           <div style={{ marginTop: 36, display: "flex", justifyContent: "center" }}>
@@ -432,18 +432,17 @@ export default async function LandingPage() {
                 <IlluminatedCapital letter="C" />
               </div>
               <div>
-                <span style={{ fontFamily: "var(--font-cormorant), serif", fontWeight: 500 }}>haque</span> été — et cette fois-ci à l&apos;automne — nous réunissons une dizaine d&apos;amis
-                chez nous, à Veneux-les-Sablons. Le principe est simple&nbsp;:
-                <em> n&apos;importe qui peut donner une petite conférence</em> de trente à
-                quarante-cinq minutes sur une passion, un sujet d&apos;étude, une obsession
-                de longue date.
+                <span style={{ fontFamily: "var(--font-cormorant), serif", fontWeight: 500 }}>haque</span> édition, nous vous invitons chez nous, à Veneux-les-Sablons,
+                pour partager autour des sujets qui nous passionnent. Le principe est
+                simple&nbsp;: <em>n&apos;importe qui peut animer une petite conférence</em>,
+                de 30 à 45 minutes, sur un sujet de son choix.
               </div>
             </div>
             <div style={{ margin: "22px 0 0" }}>
-              L&apos;idée n&apos;est pas de tenir un colloque savant. C&apos;est avant tout
-              de <strong style={{ fontWeight: 600 }}>créer du lien</strong> entre les gens
-              dans une ambiance détendue&nbsp;: un weekend de conversations, de repas
-              partagés, et de récits qu&apos;on n&apos;aurait pas entendus ailleurs.
+              L&apos;idée est de <strong style={{ fontWeight: 600 }}>créer du lien</strong>
+              {" "}entre nous via l&apos;expression et l&apos;écoute, et ainsi s&apos;offrir
+              une occasion de se rencontrer différemment, au cours d&apos;un week-end de
+              conversations et de repas partagés.
             </div>
           </div>
           <div style={{ marginTop: 56 }}>
