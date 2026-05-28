@@ -98,3 +98,15 @@ export async function getActiveEditionNumber(): Promise<number | null> {
   const idx = editions.findIndex((e) => e.isActive)
   return idx >= 0 ? idx + 1 : null
 }
+
+export function formatFrenchDate(date: Date): string {
+  return date.toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })
+}
+
+export function formatPrice(value: number): string {
+  const rounded = Math.round(value * 100) / 100
+  const formatted = Number.isInteger(rounded)
+    ? String(rounded)
+    : rounded.toFixed(2).replace(".", ",")
+  return `${formatted} €`
+}
