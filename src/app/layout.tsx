@@ -56,25 +56,9 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const theme = await getActiveTheme();
-  // Pre-hydration theme resolution (runs before paint to avoid flash):
-  // 1. explicit user toggle in localStorage wins
-  // 2. otherwise follow OS prefers-color-scheme
-  // 3. otherwise keep the server-rendered theme (admin choice, defaults to
-  //    champetre / light)
-  // We also subscribe to OS changes so the page tracks the system theme
-  // live until the user makes an explicit choice.
-  const themeBoot = `(()=>{try{
-    var d=document.documentElement;
-    var apply=function(mode){d.setAttribute('data-theme', mode==='dark'?'crepuscule':'champetre');};
-    var m=localStorage.getItem('theme-mode');
-    if(m==='dark'||m==='light'){apply(m);return;}
-    var mq=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)');
-    if(mq){
-      if(mq.matches)apply('dark');
-      var listener=function(e){if(!localStorage.getItem('theme-mode'))apply(e.matches?'dark':'light');};
-      mq.addEventListener?mq.addEventListener('change',listener):mq.addListener(listener);
-    }
-  }catch(e){}})();`;
+  // Pre-hydration: la palette par défaut est claire. Seul le toggle
+  // utilisateur (persisté en localStorage) peut basculer en sombre.
+  const themeBoot = `(()=>{try{var m=localStorage.getItem('theme-mode');if(m==='dark')document.documentElement.setAttribute('data-theme','crepuscule');else if(m==='light')document.documentElement.setAttribute('data-theme','champetre');}catch(e){}})();`;
   return (
     <html lang="fr" data-theme={theme}>
       <body
