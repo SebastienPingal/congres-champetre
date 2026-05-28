@@ -157,7 +157,7 @@ const SPARKS = [
 const STEPS = [
   { n: "I", title: "Tu t'inscris", body: "Quelques infos sur le formulaire (régime alimentaire, +1 éventuel, nuit sur place). Ton +1 doit aussi s'inscrire." },
   { n: "II", title: "Tu proposes — ou pas", body: "Une conférence si tu as un sujet ; sinon, tu viens écouter. Les deux sont parfaitement bienvenus." },
-  { n: "III", title: "On compose le livret", body: "On rassemble les propositions, on cale les horaires, et on t'envoie le programme une semaine avant." },
+  { n: "III", title: "Tu règles ta participation", body: "Tu payes ta participation aux frais en ligne, et ta présence est validée." },
   { n: "IV", title: "On se retrouve", body: "Tu arrives le samedi midi. Repas, conférences, soirée, dimanche brunch, encore des récits, et au revoir le dimanche soir." },
 ]
 
