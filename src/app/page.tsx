@@ -365,12 +365,14 @@ export default function LandingPage() {
             background: "var(--paper)", overflow: "hidden",
           }}>
             {FACTS.map((f, i) => (
-              <div key={f.k} style={{
-                display: "grid", gridTemplateColumns: "160px 1fr", gap: 20,
-                padding: "20px 26px",
-                borderTop: i === 0 ? "none" : "1px dashed var(--line-2)",
-                alignItems: "baseline",
-              }}>
+              <div
+                key={f.k}
+                className="flex flex-col gap-2 px-5 py-5 sm:grid sm:gap-5 sm:px-7 sm:py-5 sm:items-baseline"
+                style={{
+                  gridTemplateColumns: "160px 1fr",
+                  borderTop: i === 0 ? "none" : "1px dashed var(--line-2)",
+                }}
+              >
                 <div style={{ fontFamily: "var(--font-jetbrains), monospace", fontSize: 11, letterSpacing: "0.2em", textTransform: "uppercase", color: "var(--ink-3)" }}>
                   {f.k}
                 </div>
