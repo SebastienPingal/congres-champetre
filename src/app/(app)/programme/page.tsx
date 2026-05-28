@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation"
 import { useUserProfile } from "@/hooks/use-user-profile"
 import { useMeals } from "@/hooks/use-meals"
 import { ProgramSection } from "@/features/program/program-section"
+import { LoadingLeaf } from "@/components/loading-leaf"
 
 const ROUTE_MAP = {
   presence:    "/presence",
@@ -20,10 +21,7 @@ export default function ProgrammePage() {
   if (isLoading) {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-4xl mb-4">⏳</div>
-          <p>Chargement...</p>
-        </div>
+        <LoadingLeaf />
       </div>
     )
   }
