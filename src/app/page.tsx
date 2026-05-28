@@ -4,6 +4,7 @@
 // globals.css; switching `[data-theme]` on <html> re-skins everything.
 
 import Link from "next/link"
+import { ThemeToggle } from "@/components/theme-toggle"
 
 const DATES_LABEL = "17 & 18 octobre 2026"
 const DATES_ROMAN = "XVII — XVIII OCTOBRE MMXXVI"
@@ -158,6 +159,7 @@ export default function LandingPage() {
               }}>{it.label}</a>
             ))}
           </nav>
+          <ThemeToggle />
           <Link href="/auth/signin" style={{
             display: "inline-flex", alignItems: "center", gap: 8,
             background: "var(--ink)", color: "var(--paper)",

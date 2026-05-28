@@ -37,6 +37,7 @@ import {
   DialogClose,
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
+import { ThemeToggle } from "@/components/theme-toggle"
 import { Separator } from "@/components/ui/separator"
 
 export type SectionKey = "programme" | "presence" | "repas" | "conferences" | "paiement"
@@ -226,6 +227,8 @@ export function Navbar() {
             <MessageCircle width={16} height={16} />
             <span className="hidden sm:inline">WhatsApp</span>
           </a>
+
+          <ThemeToggle />
 
           <Dialog>
             <DialogTrigger asChild>

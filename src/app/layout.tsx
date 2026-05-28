@@ -56,11 +56,15 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const theme = await getActiveTheme();
+  // Pre-hydration: honour the user's stored light/dark preference if any.
+  // Runs before paint to avoid a flash of the wrong palette.
+  const themeBoot = `(()=>{try{var m=localStorage.getItem('theme-mode');if(m==='dark')document.documentElement.setAttribute('data-theme','crepuscule');else if(m==='light')document.documentElement.setAttribute('data-theme','champetre');}catch(e){}})();`;
   return (
     <html lang="fr" data-theme={theme}>
       <body
         className={`${manrope.variable} ${jetbrains.variable} ${cormorant.variable} ${newsreader.variable} antialiased`}
       >
+        <script dangerouslySetInnerHTML={{ __html: themeBoot }} />
         <AuthProvider>
           <QueryProvider>
             {children}
