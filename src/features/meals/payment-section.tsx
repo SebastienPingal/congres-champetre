@@ -35,6 +35,7 @@ export function PaymentSection({ user }: PaymentSectionProps) {
   const payableMeals = meals.filter((m) => m.status === "PRESENT" && m.price != null)
   const total = payableMeals.reduce((sum, m) => sum + (m.price ?? 0), 0)
   const totalWithFees = applyPaypalFees(total)
+  const fees = Math.round((totalWithFees - total) * 100) / 100
   const hasPaid = user.hasPaid
   const paidEuros = user.paidAmount != null ? user.paidAmount / 100 : totalWithFees
   const locked = user.edition.isRegistrationClosed
@@ -112,14 +113,24 @@ export function PaymentSection({ user }: PaymentSectionProps) {
             </li>
           ))}
         </ul>
+        <div className="flex items-center justify-between border-t px-4 py-2.5 text-sm">
+          <span className="text-muted-foreground">Sous-total repas</span>
+          <span className="text-muted-foreground">{total.toFixed(2)} €</span>
+        </div>
+        <div className="flex items-center justify-between px-4 py-2.5 text-sm">
+          <span className="text-muted-foreground">Frais PayPal</span>
+          <span className="text-muted-foreground">+{fees.toFixed(2)} €</span>
+        </div>
         <div className="flex items-center justify-between border-t px-4 py-3">
-          <div className="flex flex-col">
-            <span className="text-sm font-medium">Total à régler</span>
-            <span className="text-xs text-muted-foreground">Traitement du paiement inclus</span>
-          </div>
+          <span className="text-sm font-medium">Total à régler</span>
           <span className="text-lg font-semibold">{totalWithFees.toFixed(2)} €</span>
         </div>
       </div>
+      <p className="text-xs text-muted-foreground max-w-prose">
+        PayPal prélève des frais de traitement sur chaque paiement. Ces frais sont
+        ajoutés au montant des repas afin que l&apos;intégralité de votre participation
+        revienne à l&apos;organisation.
+      </p>
 
       {deadline && !locked && (
         <p className="text-xs text-muted-foreground">
