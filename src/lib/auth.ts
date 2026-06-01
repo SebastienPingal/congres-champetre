@@ -6,7 +6,38 @@ import { JWT } from "next-auth/jwt";
 import Google from "next-auth/providers/google"
 import GitHub from "next-auth/providers/github"
 import Discord from "next-auth/providers/discord"
+import Credentials from "next-auth/providers/credentials"
+import type { Provider } from "next-auth/providers"
 import { NextResponse } from "next/server"
+
+export const isPreviewAdminEnabled =
+  process.env.VERCEL_ENV === "preview" || process.env.ENABLE_PREVIEW_ADMIN === "1"
+
+const providers: Provider[] = [Google, GitHub, Discord]
+
+if (isPreviewAdminEnabled) {
+  providers.push(
+    Credentials({
+      id: "preview-admin",
+      name: "Preview Admin",
+      credentials: {},
+      async authorize() {
+        const email = "preview-admin@vercel.local"
+        const user = await prisma.user.upsert({
+          where: { email },
+          update: { role: "ADMIN" },
+          create: { email, name: "Preview Admin", role: "ADMIN" },
+        })
+        return {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          role: user.role,
+        }
+      },
+    })
+  )
+}
 
 declare module "next-auth" {
   interface Session {
@@ -34,7 +65,7 @@ declare module "next-auth/jwt" {
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
-  providers: [Google, GitHub, Discord],
+  providers,
   session: {
     strategy: "jwt"
   },
