@@ -30,12 +30,12 @@ export async function POST() {
       (sum, r) => sum + (r.timeSlot.price ?? 0),
       0
     )
-    const totalWithFees = applyPaypalFees(totalEuros)
-    const amountCents = Math.round(totalWithFees * 100)
-
-    if (amountCents === 0) {
+    if (totalEuros === 0) {
       return NextResponse.json({ error: "Aucun repas payant sélectionné" }, { status: 400 })
     }
+
+    const totalWithFees = applyPaypalFees(totalEuros)
+    const amountCents = Math.round(totalWithFees * 100)
 
     const order = await createOrder(totalWithFees, {
       userId: session.user.id,

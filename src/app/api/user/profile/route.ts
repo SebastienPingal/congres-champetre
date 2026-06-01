@@ -57,6 +57,7 @@ export async function GET() {
       sleepsOnSite: participation?.sleepsOnSite ?? null,
       willPayInCash: participation?.willPayInCash ?? false,
       hasPaid: participation?.hasPaid ?? false,
+      paidAmount: participation?.paidAmount ?? null,
       onboardingCompletedAt: participation?.onboardingCompletedAt ?? null,
       edition: {
         id: activeEdition.id,
@@ -169,6 +170,7 @@ export async function PATCH(request: NextRequest) {
         sleepsOnSite: participation?.sleepsOnSite ?? null,
         willPayInCash: participation?.willPayInCash ?? false,
         hasPaid: participation?.hasPaid ?? false,
+        paidAmount: participation?.paidAmount ?? null,
         onboardingCompletedAt: participation?.onboardingCompletedAt ?? null,
         edition: {
           id: activeEdition.id,
