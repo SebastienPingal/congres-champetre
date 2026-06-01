@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { createOrder } from "@/lib/paypal"
 import { getActiveEdition, NoActiveEditionError } from "@/lib/edition"
+import { applyPaypalFees } from "@/lib/paypal-fees"
 
 export async function POST() {
   try {
@@ -29,13 +30,14 @@ export async function POST() {
       (sum, r) => sum + (r.timeSlot.price ?? 0),
       0
     )
-    const amountCents = Math.round(totalEuros * 100)
-
-    if (amountCents === 0) {
+    if (totalEuros === 0) {
       return NextResponse.json({ error: "Aucun repas payant sélectionné" }, { status: 400 })
     }
 
-    const order = await createOrder(totalEuros, {
+    const totalWithFees = applyPaypalFees(totalEuros)
+    const amountCents = Math.round(totalWithFees * 100)
+
+    const order = await createOrder(totalWithFees, {
       userId: session.user.id,
       editionId: activeEdition.id,
     })
@@ -66,7 +68,7 @@ export async function POST() {
       },
     })
 
-    return NextResponse.json({ orderId: order.id, amount: totalEuros })
+    return NextResponse.json({ orderId: order.id, amount: totalWithFees })
   } catch (error) {
     if (error instanceof NoActiveEditionError) {
       return NextResponse.json({ error: "Aucune édition active" }, { status: 503 })

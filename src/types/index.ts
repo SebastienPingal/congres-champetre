@@ -36,6 +36,7 @@ export interface UserProfile {
   sleepsOnSite: boolean | null
   willPayInCash: boolean
   hasPaid: boolean
+  paidAmount: number | null
   onboardingCompletedAt: string | null
   edition: EditionInfo
   conferences: ConferenceRecord[]

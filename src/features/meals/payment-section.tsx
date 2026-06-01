@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { CheckCircle2, Lock, ShieldCheck } from "lucide-react"
 import { useMeals } from "@/hooks/use-meals"
 import { queryKeys } from "@/lib/query-keys"
+import { applyPaypalFees } from "@/lib/paypal-fees"
 import type { UserProfile } from "@/types"
 
 const paypalClientId = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID
@@ -33,7 +34,10 @@ export function PaymentSection({ user }: PaymentSectionProps) {
 
   const payableMeals = meals.filter((m) => m.status === "PRESENT" && m.price != null)
   const total = payableMeals.reduce((sum, m) => sum + (m.price ?? 0), 0)
+  const totalWithFees = applyPaypalFees(total)
+  const fees = Math.round((totalWithFees - total) * 100) / 100
   const hasPaid = user.hasPaid
+  const paidEuros = user.paidAmount != null ? user.paidAmount / 100 : totalWithFees
   const locked = user.edition.isRegistrationClosed
   const paypalConfigured = !!paypalClientId
 
@@ -46,7 +50,7 @@ export function PaymentSection({ user }: PaymentSectionProps) {
           <p className="text-sm text-muted-foreground">Merci pour votre règlement ! Votre place est réservée, à très vite au congrès.</p>
           <Badge variant="outline" className="border-primary/40 text-primary">
             <CheckCircle2 className="h-3 w-3 mr-1" />
-            {total > 0 ? `${total} € payés` : "Validée"}
+            {paidEuros > 0 ? `${paidEuros.toFixed(2)} € payés` : "Validée"}
           </Badge>
         </div>
       </section>
@@ -109,11 +113,24 @@ export function PaymentSection({ user }: PaymentSectionProps) {
             </li>
           ))}
         </ul>
+        <div className="flex items-center justify-between border-t px-4 py-2.5 text-sm">
+          <span className="text-muted-foreground">Sous-total repas</span>
+          <span className="text-muted-foreground">{total.toFixed(2)} €</span>
+        </div>
+        <div className="flex items-center justify-between px-4 py-2.5 text-sm">
+          <span className="text-muted-foreground">Frais PayPal</span>
+          <span className="text-muted-foreground">+{fees.toFixed(2)} €</span>
+        </div>
         <div className="flex items-center justify-between border-t px-4 py-3">
-          <span className="text-sm font-medium">Total</span>
-          <span className="text-lg font-semibold">{total} €</span>
+          <span className="text-sm font-medium">Total à régler</span>
+          <span className="text-lg font-semibold">{totalWithFees.toFixed(2)} €</span>
         </div>
       </div>
+      <p className="text-xs text-muted-foreground max-w-prose">
+        PayPal prélève des frais de traitement sur chaque paiement. Ces frais sont
+        ajoutés au montant des repas afin que l&apos;intégralité de votre participation
+        revienne à l&apos;organisation.
+      </p>
 
       {deadline && !locked && (
         <p className="text-xs text-muted-foreground">
