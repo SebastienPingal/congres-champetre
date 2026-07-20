@@ -204,6 +204,12 @@
   * {
     @apply border-border outline-ring/50;
   }
+  /* Cormorant (font-display) a une hauteur d'x réduite : à taille égale il
+     paraît plus petit qu'un sans-serif. On remonte la base rem de 16 → 18px
+     pour que tout le texte (text-sm/text-xs inclus) gagne en lisibilité. */
+  html {
+    font-size: 112.5%;
+  }
   body {
     @apply bg-background text-foreground font-display;
   }
