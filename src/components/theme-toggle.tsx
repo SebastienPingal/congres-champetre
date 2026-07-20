@@ -1,58 +1,22 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { Monitor, Moon, Sun } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { useThemeMode, THEME_ORDER, type ThemeMode } from "@/hooks/use-theme-mode"
 
-const STORAGE_KEY = "theme-mode"
-
-type Mode = "system" | "light" | "dark"
-
-const ORDER: Mode[] = ["system", "light", "dark"]
 const ICONS = { system: Monitor, light: Sun, dark: Moon } as const
-const LABELS: Record<Mode, string> = {
+const LABELS: Record<ThemeMode, string> = {
   system: "Suit le thème système (clic pour passer en clair)",
   light: "Thème clair (clic pour passer en sombre)",
   dark: "Thème sombre (clic pour suivre le système)",
 }
 
-function readMode(): Mode {
-  if (typeof localStorage === "undefined") return "system"
-  const v = localStorage.getItem(STORAGE_KEY)
-  return v === "light" || v === "dark" ? v : "system"
-}
-
-function systemPrefersDark(): boolean {
-  return typeof window !== "undefined" && window.matchMedia?.("(prefers-color-scheme: dark)").matches
-}
-
-function applyMode(mode: Mode) {
-  const effective = mode === "system" ? (systemPrefersDark() ? "dark" : "light") : mode
-  document.documentElement.setAttribute("data-theme", effective === "dark" ? "crepuscule" : "champetre")
-}
-
 export function ThemeToggle({ className }: { className?: string }) {
-  const [mode, setMode] = useState<Mode>("system")
-  const [mounted, setMounted] = useState(false)
+  const { mode, setMode, mounted } = useThemeMode()
   const [hover, setHover] = useState(false)
 
-  useEffect(() => {
-    setMounted(true)
-    setMode(readMode())
-  }, [])
-
-  const next = ORDER[(ORDER.indexOf(mode) + 1) % ORDER.length]
-
-  const cycle = () => {
-    try {
-      if (next === "system") localStorage.removeItem(STORAGE_KEY)
-      else localStorage.setItem(STORAGE_KEY, next)
-    } catch {
-      // localStorage unavailable — keep in-memory only
-    }
-    applyMode(next)
-    setMode(next)
-  }
+  const next = THEME_ORDER[(THEME_ORDER.indexOf(mode) + 1) % THEME_ORDER.length]
 
   const displayed = mounted && hover ? next : mode
   const Icon = ICONS[displayed]
@@ -63,7 +27,7 @@ export function ThemeToggle({ className }: { className?: string }) {
       size="icon"
       aria-label={LABELS[mode]}
       title={LABELS[mode]}
-      onClick={cycle}
+      onClick={() => setMode(next)}
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
       onFocus={() => setHover(true)}

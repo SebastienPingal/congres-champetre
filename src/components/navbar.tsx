@@ -14,9 +14,14 @@ import {
   MessageCircle,
   LogOut,
   Menu,
+  Monitor,
+  Sun,
+  Moon,
+  ChevronDown,
   type LucideIcon,
 } from "lucide-react"
 import { useUserProfile } from "@/hooks/use-user-profile"
+import { useThemeMode } from "@/hooks/use-theme-mode"
 import { cn } from "@/lib/utils"
 import {
   Sheet,
@@ -33,11 +38,19 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
   DialogClose,
 } from "@/components/ui/dialog"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuItem,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
-import { ThemeToggle } from "@/components/theme-toggle"
 import { Separator } from "@/components/ui/separator"
 import { IntentionLetterModal } from "@/features/onboarding/intention-letter-modal"
 
@@ -113,11 +126,19 @@ function NavLinks({ pathname, onNavigate }: { pathname: string | null; onNavigat
   )
 }
 
+const THEME_LABELS = [
+  { value: "system", label: "Système", icon: Monitor },
+  { value: "light", label: "Clair", icon: Sun },
+  { value: "dark", label: "Sombre", icon: Moon },
+] as const
+
 export function Navbar() {
   const { data: session } = useSession()
   const { data: profile } = useUserProfile()
   const pathname = usePathname()
   const [menuOpen, setMenuOpen] = useState(false)
+  const [confirmLogout, setConfirmLogout] = useState(false)
+  const { mode, setMode } = useThemeMode()
 
   if (!session) return null
 
@@ -231,21 +252,19 @@ export function Navbar() {
 
           <IntentionLetterModal />
 
-          <ThemeToggle />
-
-          <Dialog>
-            <DialogTrigger asChild>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
               <button
                 type="button"
-                aria-label="Se déconnecter"
-                className="navbar-logout group flex items-center gap-[9px] bg-transparent cursor-pointer shrink-0 whitespace-nowrap rounded-[10px] py-1.5 pl-2.5 pr-2.5 sm:pr-3 text-[13px] font-sans transition-colors"
+                aria-label="Menu du compte"
+                className="group flex items-center gap-[9px] bg-transparent cursor-pointer shrink-0 whitespace-nowrap rounded-[10px] py-1.5 pl-2.5 pr-2 sm:pr-2.5 text-[13px] font-sans transition-colors hover:bg-[var(--green-soft)]"
                 style={{
                   border: "1px solid var(--line-2)",
                   color: "var(--ink)",
                 }}
               >
                 <span
-                  className="navbar-logout__avatar flex items-center justify-center font-bold rounded-full shrink-0 transition-colors"
+                  className="flex items-center justify-center font-bold rounded-full shrink-0"
                   style={{
                     width: 26,
                     height: 26,
@@ -254,20 +273,48 @@ export function Navbar() {
                     fontSize: 11,
                   }}
                 >
-                  <span className="navbar-logout__initials">{initials}</span>
-                  <LogOut className="navbar-logout__icon" width={14} height={14} />
+                  {initials}
                 </span>
                 <span className="hidden sm:flex flex-col items-start leading-[1.15]">
-                  <span
-                    className="navbar-logout__kicker"
-                    style={{ fontSize: 10.5, color: "var(--ink-3)" }}
-                  >
-                    Connecté · déconnexion
+                  <span style={{ fontSize: 10.5, color: "var(--ink-3)" }}>
+                    Connecté
                   </span>
                   <span style={{ fontWeight: 600, fontSize: 13 }}>{userName}</span>
                 </span>
+                <ChevronDown
+                  width={14}
+                  height={14}
+                  className="shrink-0 transition-transform group-data-[state=open]:rotate-180"
+                  style={{ color: "var(--ink-3)" }}
+                />
               </button>
-            </DialogTrigger>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuLabel className="flex flex-col gap-0.5">
+                <span className="text-[11px] font-normal text-muted-foreground">Connecté en tant que</span>
+                <span className="truncate">{userName}</span>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuLabel className="text-[11px] font-normal text-muted-foreground">
+                Apparence
+              </DropdownMenuLabel>
+              <DropdownMenuRadioGroup value={mode} onValueChange={(v) => setMode(v as typeof mode)}>
+                {THEME_LABELS.map(({ value, label, icon: Icon }) => (
+                  <DropdownMenuRadioItem key={value} value={value}>
+                    <Icon width={15} height={15} className="mr-2" />
+                    {label}
+                  </DropdownMenuRadioItem>
+                ))}
+              </DropdownMenuRadioGroup>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem variant="destructive" onSelect={() => setConfirmLogout(true)}>
+                <LogOut width={15} height={15} className="mr-2" />
+                Se déconnecter
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          <Dialog open={confirmLogout} onOpenChange={setConfirmLogout}>
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>Se déconnecter ?</DialogTitle>
