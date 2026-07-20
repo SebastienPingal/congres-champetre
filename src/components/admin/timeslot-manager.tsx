@@ -364,9 +364,6 @@ export function TimeSlotManager({ timeSlots, onTimeSlotCreated, editionDays, edi
                   <div className="flex flex-col gap-1">
                     <h4 className="font-medium">{slot.title}</h4>
                     <p className="text-sm text-muted-foreground">{formatDateTime(slot.startTime)}</p>
-                    <p className="text-sm text-muted-foreground">
-                      Durée: {Math.round((new Date(slot.endTime).getTime() - new Date(slot.startTime).getTime()) / (1000 * 60))} minutes
-                    </p>
                   </div>
                   <div className="flex items-center gap-2">
                     <Button variant="outline" size="sm" onClick={() => openEditDialog(slot)}>Éditer</Button>
