@@ -18,6 +18,7 @@ import {
   Sun,
   Moon,
   ChevronDown,
+  ScrollText,
   type LucideIcon,
 } from "lucide-react"
 import { useUserProfile } from "@/hooks/use-user-profile"
@@ -208,31 +209,44 @@ export function Navbar() {
             </SheetContent>
           </Sheet>
 
-          <Link
-            href="/programme"
-            className="block leading-none no-underline shrink-0 whitespace-nowrap"
-            style={{ color: "inherit" }}
-          >
-            <div
-              className="font-mono uppercase mb-1"
-              style={{
-                letterSpacing: "0.22em",
-                color: "var(--ink-3)",
-              }}
+          <div className="shrink-0 flex flex-col leading-none">
+            <Link
+              href="/programme"
+              className="block no-underline whitespace-nowrap"
+              style={{ color: "inherit" }}
             >
-              <span className="text-[9px] sm:text-[10px]">Congrès Champêtre</span>
-            </div>
-            <div
-              className="font-display text-[18px] sm:text-[24px]"
-              style={{
-                fontWeight: 600,
-                letterSpacing: "-0.02em",
-                color: "var(--ink)",
-              }}
-            >
-              {editionName}
-            </div>
-          </Link>
+              <div
+                className="font-mono uppercase mb-1"
+                style={{
+                  letterSpacing: "0.22em",
+                  color: "var(--ink-3)",
+                }}
+              >
+                <span className="text-[9px] sm:text-[10px]">Congrès Champêtre</span>
+              </div>
+              <div
+                className="font-display text-[18px] sm:text-[24px]"
+                style={{
+                  fontWeight: 600,
+                  letterSpacing: "-0.02em",
+                  color: "var(--ink)",
+                }}
+              >
+                {editionName}
+              </div>
+            </Link>
+
+            <IntentionLetterModal>
+              <button
+                type="button"
+                className="mt-1 flex items-center gap-1 bg-transparent cursor-pointer whitespace-nowrap font-sans text-[11px] sm:text-[12px] no-underline transition-colors hover:opacity-80 w-fit"
+                style={{ color: "var(--green)" }}
+              >
+                <ScrollText width={12} height={12} className="shrink-0" />
+                Lettre d&apos;intention
+              </button>
+            </IntentionLetterModal>
+          </div>
 
           <nav className="hidden sm:flex gap-0.5 flex-1 ml-2">
             <NavLinks pathname={pathname} />
@@ -249,8 +263,6 @@ export function Navbar() {
             <MessageCircle width={16} height={16} />
             <span className="hidden sm:inline">WhatsApp</span>
           </a>
-
-          <IntentionLetterModal />
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
