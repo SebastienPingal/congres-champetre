@@ -169,15 +169,18 @@ const STATIC_FACTS = [
   { k: "+1", v: "Tu peux venir accompagné·e. Ton +1 doit s'inscrire de son côté pour qu'on l'ait sur le livret." },
 ]
 
+const ALCOHOL_NOTE =
+  "Cette année, l'alcool n'est pas compris dans ce qu'on fournit — mais tu es chaleureusement encouragé·e à apporter de quoi trinquer si le cœur t'en dit."
+
 function buildParticipationFact(priceRange: { min: number; max: number } | null): string {
   if (!priceRange) {
-    return "On s'occupe des courses, des repas, des boissons et de l'intendance. Une petite participation aux frais te sera demandée à l'inscription."
+    return `On s'occupe des courses, des repas et de l'intendance. Une petite participation aux frais te sera demandée à l'inscription. ${ALCOHOL_NOTE}`
   }
   const { min, max } = priceRange
   if (min === max) {
-    return `On s'occupe des courses, des repas, des boissons et de l'intendance. Participation aux frais : ${formatPrice(min)} (un repas), à régler en ligne.`
+    return `On s'occupe des courses, des repas et de l'intendance. Participation aux frais : ${formatPrice(min)} (un repas), à régler en ligne. ${ALCOHOL_NOTE}`
   }
-  return `On s'occupe des courses, des repas, des boissons et de l'intendance. Participation aux frais : à partir de ${formatPrice(min)} (un seul repas) jusqu'à ${formatPrice(max)} (week-end complet), à régler en ligne.`
+  return `On s'occupe des courses, des repas et de l'intendance. Participation aux frais : à partir de ${formatPrice(min)} (un seul repas) jusqu'à ${formatPrice(max)} (week-end complet), à régler en ligne. ${ALCOHOL_NOTE}`
 }
 
 function Fleuron({ size = 10, color = "currentColor", style }: { size?: number; color?: string; style?: React.CSSProperties }) {
@@ -471,16 +474,8 @@ export default async function LandingPage() {
                 <em>{NAME_PARTS.left}</em>
               )
             }
-            subtitle="Le fil rouge de cette seconde édition. Une boussole, pas une cage : à interpréter avec largesse."
+            subtitle="Tout ce qu'on raconte autour d'un feu — pour effrayer les enfants, consoler les adultes, ou expliquer ce qu'on ne comprend pas tout à fait."
           />
-          <div style={{
-            maxWidth: 720, margin: "0 auto 56px",
-            fontFamily: "var(--font-newsreader), serif", fontSize: 20, lineHeight: 1.6,
-            color: "var(--ink-2)", textAlign: "center", fontStyle: "italic", textWrap: "pretty",
-          }}>
-            «&nbsp;Tout ce qu&apos;on raconte autour d&apos;un feu — pour effrayer les enfants,
-            consoler les adultes, ou expliquer ce qu&apos;on ne comprend pas tout à fait.&nbsp;»
-          </div>
           <div style={{
             display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
             gap: 1, background: "var(--line)",
