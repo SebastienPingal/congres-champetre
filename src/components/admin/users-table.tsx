@@ -507,13 +507,18 @@ export function UsersTable() {
                 )}
               </TableCell>
               <TableCell className="text-center">
-                {u.isAttending === true && (
+                {(u.isAttending !== null
+                  || u.sleepsOnSite !== null
+                  || u.attendanceDays !== "NONE"
+                  || u.hasPaid
+                  || u.willPayInCash
+                  || Object.keys(u.mealStatuses).length > 0) && (
                   <Button
                     variant="ghost"
                     size="sm"
                     className="text-destructive hover:text-destructive hover:bg-destructive/10"
                     onClick={() => setDeleteTarget(u)}
-                    title="Supprimer la participation"
+                    title="Réinitialiser les réponses (réaffiche l'onboarding)"
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
@@ -537,11 +542,12 @@ export function UsersTable() {
       <Dialog open={!!deleteTarget} onOpenChange={(open) => { if (!open) setDeleteTarget(null) }}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Supprimer la participation</DialogTitle>
+            <DialogTitle>Réinitialiser les réponses</DialogTitle>
             <DialogDescription>
-              Êtes-vous sûr de vouloir supprimer la participation de{" "}
+              Êtes-vous sûr de vouloir réinitialiser les réponses de{" "}
               <strong>{deleteTarget?.name ?? deleteTarget?.email}</strong> ?
-              Cette action supprimera également ses conférences proposées et ses inscriptions aux repas pour cette édition.
+              Cette action supprimera sa participation, ses conférences proposées et ses inscriptions aux repas pour cette édition.
+              La modale d&apos;onboarding lui sera de nouveau présentée à sa prochaine connexion.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
