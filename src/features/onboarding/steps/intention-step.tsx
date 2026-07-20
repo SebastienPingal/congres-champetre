@@ -1,24 +1,12 @@
 "use client"
 
-import { Button } from "@/components/ui/button"
 import { IntentionLetterContent } from "../intention-letter"
 
-interface IntentionStepProps {
-  onContinue: () => void
-  isSubmitting: boolean
-}
-
-export function IntentionStep({ onContinue, isSubmitting }: IntentionStepProps) {
-  return (
-    <div className="flex flex-col gap-5">
-      <IntentionLetterContent />
-      <Button
-        className="w-full h-14 text-base"
-        onClick={onContinue}
-        disabled={isSubmitting}
-      >
-        Continuer
-      </Button>
-    </div>
-  )
+/**
+ * Première étape de l'onboarding : la lettre d'intention.
+ * Le bouton "Continuer" est rendu par le pied figé de la modal
+ * (`onboarding-modal.tsx`), pas ici.
+ */
+export function IntentionStep() {
+  return <IntentionLetterContent />
 }
