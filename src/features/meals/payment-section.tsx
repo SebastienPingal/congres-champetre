@@ -46,11 +46,19 @@ export function PaymentSection({ user }: PaymentSectionProps) {
   if (hasPaid) {
     return (
       <section id="section-validation" className="flex flex-col gap-3">
-        <div className="flex items-start justify-between gap-3">
-          <p className="text-sm text-muted-foreground">Merci pour votre règlement ! Votre place est réservée, à très vite au congrès.</p>
-          <Badge variant="outline" className="border-primary/40 text-primary">
-            <CheckCircle2 className="h-3 w-3 mr-1" />
-            {paidEuros > 0 ? `${paidEuros.toFixed(2)} € payés` : "Validée"}
+        <div className="flex flex-col items-center gap-4 rounded-xl border-2 border-primary/50 bg-primary/10 px-6 py-8 text-center">
+          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/15">
+            <CheckCircle2 className="h-8 w-8 text-primary" />
+          </div>
+          <div className="flex flex-col gap-1">
+            <p className="text-lg font-semibold text-primary">Votre place est réservée&nbsp;!</p>
+            <p className="text-sm text-foreground/80 max-w-prose">
+              Merci pour votre règlement, à très vite au congrès.
+            </p>
+          </div>
+          <Badge variant="outline" className="border-primary/50 bg-primary/10 text-primary text-sm px-3 py-1">
+            <CheckCircle2 className="h-4 w-4 mr-1.5" />
+            {paidEuros > 0 ? `${paidEuros.toFixed(2)} € payés` : "Paiement validé"}
           </Badge>
         </div>
       </section>
