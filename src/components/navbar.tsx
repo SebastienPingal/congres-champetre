@@ -11,6 +11,7 @@ import {
   UtensilsCrossed,
   Mic,
   CreditCard,
+  ScrollText,
   MessageCircle,
   LogOut,
   Menu,
@@ -40,7 +41,7 @@ import { Button } from "@/components/ui/button"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { Separator } from "@/components/ui/separator"
 
-export type SectionKey = "programme" | "presence" | "repas" | "conferences" | "paiement"
+export type SectionKey = "programme" | "presence" | "repas" | "conferences" | "paiement" | "lettre-intention"
 
 type NavItem = { key: SectionKey; href: string; label: string; icon: LucideIcon }
 
@@ -50,6 +51,7 @@ export const NAV_ITEMS: NavItem[] = [
   { key: "repas",       href: "/repas",       label: "Repas",       icon: UtensilsCrossed },
   { key: "conferences", href: "/conferences", label: "Conférences", icon: Mic },
   { key: "paiement",    href: "/paiement",    label: "Paiement",    icon: CreditCard },
+  { key: "lettre-intention", href: "/lettre-intention", label: "Lettre d'intention", icon: ScrollText },
 ]
 
 const WHATSAPP_URL = "https://chat.whatsapp.com/DJSVxLFkb7J6svyoBsenQu?mode=gi_t"
