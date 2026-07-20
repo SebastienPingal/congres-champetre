@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { queryKeys } from "@/lib/query-keys"
 import { useUserProfile, useUpdateProfile } from "@/hooks/use-user-profile"
 import { useMeals } from "@/hooks/use-meals"
+import { IntentionStep } from "./steps/intention-step"
 import { AttendingStep } from "./steps/attending-step"
 import { DaysStep } from "./steps/days-step"
 import { SleepingStep } from "./steps/sleeping-step"
@@ -14,7 +15,7 @@ import { MealsStep } from "./steps/meals-step"
 import { ConferenceStep } from "./steps/conference-step"
 import type { AttendanceDays, MealStatus } from "@/types"
 
-type Step = 'attending' | 'days' | 'sleeping' | 'meals' | 'speaking' | 'conference'
+type Step = 'intention' | 'attending' | 'days' | 'sleeping' | 'meals' | 'speaking' | 'conference'
 
 interface OnboardingState {
   isAttending: boolean | null
@@ -24,6 +25,7 @@ interface OnboardingState {
 }
 
 const STEP_LABELS: Record<Step, string> = {
+  intention: 'Lettre d\'intention',
   attending: 'Venez-vous au weekend ?',
   days: 'Quels jours ?',
   sleeping: 'Hébergement',
@@ -38,7 +40,7 @@ export function OnboardingModal() {
   const { mutate: updateProfile } = useUpdateProfile()
   const qc = useQueryClient()
 
-  const [currentStep, setCurrentStep] = useState<Step>('attending')
+  const [currentStep, setCurrentStep] = useState<Step>('intention')
   const [answersInitialized, setAnswersInitialized] = useState(false)
   const [answers, setAnswers] = useState<OnboardingState>({
     isAttending: null,
@@ -98,6 +100,7 @@ export function OnboardingModal() {
   // Only show meals step if user is attending AND there are meals available
   const hasMeals = meals.length > 0
   const visibleSteps: Step[] = [
+    'intention',
     'attending',
     ...(answers.isAttending === true
       ? ['days' as Step, 'sleeping' as Step, ...(hasMeals ? ['meals' as Step] : [])]
@@ -184,7 +187,7 @@ export function OnboardingModal() {
   return (
     <Dialog open={true} onOpenChange={() => {}}>
       <DialogContent
-        className="sm:max-w-md max-h-[90vh] overflow-y-auto"
+        className={`max-h-[90vh] overflow-y-auto ${currentStep === 'intention' ? 'sm:max-w-lg' : 'sm:max-w-md'}`}
         onPointerDownOutside={(e) => e.preventDefault()}
         onEscapeKeyDown={(e) => e.preventDefault()}
       >
@@ -213,6 +216,9 @@ export function OnboardingModal() {
           {STEP_LABELS[currentStep]}
         </h2>
 
+        {currentStep === 'intention' && (
+          <IntentionStep onContinue={() => setCurrentStep('attending')} isSubmitting={isSubmitting} />
+        )}
         {currentStep === 'attending' && (
           <AttendingStep onAnswer={handleAttending} isSubmitting={isSubmitting} />
         )}
@@ -232,18 +238,22 @@ export function OnboardingModal() {
           <ConferenceStep onCreated={handleConferenceDone} onSkip={handleConferenceDone} isCompleting={isCompleting} />
         )}
 
-        <p className="text-xs text-muted-foreground/80 text-center mt-3">
-          Ces choix pourront être modifiés facilement depuis votre tableau de bord.
-        </p>
+        {currentStep !== 'intention' && (
+          <>
+            <p className="text-xs text-muted-foreground/80 text-center mt-3">
+              Ces choix pourront être modifiés facilement depuis votre tableau de bord.
+            </p>
 
-        <button
-          type="button"
-          className="mt-1 text-xs text-muted-foreground/80 hover:text-muted-foreground underline underline-offset-2 text-center w-full transition-colors"
-          onClick={handleLater}
-          disabled={isSubmitting}
-        >
-          Répondre plus tard
-        </button>
+            <button
+              type="button"
+              className="mt-1 text-xs text-muted-foreground/80 hover:text-muted-foreground underline underline-offset-2 text-center w-full transition-colors"
+              onClick={handleLater}
+              disabled={isSubmitting}
+            >
+              Répondre plus tard
+            </button>
+          </>
+        )}
       </DialogContent>
     </Dialog>
   )
