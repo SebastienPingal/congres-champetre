@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Button } from "@/components/ui/button"
 import { queryKeys } from "@/lib/query-keys"
 import { useUserProfile, useUpdateProfile } from "@/hooks/use-user-profile"
 import { useMeals } from "@/hooks/use-meals"
@@ -187,73 +188,88 @@ export function OnboardingModal() {
   return (
     <Dialog open={true} onOpenChange={() => {}}>
       <DialogContent
-        className={`max-h-[90vh] overflow-y-auto ${currentStep === 'intention' ? 'sm:max-w-lg' : 'sm:max-w-md'}`}
+        className={`flex max-h-[90vh] flex-col gap-0 overflow-hidden p-0 ${currentStep === 'intention' ? 'sm:max-w-lg' : 'sm:max-w-md'}`}
         onPointerDownOutside={(e) => e.preventDefault()}
         onEscapeKeyDown={(e) => e.preventDefault()}
       >
-        <DialogHeader>
-          <DialogTitle className="text-center text-xl">
-            Bienvenue au Congrès Champêtre !
-          </DialogTitle>
-        </DialogHeader>
+        {/* En-tête figé */}
+        <div className="shrink-0 border-b px-6 pt-6 pb-3" style={{ borderColor: "var(--line)" }}>
+          <DialogHeader>
+            <DialogTitle className="text-center text-xl">
+              Bienvenue au Congrès Champêtre !
+            </DialogTitle>
+          </DialogHeader>
 
-        {/* Progress bar */}
-        <div className="flex gap-1.5 mb-2">
-          {visibleSteps.map((step, i) => (
-            <div
-              key={step}
-              className={`h-1.5 flex-1 rounded-full transition-colors ${
-                i <= currentIndex ? 'bg-primary' : 'bg-muted'
-              }`}
-            />
-          ))}
+          {/* Progress bar */}
+          <div className="flex gap-1.5 mt-3 mb-2">
+            {visibleSteps.map((step, i) => (
+              <div
+                key={step}
+                className={`h-1.5 flex-1 rounded-full transition-colors ${
+                  i <= currentIndex ? 'bg-primary' : 'bg-muted'
+                }`}
+              />
+            ))}
+          </div>
+          <p className="text-xs text-muted-foreground/80 text-center mb-2">
+            Étape {currentIndex + 1} sur {totalSteps} — {STEP_LABELS[currentStep]}
+          </p>
+
+          <h2 className="text-lg font-semibold text-center">
+            {STEP_LABELS[currentStep]}
+          </h2>
         </div>
-        <p className="text-xs text-muted-foreground/80 text-center mb-4">
-          Étape {currentIndex + 1} sur {totalSteps} — {STEP_LABELS[currentStep]}
-        </p>
 
-        <h2 className="text-lg font-semibold text-center mb-2">
-          {STEP_LABELS[currentStep]}
-        </h2>
+        {/* Contenu défilant */}
+        <div className="flex-1 min-h-0 overflow-y-auto px-6 py-4">
+          {currentStep === 'intention' && <IntentionStep />}
+          {currentStep === 'attending' && (
+            <AttendingStep onAnswer={handleAttending} isSubmitting={isSubmitting} />
+          )}
+          {currentStep === 'days' && (
+            <DaysStep onAnswer={handleDays} isSubmitting={isSubmitting} />
+          )}
+          {currentStep === 'sleeping' && (
+            <SleepingStep onAnswer={handleSleeping} isSubmitting={isSubmitting} />
+          )}
+          {currentStep === 'meals' && (
+            <MealsStep meals={meals} onAnswer={handleMeals} isSubmitting={isSubmitting} />
+          )}
+          {currentStep === 'speaking' && (
+            <SpeakingStep onAnswer={handleSpeaking} isSubmitting={isSubmitting} />
+          )}
+          {currentStep === 'conference' && (
+            <ConferenceStep onCreated={handleConferenceDone} onSkip={handleConferenceDone} isCompleting={isCompleting} />
+          )}
+        </div>
 
-        {currentStep === 'intention' && (
-          <IntentionStep onContinue={() => setCurrentStep('attending')} isSubmitting={isSubmitting} />
-        )}
-        {currentStep === 'attending' && (
-          <AttendingStep onAnswer={handleAttending} isSubmitting={isSubmitting} />
-        )}
-        {currentStep === 'days' && (
-          <DaysStep onAnswer={handleDays} isSubmitting={isSubmitting} />
-        )}
-        {currentStep === 'sleeping' && (
-          <SleepingStep onAnswer={handleSleeping} isSubmitting={isSubmitting} />
-        )}
-        {currentStep === 'meals' && (
-          <MealsStep meals={meals} onAnswer={handleMeals} isSubmitting={isSubmitting} />
-        )}
-        {currentStep === 'speaking' && (
-          <SpeakingStep onAnswer={handleSpeaking} isSubmitting={isSubmitting} />
-        )}
-        {currentStep === 'conference' && (
-          <ConferenceStep onCreated={handleConferenceDone} onSkip={handleConferenceDone} isCompleting={isCompleting} />
-        )}
-
-        {currentStep !== 'intention' && (
-          <>
-            <p className="text-xs text-muted-foreground/80 text-center mt-3">
-              Ces choix pourront être modifiés facilement depuis votre tableau de bord.
-            </p>
-
-            <button
-              type="button"
-              className="mt-1 text-xs text-muted-foreground/80 hover:text-muted-foreground underline underline-offset-2 text-center w-full transition-colors"
-              onClick={handleLater}
+        {/* Pied figé */}
+        <div className="shrink-0 border-t px-6 pt-3 pb-6" style={{ borderColor: "var(--line)" }}>
+          {currentStep === 'intention' ? (
+            <Button
+              className="w-full h-14 text-base"
+              onClick={() => setCurrentStep('attending')}
               disabled={isSubmitting}
             >
-              Répondre plus tard
-            </button>
-          </>
-        )}
+              Continuer
+            </Button>
+          ) : (
+            <>
+              <p className="text-xs text-muted-foreground/80 text-center">
+                Ces choix pourront être modifiés facilement depuis votre tableau de bord.
+              </p>
+
+              <button
+                type="button"
+                className="mt-1 text-xs text-muted-foreground/80 hover:text-muted-foreground underline underline-offset-2 text-center w-full transition-colors"
+                onClick={handleLater}
+                disabled={isSubmitting}
+              >
+                Répondre plus tard
+              </button>
+            </>
+          )}
+        </div>
       </DialogContent>
     </Dialog>
   )
