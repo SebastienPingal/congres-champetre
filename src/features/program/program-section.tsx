@@ -1,7 +1,7 @@
 "use client"
 
 import { useMemo } from "react"
-import { AlertTriangle, Lock, MapPin, Users } from "lucide-react"
+import { AlertTriangle, Clock, Lock, MapPin, Users } from "lucide-react"
 import { useTimeSlots } from "@/hooks/use-time-slots"
 import type { MealSlot, TimeSlot, UserProfile } from "@/types"
 
@@ -319,6 +319,7 @@ function SceneEntry({
 }: { session: TimeSlot; isLast: boolean }) {
   const isMeal = session.kind === "MEAL"
   const isTalk = session.kind === "CONFERENCE"
+  const isPendingTalk = isTalk && !session.conference
   const accent =
     isMeal ? "var(--meal)" : isTalk ? "var(--talk)" : "var(--ink-3)"
   const title = isTalk && session.conference ? session.conference.title : session.title
@@ -369,10 +370,40 @@ function SceneEntry({
           style={{
             position: "absolute", left: -5, top: 6,
             width: 9, height: 9, borderRadius: "50%",
-            background: accent, border: "2px solid var(--paper)",
+            background: isPendingTalk ? "var(--paper)" : accent,
+            border: isPendingTalk
+              ? `1.5px dashed var(--talk)`
+              : "2px solid var(--paper)",
           }}
         />
-        {isTalk ? (
+        {isPendingTalk ? (
+          <>
+            <div
+              className="inline-flex items-center gap-1.5 uppercase"
+              style={{
+                fontFamily: "var(--font-mono), monospace",
+                fontSize: 10, letterSpacing: "0.16em",
+                color: "var(--talk)",
+                border: "1px dashed var(--talk)",
+                borderRadius: 999,
+                padding: "3px 9px",
+              }}
+            >
+              <Clock size={11} aria-hidden="true" />
+              À venir
+            </div>
+            <div
+              style={{
+                fontFamily: "var(--font-serif), serif",
+                fontSize: 16, fontStyle: "italic",
+                fontWeight: 400, color: "var(--ink-3)",
+                lineHeight: 1.3, marginTop: 8,
+              }}
+            >
+              Conférence à annoncer
+            </div>
+          </>
+        ) : isTalk ? (
           <>
             <div
               style={{
