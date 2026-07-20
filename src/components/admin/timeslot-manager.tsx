@@ -236,7 +236,7 @@ export function TimeSlotManager({ timeSlots, onTimeSlotCreated, editionDays, edi
               Nouveau créneau
             </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="sm:max-w-2xl">
             <DialogHeader>
               <DialogTitle>Créer un nouveau créneau</DialogTitle>
               <DialogDescription>
