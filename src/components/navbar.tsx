@@ -67,7 +67,7 @@ export const NAV_ITEMS: NavItem[] = [
   { key: "paiement",    href: "/paiement",    label: "Paiement",    icon: CreditCard },
 ]
 
-const WHATSAPP_URL = "https://chat.whatsapp.com/DJSVxLFkb7J6svyoBsenQu?mode=gi_t"
+export const WHATSAPP_URL = "https://chat.whatsapp.com/DJSVxLFkb7J6svyoBsenQu?mode=gi_t"
 
 function getInitials(name?: string | null) {
   if (!name) return "?"

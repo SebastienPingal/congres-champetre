@@ -5,6 +5,7 @@
 
 import Link from "next/link"
 import { LandingHeader } from "@/components/landing-header"
+import { WHATSAPP_URL } from "@/components/navbar"
 import { prisma } from "@/lib/prisma"
 
 import {
@@ -669,7 +670,7 @@ export default async function LandingPage() {
               Réserver ma place
               <ChevIcon size={16} />
             </Link>
-            <a href="https://wa.me/" style={{
+            <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer" style={{
               display: "inline-flex", alignItems: "center", gap: 10,
               border: "1px solid color-mix(in srgb, var(--paper) 25%, transparent)",
               color: "color-mix(in srgb, var(--paper) 92%, white)",
@@ -678,7 +679,7 @@ export default async function LandingPage() {
               textDecoration: "none",
             }}>
               <WhatsAppIcon size={16} />
-              Demander sur WhatsApp
+              Rejoindre le groupe WhatsApp
             </a>
           </div>
           <div style={{ marginTop: 42, color: "color-mix(in srgb, var(--paper) 22%, transparent)" }}>
