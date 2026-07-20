@@ -92,10 +92,15 @@ export function toRoman(n: number): string {
 
 export async function getActiveEditionNumber(): Promise<number | null> {
   const editions = await prisma.edition.findMany({
-    orderBy: [{ startDate: "asc" }, { createdAt: "asc" }],
-    select: { id: true, isActive: true },
+    select: { id: true, isActive: true, startDate: true, createdAt: true },
   })
-  const idx = editions.findIndex((e) => e.isActive)
+  // Order chronologically, falling back to createdAt when startDate is null.
+  // Relying on SQL "startDate asc" alone pushes null-dated editions to the end
+  // (Postgres NULLS LAST), which would place the active edition too early.
+  const sorted = editions
+    .map((e) => ({ ...e, sortKey: (e.startDate ?? e.createdAt).getTime() }))
+    .sort((a, b) => a.sortKey - b.sortKey)
+  const idx = sorted.findIndex((e) => e.isActive)
   return idx >= 0 ? idx + 1 : null
 }
 
