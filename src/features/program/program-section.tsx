@@ -24,10 +24,6 @@ function formatHM(iso: string) {
   })
 }
 
-function durationMin(startIso: string, endIso: string) {
-  return Math.round((new Date(endIso).getTime() - new Date(startIso).getTime()) / 60000)
-}
-
 function dayKey(iso: string) {
   const d = new Date(iso)
   return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`
@@ -354,7 +350,7 @@ function SceneEntry({
             marginTop: 6, letterSpacing: "0.06em",
           }}
         >
-          → {formatHM(session.endTime)} · {durationMin(session.startTime, session.endTime)}&nbsp;min
+          → {formatHM(session.endTime)}
         </div>
       </div>
       <div
