@@ -84,6 +84,10 @@ export function IntentionLetterContent({ className }: { className?: string }) {
         La perspective de réitérer l’évènement nous met en joie, nous avons hâte
         de vivre ce week-end avec vous !
       </p>
+
+      <p className="font-medium" style={{ color: "var(--ink)" }}>
+        Signé Raphaëlle et Sébastien
+      </p>
     </div>
   )
 }
