@@ -62,6 +62,88 @@ export function EditionManager({ onEditionChanged }: EditionManagerProps) {
 
   const [actionLoading, setActionLoading] = useState<string | null>(null)
 
+  // Edit state
+  const [editId, setEditId] = useState<string | null>(null)
+  const [editName, setEditName] = useState("")
+  const [editStartDate, setEditStartDate] = useState<Date | undefined>()
+  const [editEndDate, setEditEndDate] = useState<Date | undefined>()
+  const [editStartHour, setEditStartHour] = useState("10")
+  const [editEndHour, setEditEndHour] = useState("20")
+  const [editLoading, setEditLoading] = useState(false)
+  const [editError, setEditError] = useState("")
+
+  const openEdit = (edition: (typeof editions)[number]) => {
+    setEditId(edition.id)
+    setEditName(edition.name)
+    setEditStartDate(edition.startDate ? new Date(edition.startDate) : undefined)
+    setEditEndDate(edition.endDate ? new Date(edition.endDate) : undefined)
+    setEditStartHour(String(edition.startHour ?? 10))
+    setEditEndHour(String(edition.endHour ?? 20))
+    setEditError("")
+  }
+
+  const handleEditOpenChange = (open: boolean) => {
+    if (!open) {
+      setEditId(null)
+      setEditError("")
+    }
+  }
+
+  const handleUpdateEdition = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!editId) return
+    if (!editName.trim()) {
+      setEditError("Le nom est requis")
+      return
+    }
+    if (!editStartDate || !editEndDate) {
+      setEditError("Les dates de début et de fin sont requises")
+      return
+    }
+    if (editEndDate <= editStartDate) {
+      setEditError("La date de fin doit être après la date de début")
+      return
+    }
+    const startHour = Number(editStartHour)
+    const endHour = Number(editEndHour)
+    if (!Number.isInteger(startHour) || startHour < 0 || startHour > 23 ||
+        !Number.isInteger(endHour) || endHour < 0 || endHour > 23) {
+      setEditError("Les heures doivent être comprises entre 0 et 23")
+      return
+    }
+    if (endHour <= startHour) {
+      setEditError("L'heure de fin doit être après l'heure de début")
+      return
+    }
+    setEditLoading(true)
+    setEditError("")
+    try {
+      const res = await fetch(`/api/editions/${editId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: editName.trim(),
+          startDate: editStartDate.toISOString(),
+          endDate: editEndDate.toISOString(),
+          startHour,
+          endHour,
+        }),
+      })
+      const result = await res.json()
+      if (res.ok) {
+        setEditId(null)
+        invalidateEditions()
+        onEditionChanged?.()
+      } else {
+        setEditError(result.error || "Erreur lors de la mise à jour")
+      }
+    } catch {
+      setEditError("Erreur lors de la mise à jour")
+    } finally {
+      setEditLoading(false)
+    }
+  }
+
   const invalidateEditions = () => {
     qc.invalidateQueries({ queryKey: queryKeys.editions })
   }
@@ -419,6 +501,14 @@ export function EditionManager({ onEditionChanged }: EditionManagerProps) {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => openEdit(edition)}
+                    disabled={actionLoading === edition.id}
+                  >
+                    Éditer
+                  </Button>
                   {!edition.isActive && (
                     <>
                       <Button
@@ -445,6 +535,91 @@ export function EditionManager({ onEditionChanged }: EditionManagerProps) {
           ))}
         </div>
       )}
+
+      {/* Dialog d'édition */}
+      <Dialog open={editId !== null} onOpenChange={handleEditOpenChange}>
+        <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Modifier l&apos;édition</DialogTitle>
+            <DialogDescription>
+              Mettez à jour les informations générales de l&apos;édition
+            </DialogDescription>
+          </DialogHeader>
+
+          <form onSubmit={handleUpdateEdition} className="flex flex-col gap-4">
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="edit-edition-name">Nom de l&apos;édition</Label>
+              <Input
+                id="edit-edition-name"
+                type="text"
+                placeholder="ex: Édition 2026"
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                required
+                disabled={editLoading}
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label>Début du weekend</Label>
+              <DateTimePicker
+                date={editStartDate}
+                setDate={setEditStartDate}
+                disabled={editLoading}
+                placeholder="Choisir la date de début"
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label>Fin du weekend</Label>
+              <DateTimePicker
+                date={editEndDate}
+                setDate={setEditEndDate}
+                disabled={editLoading}
+                placeholder="Choisir la date de fin"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="edit-start-hour">Heure de début du programme</Label>
+                <Input
+                  id="edit-start-hour"
+                  type="number"
+                  min={0}
+                  max={23}
+                  value={editStartHour}
+                  onChange={(e) => setEditStartHour(e.target.value)}
+                  disabled={editLoading}
+                />
+              </div>
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="edit-end-hour">Heure de fin du programme</Label>
+                <Input
+                  id="edit-end-hour"
+                  type="number"
+                  min={0}
+                  max={23}
+                  value={editEndHour}
+                  onChange={(e) => setEditEndHour(e.target.value)}
+                  disabled={editLoading}
+                />
+              </div>
+            </div>
+            {editError && <div className="text-sm text-destructive">{editError}</div>}
+            <div className="flex gap-2">
+              <Button type="submit" disabled={editLoading} className="flex-1">
+                {editLoading ? "Enregistrement..." : "Enregistrer"}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => handleEditOpenChange(false)}
+                disabled={editLoading}
+              >
+                Annuler
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

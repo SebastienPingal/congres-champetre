@@ -17,8 +17,15 @@ export async function PATCH(
       return NextResponse.json({ error: "📅 Édition non trouvée" }, { status: 404 })
     }
 
-    const { name, startDate, endDate, isActive, theme } = await request.json()
+    const { name, startDate, endDate, isActive, theme, startHour, endHour } = await request.json()
     const themePatch = theme !== undefined && isThemeId(theme) ? { theme } : {}
+
+    const isValidHour = (h: unknown): h is number =>
+      typeof h === "number" && Number.isInteger(h) && h >= 0 && h <= 23
+    const hoursPatch = {
+      ...(isValidHour(startHour) ? { startHour } : {}),
+      ...(isValidHour(endHour) ? { endHour } : {}),
+    }
 
     if (isActive === true) {
       await prisma.$transaction([
@@ -34,6 +41,7 @@ export async function PATCH(
             ...(startDate !== undefined ? { startDate: startDate ? new Date(startDate) : null } : {}),
             ...(endDate !== undefined ? { endDate: endDate ? new Date(endDate) : null } : {}),
             ...themePatch,
+            ...hoursPatch,
           },
         }),
       ])
@@ -46,6 +54,7 @@ export async function PATCH(
           ...(endDate !== undefined ? { endDate: endDate ? new Date(endDate) : null } : {}),
           ...(isActive === false ? { isActive: false } : {}),
           ...themePatch,
+          ...hoursPatch,
         },
       })
     }
