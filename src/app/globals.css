@@ -212,6 +212,9 @@
   }
   body {
     @apply bg-background text-foreground font-display;
+    /* Cormorant est un serif fin : on remonte le poids par défaut de 400 à
+       500 pour un rendu légèrement plus gras et plus lisible. */
+    font-weight: 500;
   }
 }
 
