@@ -17,7 +17,7 @@ export function IntentionStep({ onContinue, isSubmitting }: IntentionStepProps) 
         onClick={onContinue}
         disabled={isSubmitting}
       >
-        C&apos;est parti, on y va ! 🌿
+        Continuer
       </Button>
     </div>
   )
