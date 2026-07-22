@@ -167,11 +167,11 @@ const STATIC_FACTS = [
   { k: "Durée", v: "Du samedi midi au dimanche soir. Tu peux venir pour un seul jour, c'est aussi très bien." },
   { k: "Tablée", v: "Entre 10 et 15 personnes selon les jours. On reste à taille de salon." },
   { k: "Nuit sur place", v: "On s'arrange — plus vous serez nombreux à vouloir dormir, plus on part sur des solutions type tente dans le jardin, mais il y aura de la place." },
-  { k: "+1", v: "Tu peux venir accompagné·e. Ton +1 doit s'inscrire de son côté pour qu'on l'ait sur le livret." },
+  { k: "+1", v: "Tu peux venir accompagné. Ton +1 doit s'inscrire de son côté pour qu'on l'ait sur le livret." },
 ]
 
 const ALCOHOL_NOTE =
-  "Cette année, l'alcool n'est pas compris dans ce qu'on fournit — mais tu es chaleureusement encouragé·e à apporter de quoi trinquer si le cœur t'en dit."
+  "Cette année, l'alcool n'est pas compris dans ce qu'on fournit — mais tu es chaleureusement encouragé à apporter de quoi trinquer si le cœur t'en dit."
 
 function buildParticipationFact(priceRange: { min: number; max: number } | null): string {
   if (!priceRange) {
