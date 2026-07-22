@@ -27,6 +27,7 @@ const payloadSchema = z.object({
   message: z.string().trim().min(5, "Le message doit contenir au moins 5 caractères").max(10000, "Le message est trop long"),
   sendToAdminOnly: z.boolean().optional().default(false),
   filter: recipientFilter.optional().default("all"),
+  isHtml: z.boolean().optional().default(false),
 })
 
 type ParsedRequest = {
@@ -34,6 +35,7 @@ type ParsedRequest = {
   message: string
   sendToAdminOnly: boolean
   filter: z.infer<typeof recipientFilter>
+  isHtml: boolean
   attachment?: {
     filename: string
     content: Buffer
@@ -51,6 +53,7 @@ async function parseRequest(req: Request): Promise<{ ok: true; data: ParsedReque
       message: form.get("message"),
       sendToAdminOnly: form.get("sendToAdminOnly") === "true",
       filter: form.get("filter") ?? undefined,
+      isHtml: form.get("isHtml") === "true",
     })
     if (!parsed.success) {
       return { ok: false, error: "⚠️ Requête invalide", status: 400 }
@@ -159,6 +162,7 @@ export async function POST(req: Request) {
       message: parsed.data.message,
       recipients,
       attachment: parsed.data.attachment,
+      isHtml: parsed.data.isHtml,
     })
 
     return NextResponse.json({

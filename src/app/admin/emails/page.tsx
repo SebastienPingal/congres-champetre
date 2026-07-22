@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
 
 type RecipientFilter = "all" | "participants" | "non_participants" | "not_paid" | "paid" | "speakers"
 
@@ -35,6 +36,7 @@ export default function AdminEmailsPage() {
   const { data: session, status } = useSession()
   const [subject, setSubject] = useState("")
   const [message, setMessage] = useState("")
+  const [isHtml, setIsHtml] = useState(false)
   const [filter, setFilter] = useState<RecipientFilter>("all")
   const [image, setImage] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
@@ -108,6 +110,7 @@ export default function AdminEmailsPage() {
       formData.append("message", message.trim())
       formData.append("sendToAdminOnly", String(sendToAdminOnly))
       formData.append("filter", filter)
+      formData.append("isHtml", String(isHtml))
       if (image) formData.append("image", image)
 
       const response = await fetch("/api/admin/emails", {
@@ -204,19 +207,33 @@ export default function AdminEmailsPage() {
               </div>
 
               <div className="flex flex-col gap-2">
-                <Label htmlFor="email-message">Message</Label>
+                <div className="flex items-center justify-between gap-3">
+                  <Label htmlFor="email-message">Message</Label>
+                  <label className="flex items-center gap-2 text-xs font-normal text-muted-foreground cursor-pointer">
+                    <Checkbox
+                      id="email-html"
+                      checked={isHtml}
+                      onCheckedChange={(checked) => setIsHtml(checked === true)}
+                    />
+                    Mode HTML
+                  </label>
+                </div>
                 <p className="text-xs text-muted-foreground">
-                  Format Markdown supporté: titres (`#`), listes (`- item`), `**gras**`, `*italique*`, liens (`[texte](https://...)`).
+                  {isHtml
+                    ? "Mode HTML activé: saisissez votre propre HTML, il sera envoyé tel quel (non échappé). Assurez-vous que le code est fiable."
+                    : "Format Markdown supporté: titres (`#`), listes (`- item`), `**gras**`, `*italique*`, liens (`[texte](https://...)`)."}
                 </p>
                 <textarea
                   id="email-message"
                   value={message}
                   onChange={(event) => setMessage(event.target.value)}
-                  placeholder={"# Infos weekend\n\nBonjour a tous,\n\n- Arrivee: 9h\n- Debut conferences: 10h\n\nMerci !"}
+                  placeholder={isHtml
+                    ? "<h1>Infos weekend</h1>\n<p>Bonjour a tous,</p>\n<ul>\n  <li>Arrivee: 9h</li>\n  <li>Debut conferences: 10h</li>\n</ul>\n<p>Merci !</p>"
+                    : "# Infos weekend\n\nBonjour a tous,\n\n- Arrivee: 9h\n- Debut conferences: 10h\n\nMerci !"}
                   rows={10}
                   maxLength={10000}
                   required
-                  className="w-full min-h-40 rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs outline-none transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]"
+                  className="w-full min-h-40 rounded-md border border-input bg-transparent px-3 py-2 text-sm font-mono outline-none shadow-xs transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]"
                 />
               </div>
 
