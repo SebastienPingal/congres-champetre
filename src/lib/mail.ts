@@ -20,6 +20,7 @@ type BroadcastEmailInput = {
   message: string
   recipients: string[]
   attachment?: BroadcastAttachment
+  isHtml?: boolean
 }
 
 export type BroadcastEmailResult = {
@@ -145,6 +146,23 @@ function markdownToSafeHtml(markdown: string): string {
   return htmlBlocks.join("")
 }
 
+function htmlToPlainText(html: string): string {
+  return html
+    .replace(/<style[\s\S]*?<\/style>/gi, "")
+    .replace(/<script[\s\S]*?<\/script>/gi, "")
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<\/(p|div|h[1-6]|li|tr)>/gi, "\n")
+    .replace(/<[^>]+>/g, "")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/&lt;/gi, "<")
+    .replace(/&gt;/gi, ">")
+    .replace(/&quot;/gi, "\"")
+    .replace(/&#039;/gi, "'")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim()
+}
+
 export async function sendBroadcastEmail(input: BroadcastEmailInput): Promise<BroadcastEmailResult> {
   const config = readMailConfig()
   const transporter = nodemailer.createTransport({
@@ -165,7 +183,8 @@ export async function sendBroadcastEmail(input: BroadcastEmailInput): Promise<Br
   let sent = 0
   const errors: Array<{ email: string; error: string }> = []
 
-  const safeHtmlBody = markdownToSafeHtml(input.message)
+  const htmlBody = input.isHtml ? input.message : markdownToSafeHtml(input.message)
+  const textBody = input.isHtml ? htmlToPlainText(input.message) : input.message
 
   const attachment = input.attachment
   const mailAttachments = attachment
@@ -182,8 +201,8 @@ export async function sendBroadcastEmail(input: BroadcastEmailInput): Promise<Br
         from: config.from,
         to: email,
         subject: input.subject,
-        text: input.message,
-        html: safeHtmlBody,
+        text: textBody,
+        html: htmlBody,
         attachments: mailAttachments,
       })
       sent += 1
