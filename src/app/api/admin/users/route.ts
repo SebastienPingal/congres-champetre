@@ -31,6 +31,10 @@ export async function GET() {
           where: { editionId: activeEdition.id },
           take: 1,
         },
+        conferences: {
+          where: { editionId: activeEdition.id },
+          select: { id: true },
+        },
         mealRegistrations: {
           where: { timeSlot: { editionId: activeEdition.id, kind: "MEAL" } },
           select: {
@@ -55,7 +59,12 @@ export async function GET() {
         name: u.name,
         email: u.email,
         role: u.role,
-        wantsToSpeak: u.wantsToSpeak,
+        // « Parle ? » propre à l'édition active : basé sur l'existence d'une
+        // conférence pour cette édition, pas sur le flag global User.wantsToSpeak
+        // (qui peut être un reliquat d'une édition précédente).
+        // Oui = a proposé une conférence ; Non = a répondu à l'édition mais sans
+        // conférence ; ? = n'a pas encore engagé cette édition.
+        wantsToSpeak: u.conferences.length > 0 ? true : p ? false : null,
         isAttending: p?.isAttending ?? null,
         attendanceDays: p?.attendanceDays ?? "NONE",
         sleepsOnSite: p?.sleepsOnSite ?? null,
