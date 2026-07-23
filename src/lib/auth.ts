@@ -91,6 +91,21 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       return session
     }
   },
+  events: {
+    // Enregistre la dernière connexion pour savoir qui s'est connecté depuis
+    // la création de l'édition en cours (colonne "Connecté" côté admin).
+    async signIn({ user }) {
+      if (!user?.id) return
+      try {
+        await prisma.user.update({
+          where: { id: user.id },
+          data: { lastLoginAt: new Date() },
+        })
+      } catch {
+        /* ne bloque jamais la connexion */
+      }
+    },
+  },
   pages: {
     signIn: "/auth/signin"
   }

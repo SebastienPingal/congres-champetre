@@ -96,7 +96,12 @@ export function OnboardingModal() {
     },
   })
 
-  if (!user || user.onboardingCompletedAt !== null || user.edition.isRegistrationClosed) return null
+  // On affiche l'onboarding tant que la personne n'a pas indiqué si elle vient
+  // (isAttending === null), même si elle a déjà « répondu plus tard » lors d'une
+  // édition précédente. Une fois l'onboarding complété ET la présence renseignée,
+  // la modale disparaît. (Reste masquée si les inscriptions sont fermées.)
+  if (!user || user.edition.isRegistrationClosed) return null
+  if (user.onboardingCompletedAt !== null && user.isAttending !== null) return null
 
   // Only show meals step if user is attending AND there are meals available
   const hasMeals = meals.length > 0
