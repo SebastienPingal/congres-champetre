@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Check, X, Trash2 } from "lucide-react"
+import { Check, X, Trash2, Columns3 } from "lucide-react"
 import {
   Dialog,
   DialogContent,
@@ -17,6 +17,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { useAdminUsers, type AdminUserRow, type AdminUsersPayload } from "@/hooks/use-admin-users"
 import { queryKeys } from "@/lib/query-keys"
 import type { AttendanceDays } from "@/types"
@@ -28,6 +36,67 @@ const attendanceOrder: Record<AttendanceDays, number> = {
   BOTH: 3,
   UNKNOWN: 4,
 }
+
+type ColumnKey =
+  | "name"
+  | "email"
+  | "wantsToSpeak"
+  | "isAttending"
+  | "attendanceDays"
+  | "sleepsOnSite"
+  | "hasPaid"
+  | "willPayInCash"
+  | "loggedIn"
+  | "meals"
+  | "mealTotal"
+  | "actions"
+
+const COLUMN_LABELS: Record<ColumnKey, string> = {
+  name: "Nom",
+  email: "Email",
+  wantsToSpeak: "Parle ?",
+  isAttending: "Participe",
+  attendanceDays: "Jours",
+  sleepsOnSite: "Dort",
+  hasPaid: "Payé",
+  willPayInCash: "Cash",
+  loggedIn: "Connecté",
+  meals: "Repas",
+  mealTotal: "Total",
+  actions: "Actions",
+}
+
+const COLUMN_ORDER: ColumnKey[] = [
+  "name",
+  "email",
+  "wantsToSpeak",
+  "isAttending",
+  "attendanceDays",
+  "sleepsOnSite",
+  "hasPaid",
+  "willPayInCash",
+  "loggedIn",
+  "meals",
+  "mealTotal",
+  "actions",
+]
+
+const DEFAULT_VISIBLE_COLUMNS: Record<ColumnKey, boolean> = {
+  name: true,
+  email: true,
+  wantsToSpeak: true,
+  isAttending: true,
+  attendanceDays: true,
+  sleepsOnSite: true,
+  hasPaid: true,
+  willPayInCash: true,
+  loggedIn: true,
+  meals: true,
+  mealTotal: true,
+  actions: true,
+}
+
+const COLUMNS_STORAGE_KEY = "admin-users-columns"
 
 export function UsersTable() {
   const qc = useQueryClient()
@@ -63,6 +132,24 @@ export function UsersTable() {
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">(saved?.sortDirection ?? "asc")
   const [deleteTarget, setDeleteTarget] = useState<AdminUserRow | null>(null)
   const [deleting, setDeleting] = useState(false)
+
+  const [visibleColumns, setVisibleColumns] = useState<Record<ColumnKey, boolean>>(() => {
+    try {
+      const raw = localStorage.getItem(COLUMNS_STORAGE_KEY)
+      if (raw) return { ...DEFAULT_VISIBLE_COLUMNS, ...JSON.parse(raw) }
+    } catch { /* ignore */ }
+    return DEFAULT_VISIBLE_COLUMNS
+  })
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(COLUMNS_STORAGE_KEY, JSON.stringify(visibleColumns))
+    } catch { /* ignore */ }
+  }, [visibleColumns])
+
+  const toggleColumn = (key: ColumnKey) => {
+    setVisibleColumns(prev => ({ ...prev, [key]: !prev[key] }))
+  }
 
   useEffect(() => {
     try {
@@ -356,6 +443,29 @@ export function UsersTable() {
           >
             Cash
           </Button>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm">
+                <Columns3 className="h-4 w-4" />
+                Colonnes
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuLabel>Colonnes affichées</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {COLUMN_ORDER.map((key) => (
+                <DropdownMenuCheckboxItem
+                  key={key}
+                  checked={visibleColumns[key]}
+                  onSelect={(e) => e.preventDefault()}
+                  onCheckedChange={() => toggleColumn(key)}
+                >
+                  {COLUMN_LABELS[key]}
+                </DropdownMenuCheckboxItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
@@ -363,15 +473,16 @@ export function UsersTable() {
         <TableCaption>Liste des utilisateurs</TableCaption>
         <TableHeader>
           <TableRow>
-            <TableHead><SortHeader label="Nom" column="name" /></TableHead>
-            <TableHead><SortHeader label="Email" column="email" /></TableHead>
-            <TableHead><SortHeader label="Parle ?" column="wantsToSpeak" /></TableHead>
-            <TableHead><SortHeader label="Participe" column="isAttending" /></TableHead>
-            <TableHead><SortHeader label="Jours" column="attendanceDays" /></TableHead>
-            <TableHead><SortHeader label="Dort" column="sleepsOnSite" /></TableHead>
-            <TableHead><SortHeader label="Payé" column="hasPaid" /></TableHead>
-            <TableHead><SortHeader label="Cash" column="willPayInCash" /></TableHead>
-            {mealSlots.map((slot) => (
+            {visibleColumns.name && <TableHead><SortHeader label="Nom" column="name" /></TableHead>}
+            {visibleColumns.email && <TableHead><SortHeader label="Email" column="email" /></TableHead>}
+            {visibleColumns.wantsToSpeak && <TableHead><SortHeader label="Parle ?" column="wantsToSpeak" /></TableHead>}
+            {visibleColumns.isAttending && <TableHead><SortHeader label="Participe" column="isAttending" /></TableHead>}
+            {visibleColumns.attendanceDays && <TableHead><SortHeader label="Jours" column="attendanceDays" /></TableHead>}
+            {visibleColumns.sleepsOnSite && <TableHead><SortHeader label="Dort" column="sleepsOnSite" /></TableHead>}
+            {visibleColumns.hasPaid && <TableHead><SortHeader label="Payé" column="hasPaid" /></TableHead>}
+            {visibleColumns.willPayInCash && <TableHead><SortHeader label="Cash" column="willPayInCash" /></TableHead>}
+            {visibleColumns.loggedIn && <TableHead><SortHeader label="Connecté" column="hasLoggedInSinceEdition" /></TableHead>}
+            {visibleColumns.meals && mealSlots.map((slot) => (
               <TableHead key={slot.id} className="text-center px-2 max-w-[80px]">
                 <div className="flex flex-col items-center gap-0.5">
                   <span className="text-xs leading-tight">{slot.title}</span>
@@ -379,15 +490,16 @@ export function UsersTable() {
                 </div>
               </TableHead>
             ))}
-            <TableHead><SortHeader label="Total" column="mealTotal" /></TableHead>
-            <TableHead className="text-center">Actions</TableHead>
+            {visibleColumns.mealTotal && <TableHead><SortHeader label="Total" column="mealTotal" /></TableHead>}
+            {visibleColumns.actions && <TableHead className="text-center">Actions</TableHead>}
           </TableRow>
         </TableHeader>
         <TableBody>
           {filteredAndSortedUsers.map((u) => (
             <TableRow key={u.id}>
-              <TableCell className="font-medium">{u.name ?? "—"}</TableCell>
-              <TableCell>{u.email}</TableCell>
+              {visibleColumns.name && <TableCell className="font-medium">{u.name ?? "—"}</TableCell>}
+              {visibleColumns.email && <TableCell>{u.email}</TableCell>}
+              {visibleColumns.wantsToSpeak && (
               <TableCell>
                 {u.wantsToSpeak === true ? (
                   <Badge className="bg-warn-bg text-warn">Oui</Badge>
@@ -397,6 +509,8 @@ export function UsersTable() {
                   <Badge className="bg-muted text-muted-foreground">?</Badge>
                 )}
               </TableCell>
+              )}
+              {visibleColumns.isAttending && (
               <TableCell>
                 {u.isAttending === true ? (
                   <Badge className="bg-green-soft text-primary">Oui</Badge>
@@ -406,6 +520,8 @@ export function UsersTable() {
                   <Badge className="bg-muted text-muted-foreground">?</Badge>
                 )}
               </TableCell>
+              )}
+              {visibleColumns.attendanceDays && (
               <TableCell>
                 {u.attendanceDays === "NONE" && (
                   <Badge variant="outline">—</Badge>
@@ -423,6 +539,8 @@ export function UsersTable() {
                   <Badge className="bg-muted text-muted-foreground">?</Badge>
                 )}
               </TableCell>
+              )}
+              {visibleColumns.sleepsOnSite && (
               <TableCell>
                 {u.sleepsOnSite === true ? (
                   <Badge className="bg-talk-soft text-talk">Oui</Badge>
@@ -432,6 +550,8 @@ export function UsersTable() {
                   <Badge className="bg-muted text-muted-foreground">?</Badge>
                 )}
               </TableCell>
+              )}
+              {visibleColumns.hasPaid && (
               <TableCell className={u.isAttending === true && !u.hasPaid ? "bg-destructive/30" : undefined}>
                 <div className="flex items-center gap-2">
                   <Checkbox
@@ -455,6 +575,8 @@ export function UsersTable() {
                   />
                 </div>
               </TableCell>
+              )}
+              {visibleColumns.willPayInCash && (
               <TableCell className={u.willPayInCash ? "bg-warn-border" : undefined}>
                 <div className="flex items-center gap-2">
                   <Checkbox
@@ -478,7 +600,27 @@ export function UsersTable() {
                   />
                 </div>
               </TableCell>
-              {mealSlots.map((slot) => {
+              )}
+              {visibleColumns.loggedIn && (
+              <TableCell>
+                {u.hasLoggedInSinceEdition ? (
+                  <Badge
+                    className="bg-green-soft text-primary"
+                    title={u.lastLoginAt ? new Date(u.lastLoginAt).toLocaleString("fr-FR") : undefined}
+                  >
+                    Oui
+                  </Badge>
+                ) : (
+                  <Badge
+                    className="bg-muted text-muted-foreground"
+                    title={u.lastLoginAt ? `Dernière connexion : ${new Date(u.lastLoginAt).toLocaleString("fr-FR")}` : "Jamais connecté"}
+                  >
+                    Non
+                  </Badge>
+                )}
+              </TableCell>
+              )}
+              {visibleColumns.meals && mealSlots.map((slot) => {
                 const status = u.mealStatuses[slot.id]
                 return (
                   <TableCell key={slot.id} className="text-center px-2">
@@ -499,6 +641,7 @@ export function UsersTable() {
                   </TableCell>
                 )
               })}
+              {visibleColumns.mealTotal && (
               <TableCell>
                 {u.mealTotal > 0 ? (
                   <span className="text-sm font-medium">{u.mealTotal} €</span>
@@ -506,6 +649,8 @@ export function UsersTable() {
                   <span className="text-muted-foreground/80">—</span>
                 )}
               </TableCell>
+              )}
+              {visibleColumns.actions && (
               <TableCell className="text-center">
                 {(u.isAttending !== null
                   || u.sleepsOnSite !== null
@@ -524,6 +669,7 @@ export function UsersTable() {
                   </Button>
                 )}
               </TableCell>
+              )}
             </TableRow>
           ))}
         </TableBody>

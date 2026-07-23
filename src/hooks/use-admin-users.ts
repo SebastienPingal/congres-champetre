@@ -21,6 +21,8 @@ export interface AdminUserRow {
   willPayInCash: boolean
   mealStatuses: Record<string, string>
   mealTotal: number
+  lastLoginAt: string | null
+  hasLoggedInSinceEdition: boolean
   createdAt: string
   updatedAt: string
 }

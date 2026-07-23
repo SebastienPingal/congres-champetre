@@ -24,6 +24,7 @@ export async function GET() {
         email: true,
         role: true,
         wantsToSpeak: true,
+        lastLoginAt: true,
         createdAt: true,
         updatedAt: true,
         participations: {
@@ -62,6 +63,9 @@ export async function GET() {
         willPayInCash: p?.willPayInCash ?? false,
         mealStatuses,
         mealTotal: presentMeals.reduce((sum, mr) => sum + (mr.timeSlot.price ?? 0), 0),
+        lastLoginAt: u.lastLoginAt,
+        hasLoggedInSinceEdition:
+          u.lastLoginAt != null && u.lastLoginAt >= activeEdition.createdAt,
         createdAt: u.createdAt,
         updatedAt: p?.updatedAt ?? u.updatedAt,
       }
