@@ -82,7 +82,7 @@ export function LandingHeader({ edition }: { edition: string }) {
                   className="flex items-center justify-center gap-2 px-3 py-3 rounded-lg no-underline font-sans text-[14px] font-semibold"
                   style={{ background: "var(--ink)", color: "var(--paper)" }}
                 >
-                  S&apos;inscrire
+                  En savoir plus
                   <ChevIcon size={14} />
                 </Link>
               </SheetClose>
@@ -127,7 +127,7 @@ export function LandingHeader({ edition }: { edition: string }) {
           className="hidden sm:inline-flex items-center gap-2 rounded-[10px] px-4 py-2.5 no-underline font-sans font-semibold text-[13px] shrink-0 whitespace-nowrap"
           style={{ background: "var(--ink)", color: "var(--paper)" }}
         >
-          S&apos;inscrire
+          En savoir plus
           <ChevIcon size={14} />
         </Link>
       </div>
