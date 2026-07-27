@@ -649,7 +649,7 @@ export default async function LandingPage() {
             fontSize: "clamp(56px, 8vw, 92px)", fontWeight: 500,
             margin: "18px 0 0", letterSpacing: "-0.035em", lineHeight: 1, textWrap: "balance",
           }}>
-            <em>Inscris-toi</em> au congrès
+            <em>Rejoins</em> le congrès
           </h2>
           <div style={{
             fontFamily: "var(--font-newsreader), serif", fontStyle: "italic", fontSize: 20,
@@ -657,7 +657,7 @@ export default async function LandingPage() {
             marginTop: 18, fontWeight: 400, textWrap: "balance",
             maxWidth: 540, marginLeft: "auto", marginRight: "auto", lineHeight: 1.5,
           }}>
-            Quelques minutes pour réserver ta place — et, si l&apos;envie te prend, proposer un récit.
+            Quelques minutes pour nous rejoindre — et, si l&apos;envie te prend, proposer un récit.
           </div>
           <div style={{ marginTop: 36, display: "flex", justifyContent: "center", gap: 12, flexWrap: "wrap" }}>
             <Link href="/auth/signin" style={{
@@ -667,7 +667,7 @@ export default async function LandingPage() {
               fontFamily: "var(--font-manrope), sans-serif", fontWeight: 600, fontSize: 15,
               textDecoration: "none",
             }}>
-              Réserver ma place
+              En savoir plus
               <ChevIcon size={16} />
             </Link>
             <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer" style={{
