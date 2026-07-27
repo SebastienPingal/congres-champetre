@@ -398,7 +398,7 @@ export default async function LandingPage() {
               fontFamily: "var(--font-manrope), sans-serif", fontWeight: 600, fontSize: 14,
               textDecoration: "none",
             }}>
-              S&apos;inscrire au congrès
+              En savoir plus
               <ChevIcon size={15} />
             </Link>
             <a href="#concept" style={{
