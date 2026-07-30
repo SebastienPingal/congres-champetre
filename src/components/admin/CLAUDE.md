@@ -7,6 +7,10 @@ Admin-only components for managing editions, time slots, and conferences.
 | `edition-manager.tsx` | 2-step wizard: Step 1 creates the edition (name + weekend dates), Step 2 adds optional meal slots. Uses `MealSlotFields`. |
 | `timeslot-manager.tsx` | CRUD for time slots. Shows all slots for the active edition. When kind=MEAL, uses `MealSlotData` state for extra fields (description, price, showInRegistration). |
 | `meal-slot-fields.tsx` | Reusable form block for a single meal slot (title, start/end datetime, description, price, showInRegistration). Used by edition-manager wizard. Exports `MealSlotData` interface and `emptyMealSlot()` factory. |
+| `users-table.tsx` | Tableau admin des inscrits (tri, colonnes masquables, édition inline des repas / paiements). Délègue toute la logique de filtrage à `users-filters.tsx`. |
+| `users-filters.tsx` | Barre de filtres de `/admin/users`. Expose `useUsersFilters()` (état + persistance localStorage), `<UsersFilters />` (UI) et `matchesFilters(user, filters)` (prédicat). |
+
+**Ajouter un filtre utilisateur :** ajouter une entrée dans `SELECT_FILTERS` (`users-filters.tsx`) avec sa `key`, son `label`, ses `options` et son prédicat `matches` — plus une valeur par défaut `"ALL"` dans `DEFAULT_FILTERS`. L'UI, le comptage des filtres actifs, la persistance et le filtrage suivent automatiquement. Les combinaisons en un clic vivent dans `PRESETS`.
 
 **Edition creation flow:**
 1. Admin clicks "Nouvelle édition" → wizard opens at step 1

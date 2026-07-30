@@ -4,8 +4,6 @@ import { useEffect, useMemo, useState } from "react"
 import { useQueryClient } from "@tanstack/react-query"
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Check, X, Trash2, Columns3 } from "lucide-react"
@@ -26,6 +24,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { useAdminUsers, type AdminUserRow, type AdminUsersPayload } from "@/hooks/use-admin-users"
+import { UsersFilters, matchesFilters, useUsersFilters } from "@/components/admin/users-filters"
 import { queryKeys } from "@/lib/query-keys"
 import type { AttendanceDays } from "@/types"
 
@@ -97,6 +96,7 @@ const DEFAULT_VISIBLE_COLUMNS: Record<ColumnKey, boolean> = {
 }
 
 const COLUMNS_STORAGE_KEY = "admin-users-columns"
+const SORT_STORAGE_KEY = "admin-users-sort"
 
 export function UsersTable() {
   const qc = useQueryClient()
@@ -105,7 +105,6 @@ export function UsersTable() {
   const mealSlots = useMemo(() => data?.mealSlots ?? [], [data])
   const loading = isLoading
   const [error, setError] = useState<string | null>(queryError ? "Impossible de charger les utilisateurs" : null)
-  const STORAGE_KEY = "admin-users-filters"
 
   const patchCachedUsers = (updater: (rows: AdminUserRow[]) => AdminUserRow[]) => {
     qc.setQueryData<AdminUsersPayload>(queryKeys.adminUsers, (prev) =>
@@ -113,23 +112,18 @@ export function UsersTable() {
     )
   }
 
-  const loadFilters = () => {
+  const { filters, setFilter, applyPreset, resetFilters } = useUsersFilters()
+
+  const savedSort = (() => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEY)
-      if (saved) return JSON.parse(saved)
+      const raw = localStorage.getItem(SORT_STORAGE_KEY)
+      if (raw) return JSON.parse(raw)
     } catch { /* ignore */ }
     return null
-  }
+  })()
 
-  const saved = loadFilters()
-  const [searchQuery, setSearchQuery] = useState(saved?.searchQuery ?? "")
-  const [filterParticipation, setFilterParticipation] = useState<"ALL" | "YES" | "NO">(saved?.filterParticipation ?? "ALL")
-  const [filterSleep, setFilterSleep] = useState<"ALL" | "YES" | "NO">(saved?.filterSleep ?? "ALL")
-  const [filterPaid, setFilterPaid] = useState<"ALL" | "YES" | "NO">(saved?.filterPaid ?? "ALL")
-  const [filterCash, setFilterCash] = useState<"ALL" | "YES" | "NO">(saved?.filterCash ?? "ALL")
-  const [filterDays, setFilterDays] = useState<"ALL" | AttendanceDays>(saved?.filterDays ?? "ALL")
-  const [sortKey, setSortKey] = useState<keyof AdminUserRow | "">(saved?.sortKey ?? "")
-  const [sortDirection, setSortDirection] = useState<"asc" | "desc">(saved?.sortDirection ?? "asc")
+  const [sortKey, setSortKey] = useState<keyof AdminUserRow | "">(savedSort?.sortKey ?? "")
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">(savedSort?.sortDirection ?? "asc")
   const [deleteTarget, setDeleteTarget] = useState<AdminUserRow | null>(null)
   const [deleting, setDeleting] = useState(false)
 
@@ -153,20 +147,9 @@ export function UsersTable() {
 
   useEffect(() => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({
-        searchQuery, filterParticipation, filterSleep, filterPaid, filterCash, filterDays, sortKey, sortDirection,
-      }))
+      localStorage.setItem(SORT_STORAGE_KEY, JSON.stringify({ sortKey, sortDirection }))
     } catch { /* ignore */ }
-  }, [searchQuery, filterParticipation, filterSleep, filterPaid, filterCash, filterDays, sortKey, sortDirection])
-
-  const resetFilters = () => {
-    setSearchQuery("")
-    setFilterParticipation("ALL")
-    setFilterSleep("ALL")
-    setFilterDays("ALL")
-    setFilterPaid("ALL")
-    setFilterCash("ALL")
-  }
+  }, [sortKey, sortDirection])
 
   const handleDeleteParticipation = async () => {
     if (!deleteTarget) return
@@ -192,20 +175,7 @@ export function UsersTable() {
   }
 
   const filteredAndSortedUsers = useMemo(() => {
-    const normalizedQuery = searchQuery.trim().toLowerCase()
-    let result = users.filter(u => {
-      const matchesQuery = normalizedQuery.length === 0 ||
-        (u.name?.toLowerCase().includes(normalizedQuery) ?? false) ||
-        u.email.toLowerCase().includes(normalizedQuery)
-
-      const matchesParticipation = filterParticipation === "ALL" || (filterParticipation === "YES" ? u.isAttending === true : u.isAttending !== true)
-      const matchesSleep = filterSleep === "ALL" || (filterSleep === "YES" ? u.sleepsOnSite === true : u.sleepsOnSite !== true)
-      const matchesDays = filterDays === "ALL" || u.attendanceDays === filterDays
-      const matchesPaid = filterPaid === "ALL" || (filterPaid === "YES" ? u.hasPaid : !u.hasPaid)
-      const matchesCash = filterCash === "ALL" || (filterCash === "YES" ? u.willPayInCash : !u.willPayInCash)
-
-      return matchesQuery && matchesParticipation && matchesSleep && matchesDays && matchesPaid && matchesCash
-    })
+    let result = users.filter(u => matchesFilters(u, filters))
 
     if (sortKey) {
       result = [...result].sort((a, b) => {
@@ -228,7 +198,7 @@ export function UsersTable() {
     }
 
     return result
-  }, [users, searchQuery, filterParticipation, filterSleep, filterPaid, filterCash, filterDays, sortKey, sortDirection])
+  }, [users, filters, sortKey, sortDirection])
 
   const applySort = (key: keyof AdminUserRow) => {
     if (sortKey === key) {
@@ -338,112 +308,13 @@ export function UsersTable() {
 
   return (
     <div className="w-full flex flex-col gap-4">
-      {/* Filtres */}
-      <div className="flex flex-wrap items-end gap-3">
-        <div className="flex flex-col gap-1">
-          <Label htmlFor="search">Recherche</Label>
-          <Input
-            id="search"
-            placeholder="Nom ou email"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
-
-        <div className="flex flex-col gap-1">
-          <Label htmlFor="participation">Participe</Label>
-          <select
-            id="participation"
-            className="h-9 rounded-md border border-input bg-background px-3 text-sm"
-            value={filterParticipation}
-            onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setFilterParticipation(e.target.value as ("ALL" | "YES" | "NO"))}
-          >
-            <option value="ALL">Tous</option>
-            <option value="YES">Oui</option>
-            <option value="NO">Non</option>
-          </select>
-        </div>
-
-        <div className="flex flex-col gap-1">
-          <Label htmlFor="sleep">Dort sur place</Label>
-          <select
-            id="sleep"
-            className="h-9 rounded-md border border-input bg-background px-3 text-sm"
-            value={filterSleep}
-            onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setFilterSleep(e.target.value as ("ALL" | "YES" | "NO"))}
-          >
-            <option value="ALL">Tous</option>
-            <option value="YES">Oui</option>
-            <option value="NO">Non</option>
-          </select>
-        </div>
-
-        <div className="flex flex-col gap-1">
-          <Label htmlFor="paid">A payé</Label>
-          <select
-            id="paid"
-            className="h-9 rounded-md border border-input bg-background px-3 text-sm"
-            value={filterPaid}
-            onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setFilterPaid(e.target.value as ("ALL" | "YES" | "NO"))}
-          >
-            <option value="ALL">Tous</option>
-            <option value="YES">Oui</option>
-            <option value="NO">Non</option>
-          </select>
-        </div>
-
-        <div className="flex flex-col gap-1">
-          <Label htmlFor="cash">Paiera en cash</Label>
-          <select
-            id="cash"
-            className="h-9 rounded-md border border-input bg-background px-3 text-sm"
-            value={filterCash}
-            onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setFilterCash(e.target.value as ("ALL" | "YES" | "NO"))}
-          >
-            <option value="ALL">Tous</option>
-            <option value="YES">Oui</option>
-            <option value="NO">Non</option>
-          </select>
-        </div>
-
-        <div className="flex flex-col gap-1">
-          <Label htmlFor="days">Jours</Label>
-          <select
-            id="days"
-            className="h-9 rounded-md border border-input bg-background px-3 text-sm"
-            value={filterDays}
-            onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setFilterDays(e.target.value as ("ALL" | AttendanceDays))}
-          >
-            <option value="ALL">Tous</option>
-            <option value="NONE">—</option>
-            <option value="DAY1">Jour 1</option>
-            <option value="DAY2">Jour 2</option>
-            <option value="BOTH">Les deux</option>
-          </select>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <Button variant="outline" onClick={resetFilters}>♻️ Réinitialiser</Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              setFilterPaid("NO")
-              setFilterCash("ALL")
-            }}
-          >
-            Non payés
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              setFilterCash("YES")
-            }}
-          >
-            Cash
-          </Button>
-
+      <UsersFilters
+        filters={filters}
+        setFilter={setFilter}
+        applyPreset={applyPreset}
+        resetFilters={resetFilters}
+        resultLabel={`${filteredAndSortedUsers.length} / ${users.length} utilisateurs`}
+        actions={(
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm">
@@ -466,8 +337,8 @@ export function UsersTable() {
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
-        </div>
-      </div>
+        )}
+      />
 
       <Table>
         <TableCaption>Liste des utilisateurs</TableCaption>
