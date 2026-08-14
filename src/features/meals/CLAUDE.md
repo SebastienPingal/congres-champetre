@@ -14,7 +14,7 @@ Components for meal registration and payment validation.
 **Data:**
 - `useMeals()` / `useUpdateMealStatus()` from `src/hooks/use-meals.ts`
 - Total is computed from PRESENT meals with `price != null`
-- `user.edition.isRegistrationClosed` toggles read-only state; `user.edition.registrationDeadline` is the cut-off date (7 days before the edition's last day — `endDate`, falling back to `startDate`)
+- `user.edition.isRegistrationClosed` toggles read-only state; `user.edition.registrationDeadline` is the cut-off date (7 days before the edition's last day — `endDate`, falling back to `startDate`). Currently disabled via `REGISTRATION_DEADLINE_ENABLED = false` in `src/lib/edition.ts`: the deadline is always `null` and the section never locks.
 
 **Validation flow:**
 1. After onboarding completes, `PaymentSection` shows on the dashboard for attending users with at least one paid meal.

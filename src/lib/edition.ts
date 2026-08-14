@@ -25,11 +25,17 @@ export async function getActiveEditionId() {
   return edition.id;
 }
 
+// Passer à `true` pour réactiver la fermeture automatique des inscriptions.
+// Tant que c'est `false`, il n'y a pas de date butoir : les inscriptions
+// restent ouvertes indéfiniment et l'UI n'affiche aucune échéance.
+export const REGISTRATION_DEADLINE_ENABLED = false
+
 export const REGISTRATION_CLOSE_DAYS_BEFORE = 7
 
 // La date butoir est calée sur le dernier jour de l'édition (`endDate`),
 // avec repli sur `startDate` quand l'édition n'a pas de date de fin.
 export function getRegistrationDeadline(edition: Pick<Edition, "startDate" | "endDate">): Date | null {
+  if (!REGISTRATION_DEADLINE_ENABLED) return null
   const lastDay = edition.endDate ?? edition.startDate
   if (!lastDay) return null
   const deadline = new Date(lastDay)
