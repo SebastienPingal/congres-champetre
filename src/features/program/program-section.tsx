@@ -521,12 +521,17 @@ function Act({
 
 // ── Speakers section ─────────────────────────────────────────────────
 
+/** Retire les surnoms entre parenthèses : "Sébastien Pingal (Seb)" → "Sébastien Pingal" */
+function stripNickname(name: string | null | undefined) {
+  return (name ?? "").replace(/\s*\([^)]*\)/g, "").trim()
+}
+
 function SpeakersList({ slots }: { slots: TimeSlot[] }) {
   const speakers = slots
     .filter((s) => s.kind === "CONFERENCE" && s.conference)
     .map((s) => ({
       id: s.id,
-      name: s.conference!.speaker.name,
+      name: stripNickname(s.conference!.speaker.name),
       title: s.conference!.title,
     }))
 
