@@ -27,14 +27,17 @@ export async function getActiveEditionId() {
 
 export const REGISTRATION_CLOSE_DAYS_BEFORE = 7
 
-export function getRegistrationDeadline(edition: Pick<Edition, "startDate">): Date | null {
-  if (!edition.startDate) return null
-  const deadline = new Date(edition.startDate)
+// La date butoir est calée sur le dernier jour de l'édition (`endDate`),
+// avec repli sur `startDate` quand l'édition n'a pas de date de fin.
+export function getRegistrationDeadline(edition: Pick<Edition, "startDate" | "endDate">): Date | null {
+  const lastDay = edition.endDate ?? edition.startDate
+  if (!lastDay) return null
+  const deadline = new Date(lastDay)
   deadline.setDate(deadline.getDate() - REGISTRATION_CLOSE_DAYS_BEFORE)
   return deadline
 }
 
-export function isRegistrationClosed(edition: Pick<Edition, "startDate">, now: Date = new Date()): boolean {
+export function isRegistrationClosed(edition: Pick<Edition, "startDate" | "endDate">, now: Date = new Date()): boolean {
   const deadline = getRegistrationDeadline(edition)
   if (!deadline) return false
   return now.getTime() >= deadline.getTime()
