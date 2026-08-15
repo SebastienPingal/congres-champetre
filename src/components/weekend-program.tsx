@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { getSpeakerLabel } from "@/lib/helper"
 import { cn } from "@/lib/utils"
 
 type Speaker = {
@@ -13,7 +14,9 @@ type Speaker = {
 type Conference = {
   id: string
   title: string
-  speaker: Speaker
+  /** `null` sur une conférence générale (créée par un admin, sans compte rattaché). */
+  speaker: Speaker | null
+  speakerName?: string | null
 }
 
 type TimeSlot = {
@@ -158,7 +161,9 @@ export function WeekendProgram({ className }: { className?: string }) {
                             {slot.conference ? (
                               <div className="flex flex-col gap-1">
                                 <p className="text-base font-semibold">{slot.conference.title}</p>
-                                <p className="text-xs text-muted-foreground">{slot.conference.speaker.name}</p>
+                                {getSpeakerLabel(slot.conference) && (
+                                  <p className="text-xs text-muted-foreground">{getSpeakerLabel(slot.conference)}</p>
+                                )}
                                 {slot.title && (
                                   <p className="text-xs text-muted-foreground">{slot.title}</p>
                                 )}

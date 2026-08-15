@@ -16,14 +16,18 @@ interface ConferenceEditFormProps {
     title: string
     description?: string | null
     timeSlot?: { id: string } | null
+    speakerName?: string | null
   }
+  /** Affiche le champ « intervenant » : réservé aux conférences générales, côté admin. */
+  allowSpeakerName?: boolean
   onUpdated?: () => void
   onClose?: () => void
 }
 
-export function ConferenceEditForm({ conference, onUpdated, onClose }: ConferenceEditFormProps) {
+export function ConferenceEditForm({ conference, allowSpeakerName = false, onUpdated, onClose }: ConferenceEditFormProps) {
   const [title, setTitle] = useState(conference.title)
   const [description, setDescription] = useState(conference.description ?? "")
+  const [speakerName, setSpeakerName] = useState(conference.speakerName ?? "")
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<string>(conference.timeSlot?.id ?? "")
   const [error, setError] = useState("")
 
@@ -52,6 +56,9 @@ export function ConferenceEditForm({ conference, onUpdated, onClose }: Conferenc
     }
     if (selectedTimeSlot !== originalTimeSlotId) {
       payload.timeSlotId = selectedTimeSlot || null
+    }
+    if (allowSpeakerName) {
+      payload.speakerName = speakerName.trim() || null
     }
 
     updateConference(payload, {
@@ -93,6 +100,20 @@ export function ConferenceEditForm({ conference, onUpdated, onClose }: Conferenc
               disabled={isPending}
             />
           </div>
+
+          {allowSpeakerName && (
+            <div className="space-y-2">
+              <Label htmlFor="edit-speaker-name">Intervenant (optionnel)</Label>
+              <Input
+                id="edit-speaker-name"
+                type="text"
+                value={speakerName}
+                onChange={(e) => setSpeakerName(e.target.value)}
+                placeholder="Nom affiché au programme (invité, collectif…)"
+                disabled={isPending}
+              />
+            </div>
+          )}
 
           {!isLoadingSlots && (
             <div className="space-y-2">

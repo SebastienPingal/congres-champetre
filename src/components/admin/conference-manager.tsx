@@ -37,9 +37,20 @@ export function ConferenceManager({ conferences, onConferenceUpdated }: Conferen
               <div className="flex items-start justify-between">
                 <div className="flex-1 flex flex-col gap-2">
                   <h4 className="font-medium">{conference.title}</h4>
-                  <p className="text-sm text-muted-foreground">
-                    {conference.speaker.name} ({conference.speaker.email})
-                  </p>
+                  {conference.speaker ? (
+                    <p className="text-sm text-muted-foreground">
+                      {conference.speaker.name} ({conference.speaker.email})
+                    </p>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <Badge variant="secondary">Conférence générale</Badge>
+                      {conference.speakerName && (
+                        <span className="text-sm text-muted-foreground">
+                          {conference.speakerName}
+                        </span>
+                      )}
+                    </div>
+                  )}
                   {conference.description && (
                     <p className="text-sm text-muted-foreground">
                       {conference.description}
@@ -74,8 +85,10 @@ export function ConferenceManager({ conferences, onConferenceUpdated }: Conferen
                           id: conference.id,
                           title: conference.title,
                           description: conference.description,
-                          timeSlot: conference.timeSlot ? { id: conference.timeSlot.id } : null
+                          timeSlot: conference.timeSlot ? { id: conference.timeSlot.id } : null,
+                          speakerName: conference.speakerName
                         }}
+                        allowSpeakerName={!conference.speaker}
                         onUpdated={() => {
                           onConferenceUpdated()
                         }}

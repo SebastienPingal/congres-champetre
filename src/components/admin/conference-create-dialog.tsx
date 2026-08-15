@@ -12,8 +12,11 @@ interface Conference {
   id: string
   speaker: {
     id: string
-  }
+  } | null
 }
+
+/** Une conférence est soit portée par un compte participant, soit « générale » (aucun compte). */
+type SpeakerMode = "user" | "general"
 
 interface UserOption {
   id: string
@@ -43,7 +46,9 @@ export function ConferenceCreateDialog({ conferences, onConferenceCreated }: Con
   const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([])
   const [title, setTitle] = useState("")
   const [description, setDescription] = useState("")
+  const [speakerMode, setSpeakerMode] = useState<SpeakerMode>("user")
   const [selectedSpeakerId, setSelectedSpeakerId] = useState("")
+  const [speakerName, setSpeakerName] = useState("")
   const [selectedTimeSlotId, setSelectedTimeSlotId] = useState("")
   const [isLoadingData, setIsLoadingData] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -82,7 +87,12 @@ export function ConferenceCreateDialog({ conferences, onConferenceCreated }: Con
   }, [isOpen])
 
   const speakerIdsWithConference = useMemo(
-    () => new Set(conferences.map((conference) => conference.speaker.id)),
+    () =>
+      new Set(
+        conferences
+          .map((conference) => conference.speaker?.id)
+          .filter((id): id is string => Boolean(id))
+      ),
     [conferences]
   )
 
@@ -99,7 +109,9 @@ export function ConferenceCreateDialog({ conferences, onConferenceCreated }: Con
   const resetForm = () => {
     setTitle("")
     setDescription("")
+    setSpeakerMode("user")
     setSelectedSpeakerId("")
+    setSpeakerName("")
     setSelectedTimeSlotId("")
     setError("")
   }
@@ -120,7 +132,7 @@ export function ConferenceCreateDialog({ conferences, onConferenceCreated }: Con
       return
     }
 
-    if (!selectedSpeakerId) {
+    if (speakerMode === "user" && !selectedSpeakerId) {
       setError("Veuillez sélectionner un conférencier")
       return
     }
@@ -136,7 +148,9 @@ export function ConferenceCreateDialog({ conferences, onConferenceCreated }: Con
         body: JSON.stringify({
           title: title.trim(),
           description: description.trim() || null,
-          speakerId: selectedSpeakerId,
+          // `speakerId: null` = conférence générale, rattachée à aucun compte
+          speakerId: speakerMode === "general" ? null : selectedSpeakerId,
+          speakerName: speakerMode === "general" ? speakerName.trim() || null : null,
           timeSlotId: selectedTimeSlotId || null,
         }),
       })
@@ -167,7 +181,8 @@ export function ConferenceCreateDialog({ conferences, onConferenceCreated }: Con
         <DialogHeader>
           <DialogTitle>Ajouter une conférence</DialogTitle>
           <DialogDescription>
-            Choisissez un conférencier puis assignez un créneau si besoin.
+            Rattachez la conférence à un participant, ou créez une conférence générale
+            sans compte, puis assignez un créneau si besoin.
           </DialogDescription>
         </DialogHeader>
 
@@ -198,28 +213,79 @@ export function ConferenceCreateDialog({ conferences, onConferenceCreated }: Con
           </div>
 
           <div className="flex flex-col gap-2">
-            <Label htmlFor="conference-speaker">Conférencier *</Label>
-            <select
-              id="conference-speaker"
-              value={selectedSpeakerId}
-              onChange={(e) => setSelectedSpeakerId(e.target.value)}
-              className="h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm"
-              disabled={isLoadingData || isSubmitting || availableSpeakers.length === 0}
-              required
-            >
-              <option value="">Sélectionnez un conférencier</option>
-              {availableSpeakers.map((user) => (
-                <option key={user.id} value={user.id}>
-                  {user.name || "Sans nom"} ({user.email})
-                </option>
-              ))}
-            </select>
-            {availableSpeakers.length === 0 && !isLoadingData && (
-              <p className="text-sm text-muted-foreground">
-                Tous les utilisateurs ont déjà une conférence sur cette édition.
-              </p>
-            )}
+            <Label>Type de conférence</Label>
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center gap-2">
+                <input
+                  type="radio"
+                  id="speaker-mode-user"
+                  name="speakerMode"
+                  value="user"
+                  checked={speakerMode === "user"}
+                  onChange={() => setSpeakerMode("user")}
+                  disabled={isSubmitting}
+                />
+                <label htmlFor="speaker-mode-user" className="text-sm">
+                  Portée par un participant inscrit
+                </label>
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="radio"
+                  id="speaker-mode-general"
+                  name="speakerMode"
+                  value="general"
+                  checked={speakerMode === "general"}
+                  onChange={() => setSpeakerMode("general")}
+                  disabled={isSubmitting}
+                />
+                <label htmlFor="speaker-mode-general" className="text-sm">
+                  Conférence générale (aucun compte rattaché)
+                </label>
+              </div>
+            </div>
           </div>
+
+          {speakerMode === "user" ? (
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="conference-speaker">Conférencier *</Label>
+              <select
+                id="conference-speaker"
+                value={selectedSpeakerId}
+                onChange={(e) => setSelectedSpeakerId(e.target.value)}
+                className="h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm"
+                disabled={isLoadingData || isSubmitting || availableSpeakers.length === 0}
+                required
+              >
+                <option value="">Sélectionnez un conférencier</option>
+                {availableSpeakers.map((user) => (
+                  <option key={user.id} value={user.id}>
+                    {user.name || "Sans nom"} ({user.email})
+                  </option>
+                ))}
+              </select>
+              {availableSpeakers.length === 0 && !isLoadingData && (
+                <p className="text-sm text-muted-foreground">
+                  Tous les utilisateurs ont déjà une conférence sur cette édition.
+                </p>
+              )}
+            </div>
+          ) : (
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="conference-speaker-name">Intervenant (optionnel)</Label>
+              <Input
+                id="conference-speaker-name"
+                type="text"
+                value={speakerName}
+                onChange={(e) => setSpeakerName(e.target.value)}
+                placeholder="Nom affiché au programme (invité, collectif…)"
+                disabled={isSubmitting}
+              />
+              <p className="text-sm text-muted-foreground">
+                Laissez vide pour un moment sans intervenant nommé (accueil, table ronde…).
+              </p>
+            </div>
+          )}
 
           {!isLoadingData && availableTimeSlots.length > 0 && (
             <div className="flex flex-col gap-2">
@@ -269,7 +335,15 @@ export function ConferenceCreateDialog({ conferences, onConferenceCreated }: Con
           )}
 
           <div className="flex items-center gap-2">
-            <Button type="submit" disabled={isLoadingData || isSubmitting || availableSpeakers.length === 0} className="flex-1">
+            <Button
+              type="submit"
+              disabled={
+                isLoadingData ||
+                isSubmitting ||
+                (speakerMode === "user" && availableSpeakers.length === 0)
+              }
+              className="flex-1"
+            >
               {isSubmitting ? "Création..." : "Créer la conférence"}
             </Button>
             <Button type="button" variant="outline" disabled={isSubmitting} onClick={() => setIsOpen(false)}>

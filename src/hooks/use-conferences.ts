@@ -49,6 +49,8 @@ export function useUpdateConference() {
       title: string
       description: string | null
       timeSlotId?: string | null
+      /** Conférences générales uniquement (admin) — intervenant libre. */
+      speakerName?: string | null
     }) => {
       const res = await fetch(`/api/conferences/${id}`, {
         method: "PATCH",

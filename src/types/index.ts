@@ -52,6 +52,13 @@ export interface MealSlot {
   status: MealStatus
 }
 
+/** `speaker` est `null` sur les conférences générales créées par un admin. */
+export interface ConferenceSpeaker {
+  id: string
+  name: string
+  email: string
+}
+
 export interface TimeSlot {
   id: string
   title: string
@@ -61,7 +68,8 @@ export interface TimeSlot {
   conference?: {
     id: string
     title: string
-    speaker: { id: string; name: string; email: string }
+    speaker: ConferenceSpeaker | null
+    speakerName?: string | null
   }
 }
 
@@ -76,7 +84,10 @@ export interface Conference {
   id: string
   title: string
   description?: string | null
-  speaker: { id: string; name: string; email: string }
+  /** `null` pour une conférence générale (non rattachée à un compte). */
+  speaker: ConferenceSpeaker | null
+  /** Intervenant libre, utilisé uniquement quand `speaker` est `null`. */
+  speakerName?: string | null
   timeSlot?: {
     id: string
     title: string

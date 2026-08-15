@@ -7,6 +7,8 @@ Admin-only components for managing editions, time slots, and conferences.
 | `edition-manager.tsx` | 2-step wizard: Step 1 creates the edition (name + weekend dates), Step 2 adds optional meal slots. Uses `MealSlotFields`. |
 | `timeslot-manager.tsx` | CRUD for time slots. Shows all slots for the active edition. When kind=MEAL, uses `MealSlotData` state for extra fields (description, price, showInRegistration). |
 | `meal-slot-fields.tsx` | Reusable form block for a single meal slot (title, start/end datetime, description, price, showInRegistration). Used by edition-manager wizard. Exports `MealSlotData` interface and `emptyMealSlot()` factory. |
+| `conference-manager.tsx` | Liste des conférences de l'édition active (édition / suppression) + bouton d'ajout. Les conférences générales portent un badge « Conférence générale ». |
+| `conference-create-dialog.tsx` | Création admin d'une conférence. Deux modes : rattachée à un participant inscrit (`speakerId`), ou **générale** (`speakerId: null` + `speakerName` libre optionnel). Assignation de créneau CONFERENCE facultative. |
 | `users-table.tsx` | Tableau admin des inscrits (tri, colonnes masquables, édition inline des repas / paiements). Délègue toute la logique de filtrage à `users-filters.tsx`. |
 | `users-filters.tsx` | Barre de filtres de `/admin/users`. Expose `useUsersFilters()` (état + persistance localStorage), `<UsersFilters />` (UI) et `matchesFilters(user, filters)` (prédicat). |
 

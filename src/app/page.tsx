@@ -99,6 +99,7 @@ async function getLandingData(): Promise<LandingData> {
           id: true,
           title: true,
           speaker: { select: { name: true } },
+          speakerName: true,
           edition: { select: { name: true, startDate: true } },
         },
         orderBy: { createdAt: "desc" },
@@ -135,7 +136,7 @@ async function getLandingData(): Promise<LandingData> {
       pastConferences: pastConferencesRaw.map((c) => ({
         id: c.id,
         title: c.title,
-        speakerName: c.speaker?.name ?? "Anonyme",
+        speakerName: c.speaker?.name ?? c.speakerName ?? "Anonyme",
         editionName: c.edition.name,
         editionYear: c.edition.startDate?.getFullYear() ?? null,
       })),
