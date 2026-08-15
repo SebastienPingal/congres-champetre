@@ -11,6 +11,7 @@ import { DayTimePicker } from "@/components/ui/day-time-picker"
 import { ConferenceEditForm } from "@/features/conferences/conference-edit-form"
 import { type MealSlotData } from "@/components/admin/meal-slot-fields"
 import { SlotGrid } from "@/components/admin/slot-grid"
+import { getSpeakerLabel } from "@/lib/helper"
 import type { AdminTimeSlot } from "@/types"
 
 interface TimeSlotManagerProps {
@@ -374,7 +375,9 @@ export function TimeSlotManager({ timeSlots, onTimeSlotCreated, editionDays, edi
                     <h5 className="text-sm font-medium">Conférence assignée:</h5>
                     <div className="text-sm flex flex-col gap-2">
                       <p className="font-medium">{slot.conference.title}</p>
-                      <p className="text-muted-foreground">{slot.conference.speaker.name}</p>
+                      <p className="text-muted-foreground">
+                        {getSpeakerLabel(slot.conference) ?? "Conférence générale"}
+                      </p>
                       <div className="flex items-center gap-2">
                         <Dialog open={editingConferenceId === slot.conference.id} onOpenChange={(open) => setEditingConferenceId(open ? slot.conference!.id : null)}>
                           <DialogTrigger asChild>

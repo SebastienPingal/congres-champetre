@@ -3,6 +3,7 @@
 import { useMemo } from "react"
 import { AlertTriangle, Clock, Lock, MapPin, Users } from "lucide-react"
 import { useTimeSlots } from "@/hooks/use-time-slots"
+import { getSpeakerLabel } from "@/lib/helper"
 import type { MealSlot, TimeSlot, UserProfile } from "@/types"
 
 type NavTarget = "presence" | "meals" | "payment" | "conferences"
@@ -319,7 +320,7 @@ function SceneEntry({
   const accent =
     isMeal ? "var(--meal)" : isTalk ? "var(--talk)" : "var(--ink-3)"
   const title = isTalk && session.conference ? session.conference.title : session.title
-  const speaker = isTalk && session.conference ? session.conference.speaker.name : null
+  const speaker = isTalk && session.conference ? getSpeakerLabel(session.conference) : null
 
   return (
     <div
@@ -527,11 +528,12 @@ function stripNickname(name: string | null | undefined) {
 }
 
 function SpeakersList({ slots }: { slots: TimeSlot[] }) {
+  // Les conférences générales sans intervenant nommé n'apparaissent pas ici.
   const speakers = slots
-    .filter((s) => s.kind === "CONFERENCE" && s.conference)
+    .filter((s) => s.kind === "CONFERENCE" && s.conference && getSpeakerLabel(s.conference))
     .map((s) => ({
       id: s.id,
-      name: stripNickname(s.conference!.speaker.name),
+      name: stripNickname(getSpeakerLabel(s.conference!)),
       title: s.conference!.title,
     }))
 

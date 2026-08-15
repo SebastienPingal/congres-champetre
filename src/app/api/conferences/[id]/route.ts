@@ -14,7 +14,7 @@ export async function PATCH(
     const { user, error } = await requireUser()
     if (error) return error
 
-    const { timeSlotId, title, description } = await request.json()
+    const { timeSlotId, title, description, speakerName } = await request.json()
 
     // Récupérer la conférence existante
     const existingConference = await prisma.conference.findUnique({
@@ -54,6 +54,15 @@ export async function PATCH(
     // Si on change le titre ou la description
     if (title !== undefined) updateData.title = title
     if (description !== undefined) updateData.description = description
+
+    // L'intervenant libre n'existe que sur les conférences générales (sans compte),
+    // et seul un admin peut le renseigner.
+    if (speakerName !== undefined && isAdmin && existingConference.speakerId === null) {
+      updateData.speakerName =
+        typeof speakerName === "string" && speakerName.trim().length > 0
+          ? speakerName.trim()
+          : null
+    }
 
     // Si on change le créneau
     if (timeSlotId !== undefined) {
@@ -164,11 +173,14 @@ export async function DELETE(
 
     // ⚠ Couplage : `wantsToSpeak ⇔ conferences.length > 0` pour l'édition active.
     // En pratique l'utilisateur n'a qu'une conférence par édition, donc la suppression
-    // ramène wantsToSpeak à false. Voir REFACTOR.md §R8.
-    await prisma.user.update({
-      where: { id: existingConference.speakerId },
-      data: { wantsToSpeak: false }
-    })
+    // ramène wantsToSpeak à false. Voir REFACTOR.md §R8. Une conférence générale
+    // n'a pas de conférencier : rien à remettre à jour.
+    if (existingConference.speakerId) {
+      await prisma.user.update({
+        where: { id: existingConference.speakerId },
+        data: { wantsToSpeak: false }
+      })
+    }
 
     return NextResponse.json(
       { message: "✅ Conférence supprimée avec succès" }
