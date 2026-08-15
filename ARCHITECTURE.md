@@ -53,7 +53,7 @@ Edition ─┬─< TimeSlot ─┬─ Conference (1:1 optionnel via timeSlotId u
 - **Edition** : un weekend. `isActive: Boolean` — au plus une édition active à la fois (contrainte applicative dans `PATCH /api/editions/[id]`). `startHour` / `endHour` bornent la grille horaire de l'éditeur de créneaux.
 - **EditionParticipation** : table de jonction `User × Edition` avec toutes les réponses du participant à cette édition (présence, jours, dort sur place, paiement). `@@unique([userId, editionId])` garantit l'unicité.
 - **TimeSlot** : créneau horaire de l'édition. `kind: CONFERENCE | MEAL | BREAK | OTHER`. Les MEAL ajoutent `description`, `price` (€), `showInRegistration` (visible côté participant).
-- **Conference** : proposition de talk d'un user pour une édition. Lien optionnel vers un TimeSlot (1:1, `timeSlotId @unique`). Si le slot est rempli, plus aucune autre conférence ne peut s'y assigner.
+- **Conference** : proposition de talk pour une édition. Lien optionnel vers un TimeSlot (1:1, `timeSlotId @unique`). Si le slot est rempli, plus aucune autre conférence ne peut s'y assigner. `speakerId` est **optionnel** : à `null`, c'est une **conférence générale** créée par un admin (aucun compte rattaché), avec un intervenant libre optionnel dans `speakerName`. Les conférences générales ne sont pas soumises à la règle « une conférence par personne » et ne touchent pas `wantsToSpeak`.
 - **MealRegistration** : statut d'un user pour un repas (`PRESENT` / `ABSENT`). Pas de ligne = pas encore répondu.
 - **PaymentIntent** : journal d'audit Stripe (id, amount, currency, status). Distinct des champs `stripePaymentIntentId` / `stripePaymentStatus` sur `EditionParticipation` qui pointent vers le dernier intent en cours.
 
@@ -151,8 +151,8 @@ Convention : routes RESTish dans `src/app/api/<resource>/route.ts`, ressources n
 | `PATCH` | `/api/user/profile` | user | MAJ partielle de user/participation (le moteur central de l'inscription) |
 | `POST` | `/api/onboarding` | user | Marque `onboardingCompletedAt = now()` + MAJ des réponses |
 | `GET` | `/api/conferences` | public | Liste pour l'édition active |
-| `POST` | `/api/conferences` | user (admin pour autre `speakerId`) | Crée la conférence du user. Pose `wantsToSpeak: true` |
-| `PATCH` | `/api/conferences/[id]` | owner ou admin | MAJ titre/description/timeSlot |
+| `POST` | `/api/conferences` | user (admin pour autre `speakerId`) | Crée la conférence du user. Pose `wantsToSpeak: true`. Un admin envoyant explicitement `speakerId: null` crée une conférence générale (`speakerName` libre, pas de `wantsToSpeak`) |
+| `PATCH` | `/api/conferences/[id]` | owner ou admin | MAJ titre/description/timeSlot (+ `speakerName`, admin et conférence générale uniquement) |
 | `DELETE` | `/api/conferences/[id]` | owner ou admin | Supprime + pose `wantsToSpeak: false` |
 | `GET` | `/api/timeslots` | public | Liste pour l'édition active |
 | `POST` | `/api/timeslots` | admin | Crée un slot (accepte `editionId` body pour cibler une édition non-active) |

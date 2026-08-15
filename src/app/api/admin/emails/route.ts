@@ -143,11 +143,18 @@ export async function POST(req: Request) {
         })
         recipients = participations.map((p) => p.user.email)
       } else if (filter === "speakers") {
+        // Les conférences générales n'ont pas de compte rattaché → aucun destinataire.
         const conferences = await prisma.conference.findMany({
-          where: { editionId: activeEdition.id },
+          where: { editionId: activeEdition.id, speakerId: { not: null } },
           select: { speaker: { select: { email: true } } },
         })
-        recipients = [...new Set(conferences.map((c) => c.speaker.email))]
+        recipients = [
+          ...new Set(
+            conferences
+              .map((c) => c.speaker?.email)
+              .filter((email): email is string => Boolean(email))
+          ),
+        ]
       }
 
       recipients = recipients.filter((email) => email.trim().length > 0)

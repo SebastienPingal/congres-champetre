@@ -59,7 +59,7 @@ src/lib/
 ├── edition.ts              # getActiveEdition() / getActiveEditionId() / isRegistrationClosed() / getRegistrationDeadline() — THROW si aucune active
 ├── mail.ts                 # sendBroadcastEmail + markdown → HTML safe
 ├── query-keys.ts           # factory typée pour React Query
-├── helper.ts               # formatDateTimeRange (fr-FR)
+├── helper.ts               # formatDateTimeRange (fr-FR) + getSpeakerLabel (conf. générale incluse)
 └── utils.ts                # cn() (clsx + tailwind-merge)
 
 src/types/index.ts          # interfaces partagées (UserProfile, MealSlot, TimeSlot, …)
@@ -109,6 +109,7 @@ Points à retenir :
 - `Edition.isActive` : au plus une `true` à un instant donné, garanti applicativement par `PATCH /api/editions/[id]` dans une transaction Prisma.
 - `EditionParticipation` (`@@unique([userId, editionId])`) porte **toutes** les réponses du participant : `isAttending`, `attendanceDays`, `sleepsOnSite`, `hasPaid`, `willPayInCash`, `onboardingCompletedAt`, `paymentProviderId/paymentStatus`, `paidAmount`. `onboardingCompletedAt = null` → la modal s'affiche.
 - `Conference.timeSlotId` est `String? @unique` → un slot a au plus une conférence.
+- `Conference.speakerId` est `String?` : `null` = **conférence générale** créée depuis `/admin` (aucun compte rattaché). `speakerName` porte alors un intervenant libre facultatif (invité extérieur, collectif, ou rien pour un accueil / une table ronde). Ces conférences échappent à la règle « une conférence par personne » et ne modifient pas `wantsToSpeak`. Affichage : passer par `getSpeakerLabel()` (`src/lib/helper.ts`).
 - `TimeSlot.kind` : `CONFERENCE | MEAL | BREAK | OTHER`. Les `MEAL` ont `description`, `price`, `showInRegistration` en plus.
 - `MealRegistration` n'existe que si le user a coché PRESENT/ABSENT. Pas de ligne = pas répondu.
 - `PaymentIntent` est un journal d'audit PayPal (un row par order PayPal créé), distinct des champs `paymentProviderId/paymentStatus` qui pointent vers le dernier order en cours.

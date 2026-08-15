@@ -42,7 +42,8 @@ export async function POST(request: NextRequest) {
     const { user, error } = await requireUser()
     if (error) return error
 
-    const { title, description, timeSlotId, speakerId } = await request.json()
+    const body = await request.json()
+    const { title, description, timeSlotId, speakerId, speakerName } = body
 
     if (!title) {
       return NextResponse.json(
@@ -69,7 +70,20 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const targetSpeakerId = isAdmin && speakerId ? speakerId : user.id
+    // Conférence « générale » : un admin envoie explicitement `speakerId: null` pour créer
+    // une conférence rattachée à aucun compte (accueil, table ronde, invité extérieur…).
+    const isGeneral = isAdmin && "speakerId" in body && speakerId === null
+
+    const targetSpeakerId: string | null = isGeneral
+      ? null
+      : isAdmin && speakerId
+        ? speakerId
+        : user.id
+
+    const trimmedSpeakerName =
+      isGeneral && typeof speakerName === "string" && speakerName.trim().length > 0
+        ? speakerName.trim()
+        : null
 
     if (isAdmin && speakerId) {
       const speaker = await prisma.user.findUnique({
@@ -85,18 +99,22 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const existingConference = await prisma.conference.findFirst({
-      where: {
-        speakerId: targetSpeakerId,
-        editionId: activeEdition.id,
-      },
-    })
+    // La règle « une conférence par personne » ne s'applique qu'aux conférences
+    // rattachées à un compte — les conférences générales sont illimitées.
+    if (targetSpeakerId) {
+      const existingConference = await prisma.conference.findFirst({
+        where: {
+          speakerId: targetSpeakerId,
+          editionId: activeEdition.id,
+        },
+      })
 
-    if (existingConference) {
-      return NextResponse.json(
-        { error: "🎤 Vous avez déjà proposé une conférence pour cette édition" },
-        { status: 400 }
-      )
+      if (existingConference) {
+        return NextResponse.json(
+          { error: "🎤 Vous avez déjà proposé une conférence pour cette édition" },
+          { status: 400 }
+        )
+      }
     }
 
     if (timeSlotId) {
@@ -125,6 +143,7 @@ export async function POST(request: NextRequest) {
         title,
         description,
         speakerId: targetSpeakerId,
+        speakerName: trimmedSpeakerName,
         editionId: activeEdition.id,
         timeSlotId: timeSlotId || null,
       },
@@ -142,11 +161,13 @@ export async function POST(request: NextRequest) {
 
     // ⚠ Couplage : `wantsToSpeak ⇔ conferences.length > 0` pour l'édition active.
     // Voir REFACTOR.md §R8 et `/api/user/profile` PATCH (qui supprime les conférences
-    // si wantsToSpeak passe à false).
-    await prisma.user.update({
-      where: { id: targetSpeakerId },
-      data: { wantsToSpeak: true },
-    })
+    // si wantsToSpeak passe à false). Sans conférencier, aucun flag à poser.
+    if (targetSpeakerId) {
+      await prisma.user.update({
+        where: { id: targetSpeakerId },
+        data: { wantsToSpeak: true },
+      })
+    }
 
     return NextResponse.json(
       {
