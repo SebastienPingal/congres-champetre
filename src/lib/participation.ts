@@ -86,6 +86,20 @@ export async function buildParticipationUpdate(
   return { data: participationData }
 }
 
+/**
+ * Efface les inscriptions repas d'un utilisateur pour une édition.
+ *
+ * Invariant métier : **un non-participant ne peut pas avoir de repas cochés**.
+ * À appeler dès qu'`isAttending` passe explicitement à `false` (`/api/user/profile`,
+ * `/api/onboarding`). `isAttending = null` (« je ne sais pas encore ») conserve les
+ * repas : l'utilisateur est encore en train de se décider.
+ */
+export async function clearMealRegistrations(userId: string, editionId: string) {
+  return prisma.mealRegistration.deleteMany({
+    where: { userId, timeSlot: { editionId } },
+  })
+}
+
 export async function upsertParticipation(
   userId: string,
   editionId: string,

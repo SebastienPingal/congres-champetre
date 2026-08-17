@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { requireUser } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { getActiveEdition, NoActiveEditionError, getRegistrationDeadline, isRegistrationClosed, RegistrationClosedError } from "@/lib/edition"
-import { buildParticipationUpdate, upsertParticipation } from "@/lib/participation"
+import { buildParticipationUpdate, clearMealRegistrations, upsertParticipation } from "@/lib/participation"
 
 export async function GET() {
   try {
@@ -129,6 +129,11 @@ export async function PATCH(request: NextRequest) {
 
     if (participationResult) {
       await upsertParticipation(sessionUser.id, activeEdition.id, participationResult.data)
+      // Ne plus venir efface les repas cochés : un non-participant ne peut pas
+      // rester inscrit à un repas (et ne doit donc plus rien).
+      if (participationResult.data.isAttending === false) {
+        await clearMealRegistrations(sessionUser.id, activeEdition.id)
+      }
     }
 
     const user = await prisma.user.findUnique({
