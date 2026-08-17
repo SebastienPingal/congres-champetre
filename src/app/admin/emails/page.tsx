@@ -16,8 +16,8 @@ const FILTER_LABELS: Record<RecipientFilter, string> = {
   all: "Tous les utilisateurs",
   participants: "Participants à l'édition en cours",
   non_participants: "Non-participants (pas inscrits)",
-  not_paid: "Participants n'ayant pas payé",
-  paid: "Participants ayant payé",
+  not_paid: "Participants non validés (reste à régler)",
+  paid: "Participants validés (payé ou rien à devoir)",
   speakers: "Conférenciers de l'édition en cours",
 }
 

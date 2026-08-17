@@ -42,12 +42,19 @@ export async function POST(request: NextRequest) {
         ? Math.round(parseFloat(event.resource.amount.value) * 100)
         : undefined
       if (userId && editionId) {
+        const existing = await prisma.editionParticipation.findUnique({
+          where: { userId_editionId: { userId, editionId } },
+          select: { attendanceDays: true },
+        })
         await prisma.editionParticipation.update({
           where: { userId_editionId: { userId, editionId } },
           data: {
             hasPaid: true,
             paymentStatus: "succeeded",
             ...(amountCents !== undefined ? { paidAmount: amountCents } : {}),
+            // Payer vaut confirmation de présence (idem route capture).
+            isAttending: true,
+            ...(existing?.attendanceDays === "NONE" ? { attendanceDays: "UNKNOWN" as const } : {}),
           },
         })
         if (orderId) {

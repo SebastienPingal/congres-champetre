@@ -15,6 +15,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { cn } from "@/lib/utils"
+import { isParticipationValidated } from "@/lib/participation-status"
 import type { AdminUserRow } from "@/hooks/use-admin-users"
 import type { AttendanceDays } from "@/types"
 
@@ -88,9 +89,17 @@ const SELECT_FILTERS: SelectFilterDef[] = [
   },
   {
     key: "paid",
-    label: "A payé",
+    // Validé = a payé OU ne doit rien (aucun repas payant coché).
+    label: "Validé",
     options: TRI_OPTIONS,
-    matches: (u, v) => (v === "YES" ? u.hasPaid : !u.hasPaid),
+    matches: (u, v) => {
+      const validated = isParticipationValidated({
+        isAttending: u.isAttending,
+        hasPaid: u.hasPaid,
+        amountDue: u.mealTotal,
+      })
+      return v === "YES" ? validated : !validated
+    },
   },
   {
     key: "cash",
@@ -108,7 +117,7 @@ const SELECT_FILTERS: SelectFilterDef[] = [
 
 /** Raccourcis : applique une combinaison de filtres en un clic. */
 const PRESETS: { label: string, patch: Partial<UsersFiltersState> }[] = [
-  { label: "Participants non payés", patch: { participation: "YES", paid: "NO", cash: "ALL" } },
+  { label: "Participants non validés", patch: { participation: "YES", paid: "NO", cash: "ALL" } },
   { label: "Paiement en cash", patch: { cash: "YES" } },
   { label: "Jamais connectés", patch: { loggedIn: "NO" } },
 ]

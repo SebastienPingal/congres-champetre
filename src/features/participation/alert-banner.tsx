@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import { AlertTriangle, CircleDot, Lock } from "lucide-react"
+import { isParticipationValidated } from "@/lib/participation-status"
 import type { UserProfile, MealSlot } from "@/types"
 
 interface AlertBannerProps {
@@ -20,10 +21,17 @@ export function AlertBanner({ user, meals }: AlertBannerProps) {
     !locked && user.isAttending && meals.length > 0 && meals.some((m) => m.status === null)
   const needsConferenceAction =
     !locked && user.isAttending && user.wantsToSpeak && user.conferences.length === 0
-  const needsPayment = user.isAttending && totalToPay > 0 && !user.hasPaid
+  // Validé = a payé OU ne doit rien. Seuls les non-validés ont une action à faire.
+  const needsPayment =
+    user.isAttending === true &&
+    !isParticipationValidated({
+      isAttending: user.isAttending,
+      hasPaid: user.hasPaid,
+      amountDue: totalToPay,
+    })
 
   if (locked) {
-    if (user.isAttending && totalToPay > 0 && !user.hasPaid) {
+    if (needsPayment) {
       return (
         <div className="rounded-xl border border-destructive/40 bg-destructive/10 p-4 shadow-sm animate-fade-in">
           <div className="flex items-start gap-3">

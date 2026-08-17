@@ -3,6 +3,7 @@ import { z } from "zod"
 import { requireAdmin } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { sendBroadcastEmail } from "@/lib/mail"
+import { isParticipationValidated } from "@/lib/participation-status"
 
 const MAX_ATTACHMENT_BYTES = 5 * 1024 * 1024
 const ALLOWED_IMAGE_TYPES = new Set([
@@ -130,18 +131,43 @@ export async function POST(req: Request) {
           select: { email: true },
         })
         recipients = users.map((u) => u.email)
-      } else if (filter === "not_paid") {
+      } else if (filter === "not_paid" || filter === "paid") {
+        // « Validé » ≠ `hasPaid` : qui ne doit rien (aucun repas payant coché)
+        // est validé d'office et ne doit donc pas recevoir de relance.
         const participations = await prisma.editionParticipation.findMany({
-          where: { editionId: activeEdition.id, isAttending: true, hasPaid: false },
-          select: { user: { select: { email: true } } },
+          where: { editionId: activeEdition.id, isAttending: true },
+          select: {
+            isAttending: true,
+            hasPaid: true,
+            user: {
+              select: {
+                email: true,
+                mealRegistrations: {
+                  where: {
+                    status: "PRESENT",
+                    timeSlot: { editionId: activeEdition.id, price: { not: null } },
+                  },
+                  select: { timeSlot: { select: { price: true } } },
+                },
+              },
+            },
+          },
         })
-        recipients = participations.map((p) => p.user.email)
-      } else if (filter === "paid") {
-        const participations = await prisma.editionParticipation.findMany({
-          where: { editionId: activeEdition.id, isAttending: true, hasPaid: true },
-          select: { user: { select: { email: true } } },
-        })
-        recipients = participations.map((p) => p.user.email)
+        const wantValidated = filter === "paid"
+        recipients = participations
+          .filter((p) => {
+            const amountDue = p.user.mealRegistrations.reduce(
+              (sum, mr) => sum + (mr.timeSlot.price ?? 0),
+              0,
+            )
+            const validated = isParticipationValidated({
+              isAttending: p.isAttending,
+              hasPaid: p.hasPaid,
+              amountDue,
+            })
+            return validated === wantValidated
+          })
+          .map((p) => p.user.email)
       } else if (filter === "speakers") {
         // Les conférences générales n'ont pas de compte rattaché → aucun destinataire.
         const conferences = await prisma.conference.findMany({
