@@ -87,6 +87,21 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Un non-participant ne peut pas s'inscrire à un repas.
+    const participation = await prisma.editionParticipation.findUnique({
+      where: {
+        userId_editionId: { userId: session.user.id, editionId: activeEdition.id },
+      },
+      select: { isAttending: true },
+    })
+
+    if (participation?.isAttending === false) {
+      return NextResponse.json(
+        { error: "🚫 Vous avez indiqué ne pas venir — confirmez votre présence avant de choisir vos repas" },
+        { status: 409 }
+      )
+    }
+
     const timeSlot = await prisma.timeSlot.findUnique({
       where: { id: timeSlotId },
     })

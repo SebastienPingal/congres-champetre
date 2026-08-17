@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { getActiveEdition, NoActiveEditionError, isRegistrationClosed } from "@/lib/edition"
+import { clearMealRegistrations } from "@/lib/participation"
 import type { AttendanceDays } from "@prisma/client"
 
 export async function POST(request: NextRequest) {
@@ -67,6 +68,11 @@ export async function POST(request: NextRequest) {
       },
       update: participationData,
     })
+
+    // Un non-participant ne peut pas avoir de repas cochés.
+    if (participationData.isAttending === false) {
+      await clearMealRegistrations(session.user.id, activeEdition.id)
+    }
 
     if (typeof body.wantsToSpeak === "boolean" || body.wantsToSpeak === null) {
       await prisma.user.update({

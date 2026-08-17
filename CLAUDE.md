@@ -112,7 +112,7 @@ Points à retenir :
 - `Conference.timeSlotId` est `String? @unique` → un slot a au plus une conférence.
 - `Conference.speakerId` est `String?` : `null` = **conférence générale** créée depuis `/admin` (aucun compte rattaché). `speakerName` porte alors un intervenant libre facultatif (invité extérieur, collectif, ou rien pour un accueil / une table ronde). Ces conférences échappent à la règle « une conférence par personne » et ne modifient pas `wantsToSpeak`. Affichage : passer par `getSpeakerLabel()` (`src/lib/helper.ts`).
 - `TimeSlot.kind` : `CONFERENCE | MEAL | BREAK | OTHER`. Les `MEAL` ont `description`, `price`, `showInRegistration` en plus.
-- `MealRegistration` n'existe que si le user a coché PRESENT/ABSENT. Pas de ligne = pas répondu.
+- `MealRegistration` n'existe que si le user a coché PRESENT/ABSENT. Pas de ligne = pas répondu. **Invariant : `isAttending === false` ⇒ aucune `MealRegistration`** — passer à « je ne viens pas » les efface (`clearMealRegistrations()`, `src/lib/participation.ts`), et `/api/meals` POST comme `/api/admin/users` PATCH renvoient `409` si on tente d'en cocher une. `isAttending = null` (« je ne sais pas ») conserve les repas.
 - `PaymentIntent` est un journal d'audit PayPal (un row par order PayPal créé), distinct des champs `paymentProviderId/paymentStatus` qui pointent vers le dernier order en cours.
 
 ## API en un coup d'œil
