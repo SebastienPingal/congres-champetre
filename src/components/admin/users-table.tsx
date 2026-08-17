@@ -511,6 +511,19 @@ export function UsersTable() {
               )}
               {visibleColumns.meals && mealSlots.map((slot) => {
                 const status = u.mealStatuses[slot.id]
+                // Ne vient pas → aucun repas possible, cellule inerte.
+                if (u.isAttending === false) {
+                  return (
+                    <TableCell key={slot.id} className="text-center px-2">
+                      <span
+                        className="block p-1 text-muted-foreground/40"
+                        title="Ne participe pas — repassez sa présence à « oui » pour cocher un repas"
+                      >
+                        —
+                      </span>
+                    </TableCell>
+                  )
+                }
                 return (
                   <TableCell key={slot.id} className="text-center px-2">
                     <button

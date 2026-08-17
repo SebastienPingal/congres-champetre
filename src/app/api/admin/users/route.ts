@@ -49,11 +49,15 @@ export async function GET() {
 
     const result = users.map((u) => {
       const p = u.participations[0]
+      // Un non-participant n'a pas de repas : d'anciennes lignes ont pu survivre
+      // à un passage en « je ne viens pas », on les ignore (elles sont effacées
+      // à la prochaine écriture, cf. `clearMealRegistrations`).
+      const mealRegistrations = p?.isAttending === false ? [] : u.mealRegistrations
       const mealStatuses: Record<string, string> = {}
-      for (const mr of u.mealRegistrations) {
+      for (const mr of mealRegistrations) {
         mealStatuses[mr.timeSlot.id] = mr.status
       }
-      const presentMeals = u.mealRegistrations.filter((mr) => mr.status === "PRESENT")
+      const presentMeals = mealRegistrations.filter((mr) => mr.status === "PRESENT")
       return {
         id: u.id,
         name: u.name,
@@ -181,6 +185,19 @@ export async function PATCH(req: Request) {
       })
       if (!slot) {
         return NextResponse.json({ error: "Créneau repas introuvable" }, { status: 404 })
+      }
+
+      // Un non-participant ne peut pas avoir de repas cochés — l'admin doit
+      // d'abord repasser sa présence à « oui ».
+      const participation = await prisma.editionParticipation.findUnique({
+        where: { userId_editionId: { userId, editionId: activeEdition.id } },
+        select: { isAttending: true },
+      })
+      if (status !== null && participation?.isAttending === false) {
+        return NextResponse.json(
+          { error: "🚫 Cet utilisateur a indiqué ne pas venir — impossible de lui cocher un repas" },
+          { status: 409 }
+        )
       }
 
       if (status === null) {
