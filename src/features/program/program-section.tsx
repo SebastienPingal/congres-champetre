@@ -4,6 +4,7 @@ import { useMemo } from "react"
 import { AlertTriangle, Clock, Lock, MapPin, Users } from "lucide-react"
 import { useTimeSlots } from "@/hooks/use-time-slots"
 import { getSpeakerLabel } from "@/lib/helper"
+import { isParticipationValidated } from "@/lib/participation-status"
 import type { MealSlot, TimeSlot, UserProfile } from "@/types"
 
 type NavTarget = "presence" | "meals" | "payment" | "conferences"
@@ -198,12 +199,19 @@ function AlertParchemin({
   const needsPresence = !locked && !user.isAttending
   const needsMeals =
     !locked && user.isAttending && meals.length > 0 && meals.some((m) => m.status === null)
-  const needsPayment = user.isAttending && totalToPay > 0 && !user.hasPaid
+  // Validé = a payé OU ne doit rien (aucun repas payant coché).
+  const needsPayment =
+    user.isAttending === true &&
+    !isParticipationValidated({
+      isAttending: user.isAttending,
+      hasPaid: user.hasPaid,
+      amountDue: totalToPay,
+    })
   const needsConference =
     !locked && user.isAttending && user.wantsToSpeak && user.conferences.length === 0
 
   if (locked) {
-    if (user.isAttending && totalToPay > 0 && !user.hasPaid) {
+    if (needsPayment) {
       return (
         <div
           className="mx-auto mb-11 flex items-center gap-4 rounded-2xl px-5 py-4"

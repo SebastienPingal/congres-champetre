@@ -9,6 +9,7 @@ import { CheckCircle2, Lock, ShieldCheck } from "lucide-react"
 import { useMeals } from "@/hooks/use-meals"
 import { queryKeys } from "@/lib/query-keys"
 import { applyPaypalFees } from "@/lib/paypal-fees"
+import { isParticipationValidated } from "@/lib/participation-status"
 import type { UserProfile } from "@/types"
 
 const paypalClientId = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID
@@ -41,9 +42,17 @@ export function PaymentSection({ user }: PaymentSectionProps) {
   const locked = user.edition.isRegistrationClosed
   const paypalConfigured = !!paypalClientId
 
-  if (total === 0 && !hasPaid) return null
+  // Ne rien devoir vaut validation : le participant n'a aucune action à faire.
+  const validated = isParticipationValidated({
+    isAttending: user.isAttending,
+    hasPaid,
+    amountDue: total,
+  })
 
-  if (hasPaid) {
+  // Cas résiduel : rien à régler mais présence non confirmée → aucun bloc à afficher.
+  if (total === 0 && !hasPaid && !validated) return null
+
+  if (validated) {
     return (
       <section id="section-validation" className="flex flex-col gap-3">
         <div className="flex flex-col items-center gap-4 rounded-xl border-2 border-primary/50 bg-primary/10 px-6 py-8 text-center">
@@ -53,12 +62,16 @@ export function PaymentSection({ user }: PaymentSectionProps) {
           <div className="flex flex-col gap-1">
             <p className="text-lg font-semibold text-primary">Votre place est réservée&nbsp;!</p>
             <p className="text-sm text-foreground/80 max-w-prose">
-              Merci pour votre règlement, à très vite au congrès.
+              {hasPaid
+                ? "Merci pour votre règlement, à très vite au congrès."
+                : "Vous n’avez aucun repas payant à régler : votre participation est validée. À très vite au congrès."}
             </p>
           </div>
           <Badge variant="outline" className="border-primary/50 bg-primary/10 text-primary text-sm px-3 py-1">
             <CheckCircle2 className="h-4 w-4 mr-1.5" />
-            {paidEuros > 0 ? `${paidEuros.toFixed(2)} € payés` : "Paiement validé"}
+            {hasPaid
+              ? paidEuros > 0 ? `${paidEuros.toFixed(2)} € payés` : "Paiement validé"
+              : "Rien à régler"}
           </Badge>
         </div>
       </section>
