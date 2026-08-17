@@ -58,6 +58,7 @@ src/lib/
 ├── paypal.ts               # wrapper REST PayPal (token OAuth caché en mémoire) — createOrder / captureOrder / verifyWebhook
 ├── edition.ts              # getActiveEdition() / getActiveEditionId() / isRegistrationClosed() / getRegistrationDeadline() — THROW si aucune active
 ├── mail.ts                 # sendBroadcastEmail + markdown → HTML safe
+├── participation-status.ts # isParticipationValidated() — validé = a payé OU ne doit rien (pur, client+serveur)
 ├── query-keys.ts           # factory typée pour React Query
 ├── helper.ts               # formatDateTimeRange (fr-FR) + getSpeakerLabel (conf. générale incluse)
 └── utils.ts                # cn() (clsx + tailwind-merge)
@@ -153,6 +154,8 @@ if (me?.role !== "ADMIN") return NextResponse.json({ error: "⚠️ Accès refus
 **Hook de mutation React Query** : sur succès, soit `setQueryData` (cache write direct, ex. `useUpdateProfile`), soit `invalidateQueries({ queryKey: queryKeys.X })` (ex. `useCreateConference`). Les clés sont dans `src/lib/query-keys.ts` — ne pas inliner des `["..."]` ailleurs.
 
 **Composant client/serveur** : tout ce qui consomme `useSession`, `useQuery`, ou un hook Radix doit être `"use client"`. Les pages `/dashboard` et `/admin/*` le sont déjà.
+
+**Validation d'une participation** : la vérité est `isParticipationValidated()` (`src/lib/participation-status.ts`), pas `hasPaid` seul. Un participant est validé s'il a payé **ou** s'il ne doit rien (aucun repas payant coché → montant dû nul). Réciproquement, un paiement encaissé pose `isAttending = true` (routes `capture` et `webhook`). Utiliser ce helper partout où l'on juge « payé / non payé » (dashboard, alertes, `/admin/users`, filtres d'emails).
 
 **PayPal** : ne jamais accepter le montant depuis le client. Toujours recalculer côté serveur depuis `MealRegistration.status === "PRESENT"` et `TimeSlot.price`. Le dashboard utilise `PaymentSection` (`features/meals/payment-section.tsx`) avec `@paypal/react-paypal-js` — c'est le seul moyen de payer côté participant. Le bouton PayPal expose `compte PayPal` **et** `Carte bancaire invité` (pas besoin de compte PayPal pour payer). Le champ `willPayInCash` reste accessible uniquement depuis `/admin/users` pour marquer manuellement les paiements en espèces. Mode sandbox vs live contrôlé par `PAYPAL_ENV`.
 

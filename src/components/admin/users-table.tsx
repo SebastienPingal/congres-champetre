@@ -26,6 +26,7 @@ import {
 import { useAdminUsers, type AdminUserRow, type AdminUsersPayload } from "@/hooks/use-admin-users"
 import { UsersFilters, matchesFilters, useUsersFilters } from "@/components/admin/users-filters"
 import { queryKeys } from "@/lib/query-keys"
+import { isParticipationValidated } from "@/lib/participation-status"
 import type { AttendanceDays } from "@/types"
 
 const attendanceOrder: Record<AttendanceDays, number> = {
@@ -423,7 +424,18 @@ export function UsersTable() {
               </TableCell>
               )}
               {visibleColumns.hasPaid && (
-              <TableCell className={u.isAttending === true && !u.hasPaid ? "bg-destructive/30" : undefined}>
+              <TableCell
+                className={
+                  u.isAttending === true &&
+                  !isParticipationValidated({
+                    isAttending: u.isAttending,
+                    hasPaid: u.hasPaid,
+                    amountDue: u.mealTotal,
+                  })
+                    ? "bg-destructive/30"
+                    : undefined
+                }
+              >
                 <div className="flex items-center gap-2">
                   <Checkbox
                     aria-label="A payé"
@@ -444,6 +456,12 @@ export function UsersTable() {
                       }
                     }}
                   />
+                  {/* Rien à devoir vaut validation automatique — aucun paiement attendu. */}
+                  {!u.hasPaid && u.isAttending === true && u.mealTotal === 0 && (
+                    <Badge className="bg-green-soft text-primary" title="Aucun repas payant — validé automatiquement">
+                      Rien à régler
+                    </Badge>
+                  )}
                 </div>
               </TableCell>
               )}

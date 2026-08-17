@@ -17,10 +17,11 @@ Components for meal registration and payment validation.
 - `user.edition.isRegistrationClosed` toggles read-only state; `user.edition.registrationDeadline` is the cut-off date (7 days before the edition's last day — `endDate`, falling back to `startDate`). Currently disabled via `REGISTRATION_DEADLINE_ENABLED = false` in `src/lib/edition.ts`: the deadline is always `null` and the section never locks.
 
 **Validation flow:**
+0. **Validation automatique quand rien n'est dû** — `isParticipationValidated()` (`src/lib/participation-status.ts`) : un participant (`isAttending === true`) qui n'a coché aucun repas payant (`amountDue === 0`) est considéré comme validé, sans passer par PayPal. `PaymentSection` affiche alors le bloc vert « Rien à régler » et aucune alerte de paiement ne remonte.
 1. After onboarding completes, `PaymentSection` shows on the dashboard for attending users with at least one paid meal.
-2. Status badge: **Validée** (green, when `hasPaid=true`) or **Non validée** (amber).
+2. Status badge: **Validée** (green, when `hasPaid=true` ou montant dû nul) or **Non validée** (amber).
 3. Click bouton PayPal → `createOrder` POST `/api/payments/order` → popup PayPal → `onApprove` POST `/api/payments/capture`.
-4. On success → invalidate `userProfile` query → `hasPaid=true` and the section turns green. Le webhook PayPal sert de filet de sécurité si le capture côté front échoue.
+4. On success → invalidate `userProfile` query → `hasPaid=true` **et `isAttending=true`** (payer vaut confirmation de présence, posé côté serveur par `/api/payments/capture` et le webhook) → the section turns green. Le webhook PayPal sert de filet de sécurité si le capture côté front échoue.
 5. "Payer plus tard" only collapses the CTA; the participation stays unpaid until the user returns.
 
 **Section IDs:** `#section-repas` (meals), `#section-validation` (payment).

@@ -38,6 +38,10 @@ export async function POST(request: NextRequest) {
           hasPaid: true,
           paymentStatus: "succeeded",
           paidAmount: amountCents,
+          // Payer vaut confirmation de présence : on ne laisse pas un payeur
+          // en « je ne sais pas encore ».
+          isAttending: true,
+          ...(participation.attendanceDays === "NONE" ? { attendanceDays: "UNKNOWN" as const } : {}),
         },
       })
       await prisma.paymentIntent.updateMany({
