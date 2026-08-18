@@ -6,7 +6,8 @@ import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, Tabl
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Check, X, Trash2, Columns3 } from "lucide-react"
+import { Input } from "@/components/ui/input"
+import { Check, X, Trash2, Columns3, Pencil } from "lucide-react"
 import {
   Dialog,
   DialogContent,
@@ -127,6 +128,9 @@ export function UsersTable() {
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">(savedSort?.sortDirection ?? "asc")
   const [deleteTarget, setDeleteTarget] = useState<AdminUserRow | null>(null)
   const [deleting, setDeleting] = useState(false)
+  const [renameTargetId, setRenameTargetId] = useState<string | null>(null)
+  const [renameValue, setRenameValue] = useState("")
+  const [renaming, setRenaming] = useState(false)
 
   const [visibleColumns, setVisibleColumns] = useState<Record<ColumnKey, boolean>>(() => {
     try {
@@ -151,6 +155,44 @@ export function UsersTable() {
       localStorage.setItem(SORT_STORAGE_KEY, JSON.stringify({ sortKey, sortDirection }))
     } catch { /* ignore */ }
   }, [sortKey, sortDirection])
+
+  const startRename = (u: AdminUserRow) => {
+    setRenameTargetId(u.id)
+    setRenameValue(u.name ?? "")
+  }
+
+  const cancelRename = () => {
+    setRenameTargetId(null)
+    setRenameValue("")
+  }
+
+  const submitRename = async (u: AdminUserRow) => {
+    const trimmed = renameValue.trim()
+    if (!trimmed || trimmed === (u.name ?? "")) {
+      cancelRename()
+      return
+    }
+
+    const previousName = u.name
+    setRenaming(true)
+    // Optimiste : on affiche le nouveau nom tout de suite
+    patchCachedUsers(prev => prev.map(row => row.id === u.id ? { ...row, name: trimmed } : row))
+
+    try {
+      const res = await fetch("/api/admin/users", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: u.id, name: trimmed }),
+      })
+      if (!res.ok) throw new Error("Rename failed")
+      cancelRename()
+    } catch {
+      patchCachedUsers(prev => prev.map(row => row.id === u.id ? { ...row, name: previousName } : row))
+      setError("Erreur lors du renommage")
+    } finally {
+      setRenaming(false)
+    }
+  }
 
   const handleDeleteParticipation = async () => {
     if (!deleteTarget) return
@@ -369,7 +411,37 @@ export function UsersTable() {
         <TableBody>
           {filteredAndSortedUsers.map((u) => (
             <TableRow key={u.id}>
-              {visibleColumns.name && <TableCell className="font-medium">{u.name ?? "—"}</TableCell>}
+              {visibleColumns.name && (
+              <TableCell className="font-medium">
+                {renameTargetId === u.id ? (
+                  <div className="flex items-center gap-1">
+                    <Input
+                      autoFocus
+                      value={renameValue}
+                      disabled={renaming}
+                      onChange={(e) => setRenameValue(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") submitRename(u)
+                        if (e.key === "Escape") cancelRename()
+                      }}
+                      onBlur={() => submitRename(u)}
+                      className="h-8 w-40"
+                      aria-label="Nom de l'utilisateur"
+                    />
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    className="group flex items-center gap-1 text-left hover:underline cursor-pointer"
+                    onClick={() => startRename(u)}
+                    title="Renommer"
+                  >
+                    <span>{u.name ?? "—"}</span>
+                    <Pencil className="h-3 w-3 opacity-0 group-hover:opacity-60 transition-opacity" />
+                  </button>
+                )}
+              </TableCell>
+              )}
               {visibleColumns.email && <TableCell>{u.email}</TableCell>}
               {visibleColumns.wantsToSpeak && (
               <TableCell>
