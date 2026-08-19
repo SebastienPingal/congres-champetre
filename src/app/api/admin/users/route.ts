@@ -159,8 +159,9 @@ export async function PATCH(req: Request) {
       return NextResponse.json({ error: "Requête invalide" }, { status: 400 })
     }
 
-    const { userId, hasPaid, willPayInCash, mealStatusUpdate } = body as {
+    const { userId, name, hasPaid, willPayInCash, mealStatusUpdate } = body as {
       userId?: string
+      name?: string
       hasPaid?: boolean
       willPayInCash?: boolean
       mealStatusUpdate?: { timeSlotId: string; status: "PRESENT" | "ABSENT" | null }
@@ -168,6 +169,28 @@ export async function PATCH(req: Request) {
 
     if (!userId || typeof userId !== "string") {
       return NextResponse.json({ error: "userId manquant" }, { status: 400 })
+    }
+
+    // Renommage : porte sur le User lui-même, pas sur la participation —
+    // pas besoin d'édition active pour le faire.
+    if (typeof name === "string") {
+      const trimmed = name.trim()
+      if (trimmed.length === 0) {
+        return NextResponse.json({ error: "Le nom ne peut pas être vide" }, { status: 400 })
+      }
+      if (trimmed.length > 100) {
+        return NextResponse.json({ error: "Le nom est trop long (100 caractères max)" }, { status: 400 })
+      }
+      const user = await prisma.user.findUnique({ where: { id: userId }, select: { id: true } })
+      if (!user) {
+        return NextResponse.json({ error: "Utilisateur introuvable" }, { status: 404 })
+      }
+      const updatedUser = await prisma.user.update({
+        where: { id: userId },
+        data: { name: trimmed },
+        select: { id: true, name: true },
+      })
+      return NextResponse.json(updatedUser)
     }
 
     const activeEdition = await getActiveEdition()
