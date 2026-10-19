@@ -171,14 +171,14 @@
 
 /* ── Noël : « Givre » (clair) / « Nuit étoilée » (sombre) ── */
 [data-theme="noel"] {
-  --page-bg:      #fbfcf8;
-  --paper:        #fbfcf8;
+  --page-bg:      #ffffff;
+  --paper:        #ffffff;
   --paper-dark:   #0f2418;
   --surface:      #ffffff;
   --ink:          #0f2418;
   --ink-2:        #26382d;
   --ink-3:        #56685c;
-  --line:         #e1e9e2;
+  --line:         #e6ede7;
   --line-2:       #c3d3c7;
   --talk:         #dc1f36;
   --talk-soft:    #ffe1e5;
@@ -671,9 +671,9 @@
   background:
     linear-gradient(
       135deg,
-      color-mix(in oklab, var(--red) 13%, var(--paper)) 0%,
+      color-mix(in oklab, var(--red) 9%, var(--paper)) 0%,
       var(--paper) 50%,
-      color-mix(in oklab, var(--green) 14%, var(--paper)) 100%
+      color-mix(in oklab, var(--green) 10%, var(--paper)) 100%
     );
   background-attachment: fixed;
 }

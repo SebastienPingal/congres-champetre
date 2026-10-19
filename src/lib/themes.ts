@@ -40,7 +40,7 @@ export const THEMES: Record<ThemeId, ThemePalette> = {
   noel: {
     id: "noel",
     label: "Noël",
-    light: { name: "Givre", bg: "#fbfcf8", paper: "#ffffff", ink: "#0f2418", line: "#e1e9e2", green: "#0b8a47", talk: "#dc1f36", meal: "#f2ae00" },
+    light: { name: "Givre", bg: "#ffffff", paper: "#ffffff", ink: "#0f2418", line: "#e1e9e2", green: "#0b8a47", talk: "#dc1f36", meal: "#f2ae00" },
     dark: { name: "Nuit étoilée", bg: "#071f16", paper: "#0f3726", ink: "#f8f4e9", line: "#17473a", green: "#2fd17a", talk: "#ff4c5c", meal: "#ffc83a" },
   },
 }
