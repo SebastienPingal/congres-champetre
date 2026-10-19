@@ -120,7 +120,7 @@ export default function AdminPage() {
           <Card>
             <CardContent>
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-full bg-green-soft text-primary">
+                <div className="p-2 rounded-full bg-green-soft text-green">
                   <CalendarRange className="h-5 w-5" />
                 </div>
                 <div>
@@ -159,7 +159,7 @@ export default function AdminPage() {
           <Card>
             <CardContent>
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-full bg-green-soft text-primary">
+                <div className="p-2 rounded-full bg-green-soft text-green">
                   <UserCheck className="h-5 w-5" />
                 </div>
                 <div>

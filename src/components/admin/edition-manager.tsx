@@ -477,7 +477,7 @@ export function EditionManager({ onEditionChanged }: EditionManagerProps) {
               key={edition.id}
               className={`border rounded-lg p-4 flex flex-col gap-3 ${
                 edition.isActive
-                  ? "ring-2 ring-primary bg-green-soft/50"
+                  ? "ring-2 ring-primary bg-brand-soft/50"
                   : ""
               }`}
             >
@@ -486,7 +486,7 @@ export function EditionManager({ onEditionChanged }: EditionManagerProps) {
                   <div className="flex items-center gap-2">
                     <h4 className="font-medium">{edition.name}</h4>
                     {edition.isActive && (
-                      <Badge className="bg-green-soft text-primary">
+                      <Badge className="bg-green-soft text-green">
                         Active
                       </Badge>
                     )}

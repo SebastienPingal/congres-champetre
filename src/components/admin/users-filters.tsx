@@ -223,7 +223,7 @@ export function UsersFilters({
                 <Button
                   variant="outline"
                   size="sm"
-                  className={cn(isActive && "border-primary bg-green-soft text-primary")}
+                  className={cn(isActive && "border-primary bg-brand-soft text-primary")}
                 >
                   <span>{label}</span>
                   {isActive && <span className="font-semibold">: {current?.label}</span>}

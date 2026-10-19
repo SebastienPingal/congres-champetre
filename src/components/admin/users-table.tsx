@@ -457,7 +457,7 @@ export function UsersTable() {
               {visibleColumns.isAttending && (
               <TableCell>
                 {u.isAttending === true ? (
-                  <Badge className="bg-green-soft text-primary">Oui</Badge>
+                  <Badge className="bg-green-soft text-green">Oui</Badge>
                 ) : u.isAttending === false ? (
                   <Badge className="bg-muted text-foreground">Non</Badge>
                 ) : (
@@ -477,7 +477,7 @@ export function UsersTable() {
                   <Badge className="bg-warn-bg text-warn">Jour 2</Badge>
                 )}
                 {u.attendanceDays === "BOTH" && (
-                  <Badge className="bg-green-soft text-primary">Les deux</Badge>
+                  <Badge className="bg-green-soft text-green">Les deux</Badge>
                 )}
                 {u.attendanceDays === "UNKNOWN" && (
                   <Badge className="bg-muted text-muted-foreground">?</Badge>
@@ -530,7 +530,7 @@ export function UsersTable() {
                   />
                   {/* Rien à devoir vaut validation automatique — aucun paiement attendu. */}
                   {!u.hasPaid && u.isAttending === true && u.mealTotal === 0 && (
-                    <Badge className="bg-green-soft text-primary" title="Aucun repas payant — validé automatiquement">
+                    <Badge className="bg-green-soft text-green" title="Aucun repas payant — validé automatiquement">
                       Rien à régler
                     </Badge>
                   )}
@@ -566,7 +566,7 @@ export function UsersTable() {
               <TableCell>
                 {u.hasLoggedInSinceEdition ? (
                   <Badge
-                    className="bg-green-soft text-primary"
+                    className="bg-green-soft text-green"
                     title={u.lastLoginAt ? new Date(u.lastLoginAt).toLocaleString("fr-FR") : undefined}
                   >
                     Oui
@@ -605,7 +605,7 @@ export function UsersTable() {
                       onClick={() => toggleMealStatus(u.id, slot.id, status)}
                     >
                       {status === "PRESENT" ? (
-                        <Check className="h-4 w-4 text-primary" />
+                        <Check className="h-4 w-4 text-green" />
                       ) : status === "ABSENT" ? (
                         <X className="h-4 w-4 text-destructive" />
                       ) : (

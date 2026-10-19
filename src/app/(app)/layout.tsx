@@ -5,7 +5,7 @@ import { OnboardingModal } from "@/features/onboarding/onboarding-modal"
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen" style={{ background: "var(--paper)" }}>
+    <div className="app-shell min-h-screen">
       <Navbar />
       <OnboardingModal />
       {children}

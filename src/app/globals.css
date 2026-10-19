@@ -41,7 +41,10 @@
   --color-card: var(--card);
   --color-paper: var(--paper);
   --color-page-bg: var(--page-bg);
+  --color-green: var(--green);
   --color-green-soft: var(--green-soft);
+  --color-brand: var(--brand);
+  --color-brand-soft: var(--brand-soft);
   --color-ink: var(--ink);
   --color-ink-2: var(--ink-2);
   --color-ink-3: var(--ink-3);
@@ -86,6 +89,10 @@
   --warn-border:  #ebd58a;
   --warn-icon-bg: #f2d784;
   --red:          #d34a3b;
+
+  /* Couleur d'action (boutons, onglet actif, focus). = vert sauf thème Noël (rouge). */
+  --brand:        var(--green);
+  --brand-soft:   var(--green-soft);
 }
 
 /* Chaque thème (choisi par l'admin, `data-theme`) a une variante claire et une
@@ -180,6 +187,8 @@
   --warn-border:  #e8cf86;
   --warn-icon-bg: #efd27e;
   --red:          #b3262e;
+  --brand:        #b3262e;
+  --brand-soft:   #f7dcd9;
 }
 
 [data-theme="noel"][data-mode="dark"] {
@@ -203,6 +212,8 @@
   --warn-border:  #5a4a28;
   --warn-icon-bg: #6b5530;
   --red:          #e5675e;
+  --brand:        #e5675e;
+  --brand-soft:   #3a2224;
 }
 
 :root {
@@ -214,7 +225,7 @@
   --card-foreground:      var(--ink);
   --popover:              var(--paper);
   --popover-foreground:   var(--ink);
-  --primary:              var(--green);
+  --primary:              var(--brand);
   --primary-foreground:   var(--paper);
   --secondary:            var(--paper);
   --secondary-foreground: var(--ink-2);
@@ -225,7 +236,7 @@
   --destructive:          var(--red);
   --border:               var(--line);
   --input:                var(--line);
-  --ring:                 var(--green);
+  --ring:                 var(--brand);
 
   --chart-1: var(--green);
   --chart-2: var(--talk);
@@ -235,12 +246,12 @@
 
   --sidebar:                    var(--paper);
   --sidebar-foreground:         var(--ink);
-  --sidebar-primary:            var(--green);
+  --sidebar-primary:            var(--brand);
   --sidebar-primary-foreground: var(--paper);
-  --sidebar-accent:             var(--green-soft);
-  --sidebar-accent-foreground:  var(--green);
+  --sidebar-accent:             var(--brand-soft);
+  --sidebar-accent-foreground:  var(--brand);
   --sidebar-border:             var(--line);
-  --sidebar-ring:               var(--green);
+  --sidebar-ring:               var(--brand);
 }
 
 .dark {
@@ -647,4 +658,31 @@
     .ss-card-rise { animation: none; }
     .ss-confetti { display: none; }
   }
+}
+
+/* ── Décor du thème Noël : halos houx/sapin sur le fond, liseré sucre d'orge sous la navbar ── */
+.app-shell { background: var(--paper); }
+[data-theme="noel"] body,
+[data-theme="noel"] .app-shell {
+  background:
+    radial-gradient(ellipse 60% 45% at 0% 0%, color-mix(in oklab, var(--red) 9%, transparent), transparent 70%),
+    radial-gradient(ellipse 55% 45% at 100% 100%, color-mix(in oklab, var(--green) 10%, transparent), transparent 70%),
+    var(--paper);
+  background-attachment: fixed;
+}
+.site-header { position: relative; }
+[data-theme="noel"] .site-header { border-bottom-color: transparent !important; }
+[data-theme="noel"] .site-header::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -5px;
+  height: 5px;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    -45deg,
+    var(--red) 0 10px, #fff 10px 20px,
+    var(--green) 20px 30px, #fff 30px 40px
+  );
 }

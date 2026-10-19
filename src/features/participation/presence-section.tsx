@@ -81,7 +81,7 @@ export function PresenceSection({ user }: PresenceSectionProps) {
             <CircleDot className="h-3 w-3 mr-1" />À compléter
           </Badge>
         ) : (
-          <Badge variant="outline" className="border-primary/40 text-primary">
+          <Badge variant="outline" className="border-green/40 text-green">
             <CheckCircle2 className="h-3 w-3 mr-1" />Confirmé
           </Badge>
         )}

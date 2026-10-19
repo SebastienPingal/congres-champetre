@@ -35,7 +35,7 @@ export function ConferencesSection({ user }: ConferencesSectionProps) {
             <CircleDot className="h-3 w-3 mr-1" />À compléter
           </Badge>
         ) : user.wantsToSpeak && user.conferences.length > 0 ? (
-          <Badge variant="outline" className="border-primary/40 text-primary">
+          <Badge variant="outline" className="border-green/40 text-green">
             <CheckCircle2 className="h-3 w-3 mr-1" />Inscrit
           </Badge>
         ) : null}
