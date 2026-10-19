@@ -1,8 +1,6 @@
 "use client"
 
 import { useState } from "react"
-import { RotateCcw } from "lucide-react"
-import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { AppLoader } from "@/components/loaders/app-loader"
 import { Snowflakes } from "@/components/snowflakes"
@@ -92,15 +90,6 @@ export function SecretSantaSection() {
       </div>
 
       {revealError && <p className="text-sm text-destructive">{revealError}</p>}
-
-      {currentPhase === "open" && (
-        <div className="flex justify-center">
-          <Button variant="outline" size="sm" onClick={() => setPhase("closed")}>
-            <RotateCcw />
-            Rejouer l&apos;animation
-          </Button>
-        </div>
-      )}
     </section>
   )
 }

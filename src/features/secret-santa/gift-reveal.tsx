@@ -126,17 +126,17 @@ export function GiftReveal({ phase, receiverName, onOpen, instant = false }: Gif
         <div
           role="status"
           className={cn(
-            "absolute z-20 flex flex-col items-center gap-2 rounded-2xl border px-8 py-7 text-center shadow-xl",
+            "ss-reveal-card absolute z-20 flex flex-col items-center gap-2 rounded-2xl px-8 py-7 text-center",
             instant ? "" : "ss-card-rise",
           )}
-          style={{ background: "var(--surface, var(--card))", borderColor: "var(--line-2)", maxWidth: "min(90vw, 360px)" }}
+          style={{ maxWidth: "min(90vw, 360px)" }}
         >
           <span className="font-mono uppercase text-[10px]" style={{ letterSpacing: "0.22em", color: "var(--ink-3)" }}>
             Tu offres un cadeau à
           </span>
           <span
-            className="font-display break-words"
-            style={{ fontSize: "clamp(2rem, 7vw, 2.8rem)", fontWeight: 600, lineHeight: 1.05, color: "var(--green)" }}
+            className="ss-reveal-name font-display break-words"
+            style={{ fontSize: "clamp(2rem, 7vw, 2.8rem)", fontWeight: 700, lineHeight: 1.05 }}
           >
             {receiverName}
           </span>

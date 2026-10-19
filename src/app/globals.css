@@ -535,10 +535,12 @@
   .ss-rays {
     background: repeating-conic-gradient(
       from 0deg,
-      color-mix(in oklab, #f2b632 35%, transparent) 0deg 10deg,
-      transparent 10deg 30deg
+      color-mix(in oklab, var(--meal) 70%, transparent) 0deg 8deg,
+      transparent 8deg 18deg,
+      color-mix(in oklab, var(--red) 45%, transparent) 18deg 24deg,
+      transparent 24deg 36deg
     );
-    mask-image: radial-gradient(circle, #000 20%, transparent 68%);
+    mask-image: radial-gradient(circle, #000 25%, transparent 70%);
     transition: opacity 0.6s ease 0.3s;
     animation: ss-rays-spin 18s linear infinite;
   }
@@ -548,8 +550,9 @@
     50%      { opacity: 0.9; transform: scale(1); }
   }
   .ss-sparkle {
-    color: #f2b632;
-    font-size: 18px;
+    color: var(--meal);
+    font-size: 22px;
+    text-shadow: 0 0 8px color-mix(in oklab, var(--meal) 70%, transparent);
     animation: ss-twinkle 2.1s ease-in-out infinite;
   }
 
@@ -578,42 +581,67 @@
   .ss-festive {
     position: relative;
     overflow: hidden;
-    border-color: color-mix(in oklab, var(--red) 30%, var(--line-2));
+    border: 2px solid color-mix(in oklab, var(--red) 65%, var(--line-2));
+    box-shadow: 0 6px 24px -10px color-mix(in oklab, var(--red) 45%, transparent);
     background:
-      radial-gradient(circle at 0% 0%, color-mix(in oklab, var(--red) 10%, transparent), transparent 45%),
-      radial-gradient(circle at 100% 100%, color-mix(in oklab, var(--green) 12%, transparent), transparent 50%),
+      radial-gradient(circle at 0% 0%, color-mix(in oklab, var(--red) 26%, transparent), transparent 50%),
+      radial-gradient(circle at 100% 100%, color-mix(in oklab, var(--green) 30%, transparent), transparent 55%),
+      radial-gradient(circle at 100% 0%, color-mix(in oklab, var(--meal) 18%, transparent), transparent 40%),
       var(--surface);
   }
-  .ss-festive::before {
+  /* Liseré sucre d'orge en haut et en bas */
+  .ss-festive::before,
+  .ss-festive::after {
     content: "";
     position: absolute;
-    inset: 0 0 auto 0;
-    height: 6px;
+    left: 0;
+    right: 0;
+    height: 10px;
     pointer-events: none;
     background: repeating-linear-gradient(
       -45deg,
-      var(--red) 0 9px, var(--surface) 9px 18px,
-      var(--green) 18px 27px, var(--surface) 27px 36px
+      var(--red) 0 10px, #fff 10px 20px,
+      var(--green) 20px 30px, #fff 30px 40px
     );
   }
+  .ss-festive::before { top: 0; }
+  .ss-festive::after { bottom: 0; height: 6px; opacity: 0.85; }
+
+  .ss-reveal-card {
+    background:
+      linear-gradient(var(--surface), var(--surface)) padding-box,
+      linear-gradient(135deg, var(--red), var(--meal), var(--green)) border-box;
+    border: 3px solid transparent;
+    box-shadow:
+      0 0 0 6px color-mix(in oklab, var(--meal) 22%, transparent),
+      0 18px 40px -12px color-mix(in oklab, var(--red) 55%, transparent);
+  }
+  .ss-reveal-name {
+    background: linear-gradient(100deg, var(--red), color-mix(in oklab, var(--red) 55%, var(--meal)) 50%, var(--green));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
   .ss-snow {
     position: absolute;
-    color: var(--ink-3);
+    color: color-mix(in oklab, var(--meal) 70%, var(--ink-3));
+    text-shadow: 0 0 6px color-mix(in oklab, var(--meal) 60%, transparent);
     pointer-events: none;
     animation: ss-snow-twinkle 3s ease-in-out infinite;
   }
   @keyframes ss-snow-twinkle {
-    0%, 100% { opacity: 0.15; }
-    50%      { opacity: 0.45; }
+    0%, 100% { opacity: 0.35; transform: scale(0.85); }
+    50%      { opacity: 0.9; transform: scale(1.1); }
   }
   .ss-badge-red {
-    background: color-mix(in oklab, var(--red) 14%, var(--surface));
-    color: var(--red);
-    border-color: color-mix(in oklab, var(--red) 35%, transparent);
+    background: var(--red);
+    color: #fff;
+    border-color: var(--red);
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .ss-snow { animation: none; opacity: 0.3; }
+    .ss-snow { animation: none; opacity: 0.6; }
     .ss-gift-idle, .ss-gift-shake, .ss-rays, .ss-sparkle { animation: none; }
     .ss-lid-pop, .ss-box-drop { animation: none; opacity: 0; }
     .ss-card-rise { animation: none; }

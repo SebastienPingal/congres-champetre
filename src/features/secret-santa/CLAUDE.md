@@ -4,12 +4,12 @@ Révélation du Secret Santa côté participant (page `/secret-santa`).
 
 | File | Component | Purpose |
 |---|---|---|
-| `secret-santa-section.tsx` | `SecretSantaSection` | Orchestration : état vide (pas de tirage), cadeau à ouvrir, état ouvert + « Rejouer l'animation » |
+| `secret-santa-section.tsx` | `SecretSantaSection` | Orchestration : état vide (pas de tirage), cadeau à ouvrir, état ouvert |
 | `gift-reveal.tsx` | `GiftReveal` | Animation pure CSS : cadeau qui se dandine → tremble → couvercle qui saute, confettis, carte avec le nom |
 
 **Données :** `useSecretSanta()` / `useRevealSecretSanta()` (`src/hooks/use-secret-santa.ts`).
 - `GET /api/secret-santa` ne renvoie **jamais** le nom tant que `revealedAt` est null — il n'arrive qu'au `POST /api/secret-santa/reveal`, qui pose `revealedAt` à la première ouverture.
-- Un cadeau déjà ouvert s'affiche directement ouvert (`instant`), sans animation ; « Rejouer » relance l'animation sans appel API.
+- Un cadeau déjà ouvert s'affiche directement ouvert (`instant`), sans animation
 
 **Phases (`GiftPhase`) :** `closed` → `shaking` (au moins `SHAKE_MS`, en parallèle de l'appel API) → `open`.
 
