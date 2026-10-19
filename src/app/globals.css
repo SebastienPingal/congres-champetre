@@ -669,8 +669,10 @@
 [data-theme="noel"] body,
 [data-theme="noel"] .app-shell {
   background:
-    radial-gradient(ellipse 60% 45% at 0% 0%, color-mix(in oklab, var(--red) 9%, transparent), transparent 70%),
-    radial-gradient(ellipse 55% 45% at 100% 100%, color-mix(in oklab, var(--green) 10%, transparent), transparent 70%),
+    radial-gradient(ellipse 55% 50% at 0% 0%, color-mix(in oklab, var(--red) 16%, transparent), transparent 70%),
+    radial-gradient(ellipse 45% 40% at 100% 0%, color-mix(in oklab, var(--meal) 13%, transparent), transparent 70%),
+    radial-gradient(ellipse 60% 50% at 100% 100%, color-mix(in oklab, var(--green) 17%, transparent), transparent 70%),
+    radial-gradient(ellipse 45% 40% at 0% 100%, color-mix(in oklab, var(--meal) 9%, transparent), transparent 70%),
     var(--paper);
   background-attachment: fixed;
 }
@@ -689,15 +691,4 @@
     var(--red) 0 10px, #fff 10px 20px,
     var(--green) 20px 30px, #fff 30px 40px
   );
-}
-
-/* Noël : petits fondus houx / sapin / or sur les cards et les listes encadrées,
-   en écho à la card Secret Santa (en plus discret). */
-[data-theme="noel"] [data-slot="card"]:not(.ss-festive),
-[data-theme="noel"] .bg-surface.border:not(.ss-festive),
-[data-theme="noel"] .bg-card.border:not(.ss-festive) {
-  background-image:
-    radial-gradient(circle at 0% 0%, color-mix(in oklab, var(--red) 9%, transparent), transparent 45%),
-    radial-gradient(circle at 100% 100%, color-mix(in oklab, var(--green) 11%, transparent), transparent 50%),
-    radial-gradient(circle at 100% 0%, color-mix(in oklab, var(--meal) 8%, transparent), transparent 35%);
 }
