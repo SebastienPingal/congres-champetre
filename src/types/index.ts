@@ -95,3 +95,20 @@ export interface Conference {
     endTime: string
   } | null
 }
+
+export interface SecretSantaStatus {
+  assigned: boolean
+  revealedAt?: string | null
+  /** Nom du destinataire, renvoyé uniquement une fois le cadeau ouvert. */
+  receiverName?: string | null
+}
+
+export interface AdminSecretSantaStatus {
+  drawnAt: string | null
+  total: number
+  revealed: number
+  attendingCount: number
+  missingCount: number
+  staleCount: number
+  minParticipants: number
+}

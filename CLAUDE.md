@@ -44,13 +44,15 @@ src/features/               # UI feature-sliced — chaque dossier a un CLAUDE.m
 ├── meals/                  # meals-section, payment-section (PayPal-only)
 ├── conferences/            # conferences-section, conference-edit-form, conference-delete-button
 ├── onboarding/             # onboarding-modal + steps/ (attending/days/sleeping/meals/speaking/conference)
-└── program/                # program-section (lecture seule)
+├── program/                # program-section (lecture seule)
+└── secret-santa/           # secret-santa-section + gift-reveal (animation d'ouverture du cadeau)
 
 src/hooks/                  # React Query hooks (un CLAUDE.md ici)
 ├── use-user-profile.ts     # useUserProfile, useUpdateProfile
 ├── use-meals.ts            # useMeals, useUpdateMealStatus
 ├── use-conferences.ts      # useCreate/Update/DeleteConference
-└── use-time-slots.ts       # useTimeSlots (staleTime 60s)
+├── use-time-slots.ts       # useTimeSlots (staleTime 60s)
+└── use-secret-santa.ts     # useSecretSanta, useRevealSecretSanta + hooks admin (tirage, annulation, mails)
 
 src/lib/
 ├── auth.ts                 # NextAuth config (JWT strategy, Google/GitHub/Discord)
@@ -60,6 +62,7 @@ src/lib/
 ├── mail.ts                 # sendBroadcastEmail + markdown → HTML safe
 ├── participation-status.ts # isParticipationValidated() — validé = a payé OU ne doit rien (pur, client+serveur)
 ├── query-keys.ts           # factory typée pour React Query
+├── secret-santa.ts         # drawSecretSanta() — mélange crypto + cycle unique (personne ne se tire soi-même)
 ├── helper.ts               # formatDateTimeRange (fr-FR) + getSpeakerLabel (conf. générale incluse)
 └── utils.ts                # cn() (clsx + tailwind-merge)
 
@@ -88,6 +91,7 @@ Ces fichiers documentent leur dossier en détail — consulte-les avant de modif
 - `src/features/conferences/CLAUDE.md`
 - `src/features/onboarding/CLAUDE.md`
 - `src/features/program/CLAUDE.md`
+- `src/features/secret-santa/CLAUDE.md`
 - `src/hooks/CLAUDE.md`
 - `src/types/CLAUDE.md`
 - `src/components/admin/CLAUDE.md`
@@ -113,6 +117,7 @@ Points à retenir :
 - `Conference.speakerId` est `String?` : `null` = **conférence générale** créée depuis `/admin` (aucun compte rattaché). `speakerName` porte alors un intervenant libre facultatif (invité extérieur, collectif, ou rien pour un accueil / une table ronde). Ces conférences échappent à la règle « une conférence par personne » et ne modifient pas `wantsToSpeak`. Affichage : passer par `getSpeakerLabel()` (`src/lib/helper.ts`).
 - `TimeSlot.kind` : `CONFERENCE | MEAL | BREAK | OTHER`. Les `MEAL` ont `description`, `price`, `showInRegistration` en plus.
 - `MealRegistration` n'existe que si le user a coché PRESENT/ABSENT. Pas de ligne = pas répondu. **Invariant : `isAttending === false` ⇒ aucune `MealRegistration`** — passer à « je ne viens pas » les efface (`clearMealRegistrations()`, `src/lib/participation.ts`), et `/api/meals` POST comme `/api/admin/users` PATCH renvoient `409` si on tente d'en cocher une. `isAttending = null` (« je ne sais pas ») conserve les repas.
+- `SecretSantaAssignment` (`@@unique([editionId, giverId])` et `([editionId, receiverId])`) : une ligne par donneur. Le tirage (admin) porte sur les `isAttending === true` de l'édition active (min. 3) et forme **un seul cycle**. Relancer remplace tout. `revealedAt` = première ouverture du cadeau. Les admins ne voient que des compteurs, jamais les paires.
 - `PaymentIntent` est un journal d'audit PayPal (un row par order PayPal créé), distinct des champs `paymentProviderId/paymentStatus` qui pointent vers le dernier order en cours.
 
 ## API en un coup d'œil
@@ -127,6 +132,10 @@ Voir `ARCHITECTURE.md §6` pour le tableau exhaustif. Quelques routes critiques 
 | `/api/payments/capture` | POST | Capture l'order après approbation côté PayPal. Vérifie que l'`orderId` appartient bien à l'utilisateur. |
 | `/api/payments/webhook` | POST | **`request.text()` pour le body brut** — vital pour `verifyWebhook` PayPal (filet de sécurité si le capture front échoue) |
 | `/api/editions/[id]` | PATCH | `isActive: true` désactive les autres dans une transaction |
+| `/api/admin/secret-santa` | GET/POST/DELETE | Statut (compteurs) / (re)lance le tirage / l'annule |
+| `/api/admin/secret-santa/notify` | POST | `{ target: "unrevealed" \| "all" }` — mail **sans** le nom, lien vers `/secret-santa` |
+| `/api/secret-santa` | GET | Nom du destinataire uniquement si déjà révélé |
+| `/api/secret-santa/reveal` | POST | Pose `revealedAt` et renvoie le nom |
 | `/api/admin/users` | DELETE | Supprime la **participation**, pas le User |
 
 Routes admin : chaque handler refait `prisma.user.findUnique` pour vérifier `role === "ADMIN"`. Pattern répété ~10× (cf. `REFACTOR.md`).

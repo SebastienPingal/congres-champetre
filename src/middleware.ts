@@ -16,7 +16,7 @@ export default auth((req) => {
   }
 
   // 🔒 Protect routes that require authentication
-  const protectedRoutes = ['/programme', '/presence', '/repas', '/conferences', '/paiement', '/dashboard', '/admin']
+  const protectedRoutes = ['/programme', '/presence', '/repas', '/conferences', '/paiement', '/secret-santa', '/dashboard', '/admin']
   const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route))
   
   if (isProtectedRoute && !req.auth) {

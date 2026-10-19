@@ -65,6 +65,8 @@ model User {
   participations     EditionParticipation[]
   mealRegistrations  MealRegistration[]
   paymentIntents     PaymentIntent[]
+  secretSantaGiving    SecretSantaAssignment[] @relation("SecretSantaGiver")
+  secretSantaReceiving SecretSantaAssignment[] @relation("SecretSantaReceiver")
 }
 
 model Edition {
@@ -83,6 +85,7 @@ model Edition {
   conferences    Conference[]
   participations EditionParticipation[]
   paymentIntents PaymentIntent[]
+  secretSantaAssignments SecretSantaAssignment[]
 }
 
 model EditionParticipation {
@@ -173,6 +176,25 @@ model MealRegistration {
   timeSlot TimeSlot @relation(fields: [timeSlotId], references: [id], onDelete: Cascade)
 
   @@unique([userId, timeSlotId])
+}
+
+// Tirage Secret Santa d'une édition : une ligne par donneur. Le tirage forme un
+// cycle unique (personne ne se tire soi-même). `revealedAt` est posé quand le
+// participant ouvre son cadeau pour la première fois.
+model SecretSantaAssignment {
+  id         String    @id @default(cuid())
+  editionId  String
+  giverId    String
+  receiverId String
+  revealedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  edition  Edition @relation(fields: [editionId], references: [id], onDelete: Cascade)
+  giver    User    @relation("SecretSantaGiver", fields: [giverId], references: [id], onDelete: Cascade)
+  receiver User    @relation("SecretSantaReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
+
+  @@unique([editionId, giverId])
+  @@unique([editionId, receiverId])
 }
 
 enum Role {

@@ -19,9 +19,11 @@ import {
   Moon,
   ChevronDown,
   ScrollText,
+  Gift,
   type LucideIcon,
 } from "lucide-react"
 import { useUserProfile } from "@/hooks/use-user-profile"
+import { useSecretSanta } from "@/hooks/use-secret-santa"
 import { useThemeMode } from "@/hooks/use-theme-mode"
 import { cn } from "@/lib/utils"
 import {
@@ -55,9 +57,9 @@ import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { IntentionLetterModal } from "@/features/onboarding/intention-letter-modal"
 
-export type SectionKey = "programme" | "presence" | "repas" | "conferences" | "paiement"
+export type SectionKey = "programme" | "presence" | "repas" | "conferences" | "paiement" | "secret-santa"
 
-type NavItem = { key: SectionKey; href: string; label: string; icon: LucideIcon }
+type NavItem = { key: SectionKey; href: string; label: string; icon: LucideIcon; dot?: boolean }
 
 export const NAV_ITEMS: NavItem[] = [
   { key: "programme",   href: "/programme",   label: "Programme",   icon: CalendarDays },
@@ -66,6 +68,20 @@ export const NAV_ITEMS: NavItem[] = [
   { key: "conferences", href: "/conferences", label: "Conférences", icon: Mic },
   { key: "paiement",    href: "/paiement",    label: "Paiement",    icon: CreditCard },
 ]
+
+// L'onglet n'apparaît qu'une fois le tirage fait ; une pastille signale un cadeau pas encore ouvert.
+function useNavItems(): NavItem[] {
+  const { data: secretSanta } = useSecretSanta()
+  if (!secretSanta?.assigned) return NAV_ITEMS
+  return [
+    ...NAV_ITEMS,
+    { key: "secret-santa", href: "/secret-santa", label: "Secret Santa", icon: Gift, dot: !secretSanta.revealedAt },
+  ]
+}
+
+function NavDot() {
+  return <span aria-hidden className="h-1.5 w-1.5 rounded-full animate-pulse" style={{ background: "#d34a3b" }} />
+}
 
 export const WHATSAPP_URL = "https://chat.whatsapp.com/DJSVxLFkb7J6svyoBsenQu?mode=gi_t"
 
@@ -98,9 +114,10 @@ function AdminBar() {
 }
 
 function NavLinks({ pathname, onNavigate }: { pathname: string | null; onNavigate?: () => void }) {
+  const items = useNavItems()
   return (
     <>
-      {NAV_ITEMS.map(item => {
+      {items.map(item => {
         const Icon = item.icon
         const active = pathname === item.href || pathname?.startsWith(item.href + "/")
         const link = (
@@ -119,6 +136,7 @@ function NavLinks({ pathname, onNavigate }: { pathname: string | null; onNavigat
           >
             <Icon width={15} height={15} />
             {item.label}
+            {item.dot && <NavDot />}
           </Link>
         )
         return link
@@ -140,6 +158,7 @@ export function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false)
   const [confirmLogout, setConfirmLogout] = useState(false)
   const { mode, setMode } = useThemeMode()
+  const navItems = useNavItems()
 
   if (!session) return null
 
@@ -183,7 +202,7 @@ export function Navbar() {
               </SheetHeader>
               <Separator />
               <nav className="flex flex-col gap-1 p-3 overflow-y-auto flex-1">
-                {NAV_ITEMS.map(item => {
+                {navItems.map(item => {
                   const Icon = item.icon
                   const active = pathname === item.href || pathname?.startsWith(item.href + "/")
                   return (
@@ -201,6 +220,7 @@ export function Navbar() {
                       >
                         <Icon width={17} height={17} />
                         {item.label}
+                        {item.dot && <NavDot />}
                       </Link>
                     </SheetClose>
                   )

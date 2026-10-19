@@ -9,6 +9,7 @@ import { ConferenceManager } from "@/components/admin/conference-manager"
 import { Users, UserCheck, CalendarRange } from "lucide-react"
 import { EditionManager } from "@/components/admin/edition-manager"
 import { ThemeSwitcher } from "@/components/admin/theme-switcher"
+import { SecretSantaManager } from "@/components/admin/secret-santa-manager"
 import { AppLoader } from "@/components/loaders/app-loader"
 import { useTimeSlots } from "@/hooks/use-time-slots"
 import { useConferences } from "@/hooks/use-conferences"
@@ -52,6 +53,7 @@ export default function AdminPage() {
     qc.invalidateQueries({ queryKey: queryKeys.conferences })
     qc.invalidateQueries({ queryKey: queryKeys.adminStats })
     qc.invalidateQueries({ queryKey: queryKeys.editions })
+    qc.invalidateQueries({ queryKey: queryKeys.adminSecretSanta })
   }
 
   if (isLoading) {
@@ -207,6 +209,8 @@ export default function AdminPage() {
         </Card>
 
         <ThemeSwitcher />
+
+        <SecretSantaManager />
 
         <div className="grid gap-6 lg:grid-cols-2">
           {/* Gestion des créneaux */}

@@ -6,4 +6,6 @@ export const queryKeys = {
   editions: ['editions'] as const,
   adminStats: ['admin', 'stats'] as const,
   adminUsers: ['admin', 'users'] as const,
+  secretSanta: ['secret-santa'] as const,
+  adminSecretSanta: ['admin', 'secret-santa'] as const,
 } as const
