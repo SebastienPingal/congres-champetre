@@ -90,9 +90,13 @@
   --warn-icon-bg: #f2d784;
   --red:          #d34a3b;
 
-  /* Couleur d'action (boutons, onglet actif, focus). = vert sauf thème Noël (rouge). */
+  /* Couleur d'action (boutons, sélections, focus) : vert dans tous les thèmes. */
   --brand:        var(--green);
   --brand-soft:   var(--green-soft);
+  /* Accent décoratif (onglet actif, icône de titre) : jamais sur une action.
+     = vert sauf thème Noël (rouge houx). */
+  --highlight:      var(--green);
+  --highlight-soft: var(--green-soft);
 }
 
 /* Chaque thème (choisi par l'admin, `data-theme`) a une variante claire et une
@@ -187,8 +191,8 @@
   --warn-border:  #e8cf86;
   --warn-icon-bg: #efd27e;
   --red:          #b3262e;
-  --brand:        #b3262e;
-  --brand-soft:   #f7dcd9;
+  --highlight:      #b3262e;
+  --highlight-soft: #f7dcd9;
 }
 
 [data-theme="noel"][data-mode="dark"] {
@@ -212,8 +216,8 @@
   --warn-border:  #5a4a28;
   --warn-icon-bg: #6b5530;
   --red:          #e5675e;
-  --brand:        #e5675e;
-  --brand-soft:   #3a2224;
+  --highlight:      #e5675e;
+  --highlight-soft: #3a2224;
 }
 
 :root {

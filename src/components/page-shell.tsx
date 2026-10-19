@@ -43,7 +43,7 @@ export function PageShell({ title, icon: Icon, children }: PageShellProps) {
       <AlertBanner user={user} meals={meals} />
 
       <div className="flex items-center gap-3">
-        <Icon className="h-7 w-7 lg:h-8 lg:w-8" style={{ color: "var(--brand)" }} />
+        <Icon className="h-7 w-7 lg:h-8 lg:w-8" style={{ color: "var(--highlight)" }} />
         <h1
           className="font-display"
           style={{

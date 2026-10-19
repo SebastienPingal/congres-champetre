@@ -130,8 +130,8 @@ function NavLinks({ pathname, onNavigate }: { pathname: string | null; onNavigat
               active ? "font-semibold" : "font-medium",
             )}
             style={{
-              color: active ? "var(--brand)" : "var(--ink-2)",
-              background: active ? "var(--brand-soft)" : "transparent",
+              color: active ? "var(--highlight)" : "var(--ink-2)",
+              background: active ? "var(--highlight-soft)" : "transparent",
             }}
           >
             <Icon width={15} height={15} />
@@ -214,8 +214,8 @@ export function Navbar() {
                           active ? "font-semibold" : "font-medium",
                         )}
                         style={{
-                          color: active ? "var(--brand)" : "var(--ink-2)",
-                          background: active ? "var(--brand-soft)" : "transparent",
+                          color: active ? "var(--highlight)" : "var(--ink-2)",
+                          background: active ? "var(--highlight-soft)" : "transparent",
                         }}
                       >
                         <Icon width={17} height={17} />
@@ -260,7 +260,7 @@ export function Navbar() {
               <button
                 type="button"
                 className="mt-1 flex items-center gap-1 bg-transparent cursor-pointer whitespace-nowrap font-sans text-[11px] sm:text-[12px] no-underline transition-colors hover:opacity-80 w-fit"
-                style={{ color: "var(--brand)" }}
+                style={{ color: "var(--highlight)" }}
               >
                 <ScrollText width={12} height={12} className="shrink-0" />
                 Lettre d&apos;intention
