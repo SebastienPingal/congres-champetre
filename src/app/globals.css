@@ -169,55 +169,55 @@
   --red:          #e06a55;
 }
 
-/* ── Noël : « Neige » (clair) / « Veillée » (sombre) ── */
+/* ── Noël : « Givre » (clair) / « Nuit étoilée » (sombre) ── */
 [data-theme="noel"] {
-  --page-bg:      #f6f1e7;
-  --paper:        #fbf8f1;
-  --paper-dark:   #1e2a22;
-  --surface:      #fffdf8;
-  --ink:          #1e2a22;
-  --ink-2:        #33423a;
-  --ink-3:        #5d6b60;
-  --line:         #e6dccb;
-  --line-2:       #cdbf9f;
-  --talk:         #b3262e;
-  --talk-soft:    #f7dcd9;
-  --meal:         #c8971f;
-  --meal-soft:    #f8ebc6;
-  --green:        #1f6b3f;
-  --green-soft:   #dcecd9;
-  --warn:         #9a6b00;
-  --warn-bg:      #fff3d0;
-  --warn-border:  #e8cf86;
-  --warn-icon-bg: #efd27e;
-  --red:          #b3262e;
-  --highlight:      #b3262e;
-  --highlight-soft: #f7dcd9;
+  --page-bg:      #fbfcf8;
+  --paper:        #fbfcf8;
+  --paper-dark:   #0f2418;
+  --surface:      #ffffff;
+  --ink:          #0f2418;
+  --ink-2:        #26382d;
+  --ink-3:        #56685c;
+  --line:         #e1e9e2;
+  --line-2:       #c3d3c7;
+  --talk:         #dc1f36;
+  --talk-soft:    #ffe1e5;
+  --meal:         #f2ae00;
+  --meal-soft:    #fff0bf;
+  --green:        #0b8a47;
+  --green-soft:   #d3f4e1;
+  --warn:         #9a6a00;
+  --warn-bg:      #fff5d1;
+  --warn-border:  #f1d27a;
+  --warn-icon-bg: #f7d873;
+  --red:          #dc1f36;
+  --highlight:      #dc1f36;
+  --highlight-soft: #ffe1e5;
 }
 
 [data-theme="noel"][data-mode="dark"] {
-  --page-bg:      #0f1a15;
-  --paper:        #14221b;
-  --paper-dark:   #f3ead6;
-  --surface:      #1b2c23;
-  --ink:          #f3ead6;
-  --ink-2:        #d4cdb9;
-  --ink-3:        #a3ad9f;
-  --line:         #24382d;
-  --line-2:       #36503f;
-  --talk:         #e5675e;
-  --talk-soft:    #3a2224;
-  --meal:         #e8c46a;
-  --meal-soft:    #3a3020;
-  --green:        #7cc490;
-  --green-soft:   #1f3a2a;
-  --warn:         #e9c66a;
-  --warn-bg:      #3a2f1a;
-  --warn-border:  #5a4a28;
-  --warn-icon-bg: #6b5530;
-  --red:          #e5675e;
-  --highlight:      #e5675e;
-  --highlight-soft: #3a2224;
+  --page-bg:      #071f16;
+  --paper:        #0a2a1d;
+  --paper-dark:   #f8f4e9;
+  --surface:      #0f3726;
+  --ink:          #f8f4e9;
+  --ink-2:        #dcd8cb;
+  --ink-3:        #9fb5a7;
+  --line:         #17473a;
+  --line-2:       #24604a;
+  --talk:         #ff4c5c;
+  --talk-soft:    #4d1620;
+  --meal:         #ffc83a;
+  --meal-soft:    #3e3110;
+  --green:        #2fd17a;
+  --green-soft:   #114530;
+  --warn:         #ffd166;
+  --warn-bg:      #3a2f10;
+  --warn-border:  #6b5520;
+  --warn-icon-bg: #7a6125;
+  --red:          #ff4c5c;
+  --highlight:      #ff4c5c;
+  --highlight-soft: #4d1620;
 }
 
 :root {
@@ -689,4 +689,15 @@
     var(--red) 0 10px, #fff 10px 20px,
     var(--green) 20px 30px, #fff 30px 40px
   );
+}
+
+/* Noël : petits fondus houx / sapin / or sur les cards et les listes encadrées,
+   en écho à la card Secret Santa (en plus discret). */
+[data-theme="noel"] [data-slot="card"]:not(.ss-festive),
+[data-theme="noel"] .bg-surface.border:not(.ss-festive),
+[data-theme="noel"] .bg-card.border:not(.ss-festive) {
+  background-image:
+    radial-gradient(circle at 0% 0%, color-mix(in oklab, var(--red) 9%, transparent), transparent 45%),
+    radial-gradient(circle at 100% 100%, color-mix(in oklab, var(--green) 11%, transparent), transparent 50%),
+    radial-gradient(circle at 100% 0%, color-mix(in oklab, var(--meal) 8%, transparent), transparent 35%);
 }
