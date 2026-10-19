@@ -60,6 +60,7 @@ export function ThemeSwitcher() {
         <CardTitle>Thème de l&apos;application</CardTitle>
         <CardDescription>
           Choisis l&apos;atmosphère visuelle appliquée à tout le site, pour tous les visiteurs.
+          Chaque thème a une variante claire et une sombre : chacun voit celle de son mode (menu du compte).
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-3">
@@ -73,18 +74,28 @@ export function ThemeSwitcher() {
                 key={id}
                 onClick={() => apply(id)}
                 disabled={pending !== null}
-                className={`flex flex-col gap-3 rounded-lg border p-3 text-left transition-shadow disabled:opacity-60 ${
+                className={`flex flex-col gap-2 rounded-lg border bg-surface p-2 text-left transition-shadow disabled:opacity-60 ${
                   isActive ? "ring-2 ring-primary" : "hover:shadow-md"
                 }`}
-                style={{ background: t.paper, color: t.ink, borderColor: t.line }}
               >
-                <div className="flex gap-1.5">
-                  <span className="h-4 w-4 rounded" style={{ background: t.ink }} />
-                  <span className="h-4 w-4 rounded" style={{ background: t.talk }} />
-                  <span className="h-4 w-4 rounded" style={{ background: t.meal }} />
-                  <span className="h-4 w-4 rounded border" style={{ background: t.bg, borderColor: t.line2 }} />
+                <div className="grid grid-cols-2 gap-1.5">
+                  {[t.light, t.dark].map((v) => (
+                    <div
+                      key={v.name}
+                      className="flex flex-col gap-2 rounded-md border p-2"
+                      style={{ background: v.bg, color: v.ink, borderColor: v.line }}
+                    >
+                      <div className="flex gap-1">
+                        <span className="h-3.5 w-3.5 rounded-sm" style={{ background: v.green }} />
+                        <span className="h-3.5 w-3.5 rounded-sm" style={{ background: v.talk }} />
+                        <span className="h-3.5 w-3.5 rounded-sm" style={{ background: v.meal }} />
+                        <span className="h-3.5 w-3.5 rounded-sm border" style={{ background: v.paper, borderColor: v.line }} />
+                      </div>
+                      <span className="font-mono text-[9px] uppercase tracking-wider opacity-80">{v.name}</span>
+                    </div>
+                  ))}
                 </div>
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between px-1">
                   <span className="font-semibold text-sm">{t.label}</span>
                   {isActive && <span className="text-[10px] uppercase tracking-wider opacity-70">Actif</span>}
                   {isPending && <span className="text-[10px] uppercase tracking-wider opacity-70">…</span>}

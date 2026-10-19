@@ -88,25 +88,15 @@
   --red:          #d34a3b;
 }
 
-[data-theme="vermeil"] {
-  --page-bg:      #dbc9a8;
-  --paper:        #f3e6cd;
-  --paper-dark:   #2a1810;
-  --surface:      #fbf3df;
-  --ink:          #2a1810;
-  --ink-2:        #33241a;
-  --ink-3:        #5c4832;
-  --line:         #dcc9a3;
-  --line-2:       #bfa676;
-  --talk:         #9a3927;
-  --talk-soft:    #f1d8ce;
-  --meal:         #a87b21;
-  --meal-soft:    #f1e0bf;
-  --green:        #5e6a2e;
-  --green-soft:   #e2e0bf;
-}
+/* Chaque thème (choisi par l'admin, `data-theme`) a une variante claire et une
+   sombre ; la variante suit le mode du visiteur (`data-mode`, cf. layout.tsx).
+   `:root` ci-dessus = Champêtre clair, repli par défaut.
+   ⚠ Une variante claire `[data-theme=X]` s'applique aussi en sombre (même
+   spécificité, déclarée après `[data-mode=dark]`) : chaque variante sombre
+   `[data-theme=X][data-mode=dark]` doit redéfinir TOUS les tokens de sa claire. */
 
-[data-theme="crepuscule"] {
+/* ── Champêtre sombre (ex-« Crépuscule ») — aussi le repli sombre ── */
+[data-mode="dark"] {
   --page-bg:      #191720;
   --paper:        #221f29;
   --paper-dark:   #faf6ea;
@@ -126,6 +116,93 @@
   --warn-bg:      #3a2f1a;
   --warn-border:  #5a4a28;
   --warn-icon-bg: #6b5530;
+  --red:          #e0705f;
+}
+
+/* ── Vermeil ── */
+[data-theme="vermeil"] {
+  --page-bg:      #dbc9a8;
+  --paper:        #f3e6cd;
+  --paper-dark:   #2a1810;
+  --surface:      #fbf3df;
+  --ink:          #2a1810;
+  --ink-2:        #33241a;
+  --ink-3:        #5c4832;
+  --line:         #dcc9a3;
+  --line-2:       #bfa676;
+  --talk:         #9a3927;
+  --talk-soft:    #f1d8ce;
+  --meal:         #a87b21;
+  --meal-soft:    #f1e0bf;
+  --green:        #5e6a2e;
+  --green-soft:   #e2e0bf;
+  --red:          #b43a26;
+}
+
+[data-theme="vermeil"][data-mode="dark"] {
+  --page-bg:      #170f0a;
+  --paper:        #20160f;
+  --paper-dark:   #f3e6cd;
+  --surface:      #2a1d14;
+  --ink:          #f3e6cd;
+  --ink-2:        #dccab0;
+  --ink-3:        #b09a7e;
+  --line:         #3a2a1e;
+  --line-2:       #554030;
+  --talk:         #e08a6e;
+  --talk-soft:    #3d241b;
+  --meal:         #d9a948;
+  --meal-soft:    #3a2c17;
+  --green:        #a9b56a;
+  --green-soft:   #2c2f1a;
+  --red:          #e06a55;
+}
+
+/* ── Noël : « Neige » (clair) / « Veillée » (sombre) ── */
+[data-theme="noel"] {
+  --page-bg:      #f6f1e7;
+  --paper:        #fbf8f1;
+  --paper-dark:   #1e2a22;
+  --surface:      #fffdf8;
+  --ink:          #1e2a22;
+  --ink-2:        #33423a;
+  --ink-3:        #5d6b60;
+  --line:         #e6dccb;
+  --line-2:       #cdbf9f;
+  --talk:         #b3262e;
+  --talk-soft:    #f7dcd9;
+  --meal:         #c8971f;
+  --meal-soft:    #f8ebc6;
+  --green:        #1f6b3f;
+  --green-soft:   #dcecd9;
+  --warn:         #9a6b00;
+  --warn-bg:      #fff3d0;
+  --warn-border:  #e8cf86;
+  --warn-icon-bg: #efd27e;
+  --red:          #b3262e;
+}
+
+[data-theme="noel"][data-mode="dark"] {
+  --page-bg:      #0f1a15;
+  --paper:        #14221b;
+  --paper-dark:   #f3ead6;
+  --surface:      #1b2c23;
+  --ink:          #f3ead6;
+  --ink-2:        #d4cdb9;
+  --ink-3:        #a3ad9f;
+  --line:         #24382d;
+  --line-2:       #36503f;
+  --talk:         #e5675e;
+  --talk-soft:    #3a2224;
+  --meal:         #e8c46a;
+  --meal-soft:    #3a3020;
+  --green:        #7cc490;
+  --green-soft:   #1f3a2a;
+  --warn:         #e9c66a;
+  --warn-bg:      #3a2f1a;
+  --warn-border:  #5a4a28;
+  --warn-icon-bg: #6b5530;
+  --red:          #e5675e;
 }
 
 :root {
@@ -291,7 +368,7 @@
 
   /* En crépuscule, atténuer le halo + désaturer le bouton pour qu'il ne crève
      pas l'écran sur le fond sombre. */
-  [data-theme="crepuscule"] .animate-whatsapp-pulse {
+  [data-mode="dark"] .animate-whatsapp-pulse {
     background: #1d8a52 !important;
     animation: whatsapp-pulse-dim 2.4s ease-in-out infinite;
   }
@@ -496,7 +573,47 @@
     background: #e7a91c;
   }
 
+  /* Bloc festif : liseré sucre d'orge, halos houx/sapin, flocons. Suit les
+     tokens du thème actif (--red, --green, --meal pour l'or). */
+  .ss-festive {
+    position: relative;
+    overflow: hidden;
+    border-color: color-mix(in oklab, var(--red) 30%, var(--line-2));
+    background:
+      radial-gradient(circle at 0% 0%, color-mix(in oklab, var(--red) 10%, transparent), transparent 45%),
+      radial-gradient(circle at 100% 100%, color-mix(in oklab, var(--green) 12%, transparent), transparent 50%),
+      var(--surface);
+  }
+  .ss-festive::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 6px;
+    pointer-events: none;
+    background: repeating-linear-gradient(
+      -45deg,
+      var(--red) 0 9px, var(--surface) 9px 18px,
+      var(--green) 18px 27px, var(--surface) 27px 36px
+    );
+  }
+  .ss-snow {
+    position: absolute;
+    color: var(--ink-3);
+    pointer-events: none;
+    animation: ss-snow-twinkle 3s ease-in-out infinite;
+  }
+  @keyframes ss-snow-twinkle {
+    0%, 100% { opacity: 0.15; }
+    50%      { opacity: 0.45; }
+  }
+  .ss-badge-red {
+    background: color-mix(in oklab, var(--red) 14%, var(--surface));
+    color: var(--red);
+    border-color: color-mix(in oklab, var(--red) 35%, transparent);
+  }
+
   @media (prefers-reduced-motion: reduce) {
+    .ss-snow { animation: none; opacity: 0.3; }
     .ss-gift-idle, .ss-gift-shake, .ss-rays, .ss-sparkle { animation: none; }
     .ss-lid-pop, .ss-box-drop { animation: none; opacity: 0; }
     .ss-card-rise { animation: none; }

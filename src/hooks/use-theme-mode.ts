@@ -20,7 +20,7 @@ function systemPrefersDark(): boolean {
 
 function applyMode(mode: ThemeMode) {
   const effective = mode === "system" ? (systemPrefersDark() ? "dark" : "light") : mode
-  document.documentElement.setAttribute("data-theme", effective === "dark" ? "crepuscule" : "champetre")
+  document.documentElement.setAttribute("data-mode", effective)
 }
 
 /**

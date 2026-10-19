@@ -4,6 +4,7 @@ import { useState } from "react"
 import { Gift, Mail, RefreshCw, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { Snowflakes } from "@/components/snowflakes"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   Dialog,
@@ -87,10 +88,11 @@ export function SecretSantaManager() {
   const onDrawClick = () => (hasDraw ? setPending("draw") : run("draw"))
 
   return (
-    <Card>
+    <Card className="ss-festive">
+      <Snowflakes />
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Gift className="h-5 w-5" />
+          <Gift className="h-5 w-5" style={{ color: "var(--red)" }} />
           Secret Santa
         </CardTitle>
         <CardDescription>
@@ -108,12 +110,13 @@ export function SecretSantaManager() {
                 <>
                   <Badge>Tirage effectué</Badge>
                   <span className="text-muted-foreground">
-                    {status.total} participants · {status.revealed} cadeau(x) ouvert(s) · {unrevealed} en attente
+                    {status.total} participants · {status.revealed} cadeau(x) ouvert(s)
                   </span>
+                  {unrevealed > 0 && <Badge variant="outline" className="ss-badge-red">{unrevealed} en attente</Badge>}
                 </>
               ) : (
                 <>
-                  <Badge variant="outline">Pas encore de tirage</Badge>
+                  <Badge variant="outline" className="ss-badge-red">Pas encore de tirage</Badge>
                   <span className="text-muted-foreground">{status.attendingCount} participants présents</span>
                 </>
               )}
@@ -150,7 +153,7 @@ export function SecretSantaManager() {
                     <Mail />
                     Prévenir tout le monde ({status.total})
                   </Button>
-                  <Button variant="ghost" onClick={() => setPending("cancel")} disabled={busy}>
+                  <Button variant="ghost" className="text-destructive hover:text-destructive" onClick={() => setPending("cancel")} disabled={busy}>
                     <Trash2 />
                     Annuler le tirage
                   </Button>

@@ -56,14 +56,14 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const theme = await getActiveTheme();
-  // Pre-hydration theme resolution:
+  // Pre-hydration mode resolution (`data-mode`, le `data-theme` vient de l'édition) :
   // - localStorage 'theme-mode' = 'light' | 'dark' → applique explicitement
   // - sinon (absent ou 'system') → suit prefers-color-scheme (default).
   // Le listener matchMedia garde la page synchronisée tant qu'aucune
   // préférence explicite n'est posée.
   const themeBoot = `(()=>{try{
     var d=document.documentElement;
-    var apply=function(mode){d.setAttribute('data-theme', mode==='dark'?'crepuscule':'champetre');};
+    var apply=function(mode){d.setAttribute('data-mode', mode==='dark'?'dark':'light');};
     var m=localStorage.getItem('theme-mode');
     if(m==='dark'||m==='light'){apply(m);return;}
     var mq=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)');
@@ -74,7 +74,7 @@ export default async function RootLayout({
     }
   }catch(e){}})();`;
   return (
-    <html lang="fr" data-theme={theme}>
+    <html lang="fr" data-theme={theme} data-mode="light" suppressHydrationWarning>
       <body
         className={`${manrope.variable} ${jetbrains.variable} ${cormorant.variable} ${newsreader.variable} antialiased`}
       >

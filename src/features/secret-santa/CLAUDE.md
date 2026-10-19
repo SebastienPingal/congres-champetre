@@ -16,3 +16,5 @@ Révélation du Secret Santa côté participant (page `/secret-santa`).
 **Animations :** keyframes `ss-*` dans `src/app/globals.css` (bloc « Secret Santa »), neutralisées sous `prefers-reduced-motion`.
 
 **Navbar :** l'onglet « Secret Santa » n'apparaît que si `assigned`, avec une pastille tant que le cadeau n'est pas ouvert.
+
+**Habillage festif :** les blocs portent `.ss-festive` (liseré sucre d'orge, halos, `<Snowflakes />` de `src/components/snowflakes.tsx`) et les badges « à faire » `.ss-badge-red`. Tout dérive des tokens du thème actif (`--red`, `--green`, `--surface`), donc ça suit Champêtre / Vermeil / Noël en clair comme en sombre.

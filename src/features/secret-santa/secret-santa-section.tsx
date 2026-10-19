@@ -5,6 +5,7 @@ import { RotateCcw } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { AppLoader } from "@/components/loaders/app-loader"
+import { Snowflakes } from "@/components/snowflakes"
 import { useRevealSecretSanta, useSecretSanta } from "@/hooks/use-secret-santa"
 import { GiftReveal, type GiftPhase } from "./gift-reveal"
 
@@ -28,7 +29,8 @@ export function SecretSantaSection() {
 
   if (error || !data?.assigned) {
     return (
-      <section className="flex flex-col items-center gap-3 rounded-lg border bg-surface px-6 py-12 text-center">
+      <section className="ss-festive flex flex-col items-center gap-3 rounded-lg border px-6 py-12 text-center">
+        <Snowflakes />
         <span className="text-5xl" aria-hidden>🎁</span>
         <p className="font-display text-2xl" style={{ color: "var(--ink)" }}>
           Le tirage n&apos;a pas encore eu lieu
@@ -69,12 +71,13 @@ export function SecretSantaSection() {
             ? "Prépare-lui une jolie surprise pour le weekend !"
             : "Un cadeau t'attend. Clique dessus pour découvrir à qui tu vas faire une surprise."}
         </p>
-        <Badge variant={alreadyRevealed ? "default" : "outline"}>
+        <Badge variant={alreadyRevealed ? "default" : "outline"} className={alreadyRevealed ? undefined : "ss-badge-red"}>
           {alreadyRevealed ? "Cadeau ouvert" : "À ouvrir"}
         </Badge>
       </div>
 
-      <div className="relative overflow-hidden rounded-lg border bg-surface">
+      <div className="ss-festive rounded-lg border">
+        <Snowflakes />
         <GiftReveal
           phase={currentPhase}
           receiverName={data.receiverName ?? null}

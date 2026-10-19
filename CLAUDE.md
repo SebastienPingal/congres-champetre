@@ -170,6 +170,8 @@ if (me?.role !== "ADMIN") return NextResponse.json({ error: "⚠️ Accès refus
 
 **Fermeture des inscriptions** : ⚠ **désactivée pour le moment** — `REGISTRATION_DEADLINE_ENABLED = false` dans `src/lib/edition.ts` fait renvoyer `null` à `getRegistrationDeadline()` et `false` à `isRegistrationClosed()`, donc les inscriptions restent ouvertes indéfiniment et aucune échéance n'est affichée. Repasser la constante à `true` réactive le mécanisme décrit ci-dessous. Quand elle est active : 7 jours avant le dernier jour de l'édition (`edition.endDate`, avec repli sur `edition.startDate` si pas de date de fin). Tout endpoint qui modifie la participation (`/api/user/profile` PATCH, `/api/meals` POST, `/api/onboarding` POST, `/api/conferences` POST + `[id]` PATCH/DELETE) renvoie `409` après ce délai pour les non-admins. L'UI passe en read-only et affiche un badge « Inscriptions fermées ». `/api/payments/order` et `/api/payments/capture` restent ouverts pour permettre aux utilisateurs déjà inscrits de payer en retard.
 
+**Thèmes** : `Edition.theme` (`champetre | vermeil | noel`, `src/lib/themes.ts`) → `data-theme` sur `<html>`, choisi par l'admin. Le mode clair/sombre du visiteur → `data-mode` (`useThemeMode`, script de boot dans `layout.tsx`). Chaque thème a ses deux variantes dans `globals.css` (`[data-theme=X]` et `[data-theme=X][data-mode=dark]`, repli sombre `[data-mode=dark]` = ex-Crépuscule). Ne jamais écrire `data-theme` depuis le mode.
+
 **Email** : passer par `sendBroadcastEmail()`. Le markdown est converti via un parser maison (lignes, listes `-`/`*`, `**bold**`, `*italic*`, `[link](url)`, `` `code` ``) avec `escapeHtml` au préalable.
 
 **i18n** : strings user-facing en français. Variables, fonctions, types : anglais.
