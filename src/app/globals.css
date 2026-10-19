@@ -664,16 +664,17 @@
   }
 }
 
-/* ── Décor du thème Noël : halos houx/sapin sur le fond, liseré sucre d'orge sous la navbar ── */
+/* ── Décor du thème Noël : fondu diagonal houx → sapin sur le fond, liseré sucre d'orge sous la navbar ── */
 .app-shell { background: var(--paper); }
 [data-theme="noel"] body,
 [data-theme="noel"] .app-shell {
   background:
-    radial-gradient(ellipse 55% 50% at 0% 0%, color-mix(in oklab, var(--red) 16%, transparent), transparent 70%),
-    radial-gradient(ellipse 45% 40% at 100% 0%, color-mix(in oklab, var(--meal) 13%, transparent), transparent 70%),
-    radial-gradient(ellipse 60% 50% at 100% 100%, color-mix(in oklab, var(--green) 17%, transparent), transparent 70%),
-    radial-gradient(ellipse 45% 40% at 0% 100%, color-mix(in oklab, var(--meal) 9%, transparent), transparent 70%),
-    var(--paper);
+    linear-gradient(
+      135deg,
+      color-mix(in oklab, var(--red) 13%, var(--paper)) 0%,
+      var(--paper) 50%,
+      color-mix(in oklab, var(--green) 14%, var(--paper)) 100%
+    );
   background-attachment: fixed;
 }
 .site-header { position: relative; }
