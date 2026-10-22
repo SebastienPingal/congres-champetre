@@ -361,7 +361,7 @@ export default async function LandingPage() {
           <Ornament lineWidth={56} gap={20}>
             <HeroFleuron tone="green" />
             <span style={{ fontFamily: "var(--font-newsreader), serif", fontStyle: "italic", fontSize: 18, color: "var(--ink-2)", fontWeight: 500 }}>
-              où l&apos;on raconte
+              où l&apos;on partage
             </span>
             <HeroFleuron tone="red" />
           </Ornament>
