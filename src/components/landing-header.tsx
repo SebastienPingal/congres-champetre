@@ -78,11 +78,11 @@ export function LandingHeader({ edition }: { edition: string }) {
               <Separator className="my-2" />
               <SheetClose asChild>
                 <Link
-                  href="/auth/signin"
+                  href="/programme"
                   className="flex items-center justify-center gap-2 px-3 py-3 rounded-lg no-underline font-sans text-[14px] font-semibold"
                   style={{ background: "var(--ink)", color: "var(--paper)" }}
                 >
-                  En savoir plus
+                  Accéder à l&apos;événement
                   <ChevIcon size={14} />
                 </Link>
               </SheetClose>
@@ -123,11 +123,11 @@ export function LandingHeader({ edition }: { edition: string }) {
         <ThemeToggle className="shrink-0" />
 
         <Link
-          href="/auth/signin"
+          href="/programme"
           className="hidden sm:inline-flex items-center gap-2 rounded-[10px] px-4 py-2.5 no-underline font-sans font-semibold text-[13px] shrink-0 whitespace-nowrap"
           style={{ background: "var(--ink)", color: "var(--paper)" }}
         >
-          En savoir plus
+          Accéder à l&apos;événement
           <ChevIcon size={14} />
         </Link>
       </div>

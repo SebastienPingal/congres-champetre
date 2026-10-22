@@ -419,14 +419,14 @@ export default async function LandingPage() {
           </div>
 
           <div style={{ marginTop: 32, display: "flex", justifyContent: "center", gap: 12, flexWrap: "wrap" }}>
-            <Link href="/auth/signin" style={{
+            <Link href="/programme" style={{
               display: "inline-flex", alignItems: "center", gap: 10,
               background: "var(--ink)", color: "var(--paper)",
               padding: "14px 24px", borderRadius: 12,
               fontFamily: "var(--font-manrope), sans-serif", fontWeight: 600, fontSize: 14,
               textDecoration: "none",
             }}>
-              En savoir plus
+              Accéder à l&apos;événement
               <ChevIcon size={15} />
             </Link>
             <a href="#concept" style={{
@@ -686,14 +686,14 @@ export default async function LandingPage() {
             Quelques minutes pour nous rejoindre — et, si l&apos;envie te prend, proposer un récit.
           </div>
           <div style={{ marginTop: 36, display: "flex", justifyContent: "center", gap: 12, flexWrap: "wrap" }}>
-            <Link href="/auth/signin" style={{
+            <Link href="/programme" style={{
               display: "inline-flex", alignItems: "center", gap: 10,
               background: "var(--paper)", color: "var(--paper-dark)",
               padding: "16px 28px", borderRadius: 12,
               fontFamily: "var(--font-manrope), sans-serif", fontWeight: 600, fontSize: 15,
               textDecoration: "none",
             }}>
-              En savoir plus
+              Accéder à l&apos;événement
               <ChevIcon size={16} />
             </Link>
             <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer" style={{
