@@ -426,7 +426,7 @@ export default async function LandingPage() {
               fontFamily: "var(--font-manrope), sans-serif", fontWeight: 600, fontSize: 14,
               textDecoration: "none",
             }}>
-              Accéder à l&apos;événement
+              Voir le programme
               <ChevIcon size={15} />
             </Link>
             <a href="#concept" style={{
@@ -693,7 +693,7 @@ export default async function LandingPage() {
               fontFamily: "var(--font-manrope), sans-serif", fontWeight: 600, fontSize: 15,
               textDecoration: "none",
             }}>
-              Accéder à l&apos;événement
+              Voir le programme
               <ChevIcon size={16} />
             </Link>
             <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer" style={{
