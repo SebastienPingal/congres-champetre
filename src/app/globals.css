@@ -193,6 +193,9 @@
   --red:          #dc1f36;
   --highlight:      #dc1f36;
   --highlight-soft: #ffe1e5;
+  /* Halo du hero de la landing : houx en haut à gauche, sapin en bas à droite */
+  --hero-glow-a:    color-mix(in srgb, var(--red) 12%, transparent);
+  --hero-glow-b:    color-mix(in srgb, var(--green) 12%, transparent);
 }
 
 [data-theme="noel"][data-mode="dark"] {

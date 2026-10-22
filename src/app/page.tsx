@@ -347,8 +347,8 @@ export default async function LandingPage() {
         }} />
         <div aria-hidden style={{
           position: "absolute", inset: 0, pointerEvents: "none",
-          background: `radial-gradient(ellipse at 12% 0%, rgba(201,168,107,0.10), transparent 55%),
-                       radial-gradient(ellipse at 95% 100%, rgba(106,76,184,0.08), transparent 55%)`,
+          background: `radial-gradient(ellipse at 12% 0%, var(--hero-glow-a, rgba(201,168,107,0.10)), transparent 55%),
+                       radial-gradient(ellipse at 95% 100%, var(--hero-glow-b, rgba(106,76,184,0.08)), transparent 55%)`,
         }} />
         <div style={{ position: "relative", maxWidth: 1080, margin: "0 auto", textAlign: "center" }}>
           <div style={{
