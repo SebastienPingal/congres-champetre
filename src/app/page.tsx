@@ -459,18 +459,16 @@ export default async function LandingPage() {
             color: "var(--ink)", textAlign: "left", maxWidth: 720, margin: "0 auto",
             textWrap: "pretty",
           }}>
-            <div style={{ margin: 0, display: "flex", gap: 22, alignItems: "flex-start" }}>
-              <div style={{ flexShrink: 0, marginTop: 4 }}>
+            <div style={{ margin: 0 }}>
+              <div style={{ float: "left", margin: "6px 18px 0 0" }}>
                 <IlluminatedCapital letter="C" />
               </div>
-              <div>
-                <span style={{ fontFamily: "var(--font-cormorant), serif", fontWeight: 500 }}>haque</span> édition, nous vous invitons chez nous, à Veneux-les-Sablons,
-                pour partager autour des sujets qui nous passionnent. Le principe est
-                simple&nbsp;: <em>n&apos;importe qui peut animer une petite conférence</em>,
-                de 30 à 45 minutes, sur un sujet de son choix.
-              </div>
+              haque édition, nous vous invitons chez nous, à Veneux-les-Sablons,
+              pour partager autour des sujets qui nous passionnent. Le principe est
+              simple&nbsp;: <em>n&apos;importe qui peut animer une petite conférence</em>,
+              de 30 à 45 minutes, sur un sujet de son choix.
             </div>
-            <div style={{ margin: "22px 0 0" }}>
+            <div style={{ margin: "22px 0 0", clear: "both" }}>
               L&apos;idée est de <strong style={{ fontWeight: 600 }}>créer du lien</strong>
               {" "}entre nous via l&apos;expression et l&apos;écoute, et ainsi s&apos;offrir
               une occasion de se rencontrer différemment, au cours d&apos;un week-end de
