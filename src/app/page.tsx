@@ -148,12 +148,12 @@ async function getLandingData(): Promise<LandingData> {
 }
 
 const SPARKS = [
-  { title: "Mythes", note: "Les origines d'un peuple, d'un lieu, d'une famille…" },
-  { title: "Créatures du folklore", note: "Bêtes étranges, petit peuple, et présences mystérieuses." },
-  { title: "Légendes urbaines", note: "Les rumeurs tenaces qu'on raconte à voix basse au coin du feu." },
-  { title: "Contes & morale", note: "Pourquoi raconte-t-on encore Perrault, Andersen, les frères Grimm ?" },
-  { title: "Récits familiaux", note: "Cette histoire qui a marqué ta lignée, et qui vit encore à travers toi." },
-  { title: "Mensonges & vérités", note: "Ce qu'on choisit de croire, et pourquoi." },
+  { title: "Solstice", note: "La nuit la plus longue de l'année, mystère et folklore autour de ce moment spécial." },
+  { title: "Grands froids", note: "Le grand hiver de 1709, la retraite de Russie, les expéditions polaires : quand l'hiver entre dans l'histoire." },
+  { title: "Veillées", note: "Au coin de la cheminée, à l'abri dans la maison, on se raconte que la grande nuit de l'année fait parfois naître en nous quelques craintes…" },
+  { title: "Fêtes & traditions", note: "Avent, Sainte-Lucie, Noël, Nouvel An : les rites qui ponctuent la saison." },
+  { title: "Hivers de famille", note: "Le Noël dont on parle encore, l'hiver où tout a changé : l'occasion de partager une histoire personnelle." },
+  { title: "Tables d'hiver", note: "Soupes, vin chaud, ragoûts, ce qu'on mange pour tenir jusqu'au printemps." },
 ]
 
 const STEPS = [
