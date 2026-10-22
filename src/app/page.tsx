@@ -5,6 +5,7 @@
 
 import Link from "next/link"
 import { LandingHeader } from "@/components/landing-header"
+import { Snowfall } from "@/components/snowfall"
 import { WHATSAPP_URL } from "@/components/navbar"
 import { prisma } from "@/lib/prisma"
 
@@ -312,6 +313,7 @@ export default async function LandingPage() {
     }}>
       {/* ── Header (responsive, sheet drawer en mobile) ── */}
       <LandingHeader edition={EDITION} />
+      <Snowfall />
 
       {/* ── Hero ── */}
       <section style={{ position: "relative", padding: "96px 32px 88px", borderBottom: "1px solid var(--line)", overflow: "hidden" }}>

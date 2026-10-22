@@ -693,3 +693,37 @@
     var(--green) 20px 30px, #fff 30px 40px
   );
 }
+
+/* ── Neige de la landing (`<Snowfall />`) : flocons ronds, bleutés en clair pour rester visibles sur fond blanc ── */
+.snowfall {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  overflow: hidden;
+  pointer-events: none;
+  --flake: color-mix(in oklab, #b9d3e6 75%, var(--ink-3));
+}
+[data-mode="dark"] .snowfall { --flake: #ffffff; }
+.snowfall-flake {
+  position: absolute;
+  top: -10px;
+  left: var(--x);
+  width: var(--size);
+  height: var(--size);
+  border-radius: 50%;
+  background: var(--flake);
+  box-shadow: 0 0 4px var(--flake);
+  opacity: var(--opacity);
+  animation-name: snowfall;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  will-change: transform;
+}
+@keyframes snowfall {
+  0%   { transform: translate3d(0, 0, 0); }
+  50%  { transform: translate3d(var(--drift), 55vh, 0); }
+  100% { transform: translate3d(0, 110vh, 0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .snowfall { display: none; }
+}
