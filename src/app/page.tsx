@@ -148,14 +148,26 @@ async function getLandingData(): Promise<LandingData> {
   }
 }
 
-// Titre du hero : en thème Noël, une copie blanche décalée vers le haut
-// (`::before`, cf. `.snowy` dans globals.css) dépasse du haut des lettres
-// comme une couche de neige. Sans effet dans les autres thèmes.
-function SnowyText({ text }: { text: string }) {
+// Titre du hero en thème Noël : premier mot en vert, la suite en rouge, en
+// aplats (cf. `.xmas-*` dans globals.css). Sans effet dans les autres thèmes.
+function TwoToneTitle({ text }: { text: string }) {
+  const i = text.indexOf(" ")
+  if (i < 0) return <span className="xmas-green">{text}</span>
   return (
-    <span className="snowy" data-text={text}>
-      <span className="snowy-ink">{text}</span>
-    </span>
+    <>
+      <span className="xmas-green">{text.slice(0, i)}</span>
+      <span className="xmas-red">{text.slice(i)}</span>
+    </>
+  )
+}
+
+// Fleuron qui devient un flocon en thème Noël.
+function HeroFleuron({ tone }: { tone: "green" | "red" }) {
+  return (
+    <>
+      <span className="noel-hide" style={{ display: "inline-flex" }}><Fleuron size={10} /></span>
+      <span className={`noel-only xmas-${tone}`} aria-hidden style={{ fontSize: 14, lineHeight: 1 }}>❄</span>
+    </>
   )
 }
 
@@ -347,11 +359,11 @@ export default async function LandingPage() {
           </div>
 
           <Ornament lineWidth={56} gap={20}>
-            <Fleuron size={10} />
+            <HeroFleuron tone="green" />
             <span style={{ fontFamily: "var(--font-newsreader), serif", fontStyle: "italic", fontSize: 18, color: "var(--ink-2)", fontWeight: 500 }}>
               où l&apos;on raconte
             </span>
-            <Fleuron size={10} />
+            <HeroFleuron tone="red" />
           </Ornament>
 
           <h1 style={{
@@ -362,14 +374,14 @@ export default async function LandingPage() {
           }}>
             {NAME_PARTS.right ? (
               <>
-                <SnowyText text={NAME_PARTS.left} /><br />
-                <span style={{ fontStyle: "italic", fontWeight: 400, color: "var(--talk)" }}>
-                  <SnowyText text={`${NAME_PARTS.sep?.trim()}\u00a0${NAME_PARTS.right}`} />
+                <span className="xmas-green">{NAME_PARTS.left}</span><br />
+                <span className="xmas-red" style={{ fontStyle: "italic", fontWeight: 400, color: "var(--talk)" }}>
+                  {NAME_PARTS.sep?.trim()}&nbsp;{NAME_PARTS.right}
                 </span>
               </>
             ) : (
               <span style={{ fontStyle: "italic", fontWeight: 400, color: "var(--talk)" }}>
-                <SnowyText text={NAME_PARTS.left} />
+                <TwoToneTitle text={NAME_PARTS.left} />
               </span>
             )}
           </h1>
