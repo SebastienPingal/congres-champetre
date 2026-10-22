@@ -148,6 +148,17 @@ async function getLandingData(): Promise<LandingData> {
   }
 }
 
+// Titre du hero : en thème Noël, une copie blanche décalée vers le haut
+// (`::before`, cf. `.snowy` dans globals.css) dépasse du haut des lettres
+// comme une couche de neige. Sans effet dans les autres thèmes.
+function SnowyText({ text }: { text: string }) {
+  return (
+    <span className="snowy" data-text={text}>
+      <span className="snowy-ink">{text}</span>
+    </span>
+  )
+}
+
 const SPARKS = [
   { title: "Solstice", note: "La nuit la plus longue de l'année, mystère et folklore autour de ce moment spécial." },
   { title: "Grands froids", note: "Le grand hiver de 1709, la retraite de Russie, les expéditions polaires : quand l'hiver entre dans l'histoire." },
@@ -351,13 +362,15 @@ export default async function LandingPage() {
           }}>
             {NAME_PARTS.right ? (
               <>
-                {NAME_PARTS.left}<br />
+                <SnowyText text={NAME_PARTS.left} /><br />
                 <span style={{ fontStyle: "italic", fontWeight: 400, color: "var(--talk)" }}>
-                  {NAME_PARTS.sep?.trim()}&nbsp;{NAME_PARTS.right}
+                  <SnowyText text={`${NAME_PARTS.sep?.trim()}\u00a0${NAME_PARTS.right}`} />
                 </span>
               </>
             ) : (
-              <span style={{ fontStyle: "italic", fontWeight: 400, color: "var(--talk)" }}>{NAME_PARTS.left}</span>
+              <span style={{ fontStyle: "italic", fontWeight: 400, color: "var(--talk)" }}>
+                <SnowyText text={NAME_PARTS.left} />
+              </span>
             )}
           </h1>
 

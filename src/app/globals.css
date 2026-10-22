@@ -702,7 +702,9 @@
   overflow: hidden;
   pointer-events: none;
   --flake: color-mix(in oklab, #b9d3e6 75%, var(--ink-3));
+  display: none;
 }
+[data-theme="noel"] .snowfall { display: block; }
 [data-mode="dark"] .snowfall { --flake: #ffffff; }
 .snowfall-flake {
   position: absolute;
@@ -724,6 +726,49 @@
   50%  { transform: translate3d(var(--drift), 55vh, 0); }
   100% { transform: translate3d(0, 110vh, 0); }
 }
+
+/* ── Titre du hero en thème Noël (`<SnowyText />`) : neige posée sur les lettres + dégradé houx → or → sapin ── */
+[data-theme="noel"] .snowy {
+  position: relative;
+  display: inline-block;
+  isolation: isolate;
+}
+[data-theme="noel"] .snowy::before {
+  content: attr(data-text);
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  color: #ffffff;
+  -webkit-text-fill-color: #ffffff;
+  transform: translateY(-0.045em);
+  /* Liseré bleuté : sans lui la neige disparaît sur le fond blanc du thème clair. */
+  filter: drop-shadow(0 0 1px rgba(60, 95, 125, 0.55));
+  pointer-events: none;
+}
+[data-theme="noel"] .snowy-ink {
+  /* Padding/marge négative : le fond couvre les débords de l'italique sans décaler la mise en page. */
+  padding: 0.08em 0.12em;
+  margin: 0 -0.12em;
+  background: linear-gradient(
+    100deg,
+    var(--red) 0%,
+    color-mix(in oklab, var(--red) 55%, var(--meal)) 30%,
+    var(--green) 55%,
+    color-mix(in oklab, var(--red) 55%, var(--meal)) 80%,
+    var(--red) 100%
+  );
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: snowy-shimmer 14s ease-in-out infinite alternate;
+}
+@keyframes snowy-shimmer {
+  from { background-position: 0% 50%; }
+  to   { background-position: 100% 50%; }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .snowfall { display: none; }
+  .snowfall { display: none !important; }
+  [data-theme="noel"] .snowy-ink { animation: none; }
 }
