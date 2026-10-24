@@ -98,6 +98,7 @@ export async function POST(req: Request) {
     }
 
     let recipients: string[] = []
+    let blacklistedCount = 0
 
     if (parsed.data.sendToAdminOnly) {
       const adminEmail = user.email?.trim()
@@ -184,6 +185,17 @@ export async function POST(req: Request) {
       }
 
       recipients = recipients.filter((email) => email.trim().length > 0)
+
+      // Comptes blacklistés : exclus de tous les envois, quel que soit le filtre.
+      // Le test admin (branche ci-dessus) n'est pas concerné.
+      const blacklisted = await prisma.user.findMany({
+        where: { emailBlacklisted: true },
+        select: { email: true },
+      })
+      const blacklistedEmails = new Set(blacklisted.map((u) => u.email))
+      const before = recipients.length
+      recipients = recipients.filter((email) => !blacklistedEmails.has(email))
+      blacklistedCount = before - recipients.length
     }
 
     if (recipients.length === 0) {
@@ -203,6 +215,7 @@ export async function POST(req: Request) {
       total: result.total,
       sent: result.sent,
       failed: result.failed,
+      blacklisted: blacklistedCount,
       errors: result.errors.slice(0, 20),
     })
   } catch (error) {

@@ -26,6 +26,7 @@ type SendResponse = {
   total: number
   sent: number
   failed: number
+  blacklisted?: number
   errors?: Array<{ email: string; error: string }>
 }
 
@@ -278,6 +279,7 @@ export default function AdminEmailsPage() {
                 </Button>
                 <p className="text-sm text-muted-foreground">
                   Test admin puis envoi global: un email est envoyé individuellement à chaque destinataire.
+                  Les comptes blacklistés (cf. Utilisateurs) sont exclus.
                 </p>
               </div>
             </form>
@@ -304,6 +306,9 @@ export default function AdminEmailsPage() {
               <p>📨 Total ciblé: {result.total}</p>
               <p>✅ Envoyés: {result.sent}</p>
               <p>❌ En échec: {result.failed}</p>
+              {!!result.blacklisted && (
+                <p>🚫 Exclus (blacklist): {result.blacklisted}</p>
+              )}
               {Array.isArray(result.errors) && result.errors.length > 0 && (
                 <div className="flex flex-col gap-1">
                   <p className="font-medium">Erreurs (max 20):</p>

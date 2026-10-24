@@ -25,6 +25,7 @@ export async function GET() {
         role: true,
         wantsToSpeak: true,
         lastLoginAt: true,
+        emailBlacklisted: true,
         createdAt: true,
         updatedAt: true,
         participations: {
@@ -79,6 +80,7 @@ export async function GET() {
         lastLoginAt: u.lastLoginAt,
         hasLoggedInSinceEdition:
           u.lastLoginAt != null && u.lastLoginAt >= activeEdition.createdAt,
+        emailBlacklisted: u.emailBlacklisted,
         createdAt: u.createdAt,
         updatedAt: p?.updatedAt ?? u.updatedAt,
       }
@@ -159,9 +161,10 @@ export async function PATCH(req: Request) {
       return NextResponse.json({ error: "Requête invalide" }, { status: 400 })
     }
 
-    const { userId, name, hasPaid, willPayInCash, mealStatusUpdate } = body as {
+    const { userId, name, emailBlacklisted, hasPaid, willPayInCash, mealStatusUpdate } = body as {
       userId?: string
       name?: string
+      emailBlacklisted?: boolean
       hasPaid?: boolean
       willPayInCash?: boolean
       mealStatusUpdate?: { timeSlotId: string; status: "PRESENT" | "ABSENT" | null }
@@ -189,6 +192,20 @@ export async function PATCH(req: Request) {
         where: { id: userId },
         data: { name: trimmed },
         select: { id: true, name: true },
+      })
+      return NextResponse.json(updatedUser)
+    }
+
+    // Blacklist mail : porte aussi sur le User, indépendante de l'édition.
+    if (typeof emailBlacklisted === "boolean") {
+      const user = await prisma.user.findUnique({ where: { id: userId }, select: { id: true } })
+      if (!user) {
+        return NextResponse.json({ error: "Utilisateur introuvable" }, { status: 404 })
+      }
+      const updatedUser = await prisma.user.update({
+        where: { id: userId },
+        data: { emailBlacklisted },
+        select: { id: true, emailBlacklisted: true },
       })
       return NextResponse.json(updatedUser)
     }

@@ -24,6 +24,8 @@ export async function POST(req: Request) {
       where: {
         editionId: edition.id,
         ...(parsed.data.target === "unrevealed" ? { revealedAt: null } : {}),
+        // Les comptes blacklistés ne reçoivent aucun mail admin.
+        giver: { emailBlacklisted: false },
       },
       select: { giver: { select: { email: true } } },
     })

@@ -23,6 +23,7 @@ export interface AdminUserRow {
   mealTotal: number
   lastLoginAt: string | null
   hasLoggedInSinceEdition: boolean
+  emailBlacklisted: boolean
   createdAt: string
   updatedAt: string
 }

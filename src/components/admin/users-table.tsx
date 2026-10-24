@@ -48,6 +48,7 @@ type ColumnKey =
   | "hasPaid"
   | "willPayInCash"
   | "loggedIn"
+  | "emailBlacklisted"
   | "meals"
   | "mealTotal"
   | "actions"
@@ -62,6 +63,7 @@ const COLUMN_LABELS: Record<ColumnKey, string> = {
   hasPaid: "Payé",
   willPayInCash: "Cash",
   loggedIn: "Connecté",
+  emailBlacklisted: "Blacklist mails",
   meals: "Repas",
   mealTotal: "Total",
   actions: "Actions",
@@ -77,6 +79,7 @@ const COLUMN_ORDER: ColumnKey[] = [
   "hasPaid",
   "willPayInCash",
   "loggedIn",
+  "emailBlacklisted",
   "meals",
   "mealTotal",
   "actions",
@@ -92,6 +95,7 @@ const DEFAULT_VISIBLE_COLUMNS: Record<ColumnKey, boolean> = {
   hasPaid: true,
   willPayInCash: true,
   loggedIn: true,
+  emailBlacklisted: true,
   meals: true,
   mealTotal: true,
   actions: true,
@@ -396,6 +400,7 @@ export function UsersTable() {
             {visibleColumns.hasPaid && <TableHead><SortHeader label="Payé" column="hasPaid" /></TableHead>}
             {visibleColumns.willPayInCash && <TableHead><SortHeader label="Cash" column="willPayInCash" /></TableHead>}
             {visibleColumns.loggedIn && <TableHead><SortHeader label="Connecté" column="hasLoggedInSinceEdition" /></TableHead>}
+            {visibleColumns.emailBlacklisted && <TableHead><SortHeader label="Blacklist" column="emailBlacklisted" /></TableHead>}
             {visibleColumns.meals && mealSlots.map((slot) => (
               <TableHead key={slot.id} className="text-center px-2 max-w-[80px]">
                 <div className="flex flex-col items-center gap-0.5">
@@ -579,6 +584,30 @@ export function UsersTable() {
                     Non
                   </Badge>
                 )}
+              </TableCell>
+              )}
+              {visibleColumns.emailBlacklisted && (
+              <TableCell className={u.emailBlacklisted ? "bg-destructive/30" : undefined}>
+                <Checkbox
+                  aria-label="Exclu des mails"
+                  title="Exclu des mails généraux et des relances Secret Santa"
+                  checked={u.emailBlacklisted}
+                  onCheckedChange={async (value) => {
+                    if (typeof value !== "boolean") return
+                    const next = value
+                    patchCachedUsers(prev => prev.map(x => x.id === u.id ? { ...x, emailBlacklisted: next } : x))
+                    try {
+                      const res = await fetch("/api/admin/users", {
+                        method: "PATCH",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ userId: u.id, emailBlacklisted: next })
+                      })
+                      if (!res.ok) throw new Error("Update failed")
+                    } catch {
+                      patchCachedUsers(prev => prev.map(x => x.id === u.id ? { ...x, emailBlacklisted: !next } : x))
+                    }
+                  }}
+                />
               </TableCell>
               )}
               {visibleColumns.meals && mealSlots.map((slot) => {

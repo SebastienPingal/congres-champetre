@@ -118,6 +118,7 @@ Points à retenir :
 - `TimeSlot.kind` : `CONFERENCE | MEAL | BREAK | OTHER`. Les `MEAL` ont `description`, `price`, `showInRegistration` en plus.
 - `MealRegistration` n'existe que si le user a coché PRESENT/ABSENT. Pas de ligne = pas répondu. **Invariant : `isAttending === false` ⇒ aucune `MealRegistration`** — passer à « je ne viens pas » les efface (`clearMealRegistrations()`, `src/lib/participation.ts`), et `/api/meals` POST comme `/api/admin/users` PATCH renvoient `409` si on tente d'en cocher une. `isAttending = null` (« je ne sais pas ») conserve les repas.
 - `SecretSantaAssignment` (`@@unique([editionId, giverId])` et `([editionId, receiverId])`) : une ligne par donneur. Le tirage (admin) porte sur les `isAttending === true` de l'édition active (min. 3) et forme **un seul cycle**. Relancer remplace tout. `revealedAt` = première ouverture du cadeau. Les admins ne voient que des compteurs, jamais les paires.
+- `User.emailBlacklisted` : coché depuis `/admin/users` (colonne « Blacklist »). Exclut le compte de **tous** les mails admin — broadcasts `/api/admin/emails` (quel que soit le filtre, sauf le test admin) et relances `/api/admin/secret-santa/notify`. N'affecte rien d'autre (connexion, participation, tirage Secret Santa inchangés).
 - `PaymentIntent` est un journal d'audit PayPal (un row par order PayPal créé), distinct des champs `paymentProviderId/paymentStatus` qui pointent vers le dernier order en cours.
 
 ## API en un coup d'œil

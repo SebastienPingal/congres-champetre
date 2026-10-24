@@ -56,6 +56,8 @@ model User {
   role          Role      @default(USER)
   wantsToSpeak  Boolean?
   lastLoginAt   DateTime?
+  /// Exclu des mails envoyés par l'admin (broadcasts + relances Secret Santa).
+  emailBlacklisted Boolean @default(false)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 

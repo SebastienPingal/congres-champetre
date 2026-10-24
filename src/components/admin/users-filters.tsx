@@ -30,6 +30,7 @@ export interface UsersFiltersState {
   paid: TriState
   cash: TriState
   loggedIn: TriState
+  blacklisted: TriState
 }
 
 export const DEFAULT_FILTERS: UsersFiltersState = {
@@ -40,6 +41,7 @@ export const DEFAULT_FILTERS: UsersFiltersState = {
   paid: "ALL",
   cash: "ALL",
   loggedIn: "ALL",
+  blacklisted: "ALL",
 }
 
 const TRI_OPTIONS: { value: TriState, label: string }[] = [
@@ -112,6 +114,12 @@ const SELECT_FILTERS: SelectFilterDef[] = [
     label: "Connecté",
     options: TRI_OPTIONS,
     matches: (u, v) => (v === "YES" ? u.hasLoggedInSinceEdition : !u.hasLoggedInSinceEdition),
+  },
+  {
+    key: "blacklisted",
+    label: "Blacklist mails",
+    options: TRI_OPTIONS,
+    matches: (u, v) => (v === "YES" ? u.emailBlacklisted : !u.emailBlacklisted),
   },
 ]
 
