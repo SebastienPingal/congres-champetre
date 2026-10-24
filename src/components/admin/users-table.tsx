@@ -415,7 +415,11 @@ export function UsersTable() {
         </TableHeader>
         <TableBody>
           {filteredAndSortedUsers.map((u) => (
-            <TableRow key={u.id}>
+            <TableRow
+              key={u.id}
+              // Blacklisté : toute la ligne s'assombrit, sans masquer les surlignages de cellule (non validé, cash).
+              className={u.emailBlacklisted ? "bg-black/15 hover:bg-black/20 dark:bg-black/40 dark:hover:bg-black/50" : undefined}
+            >
               {visibleColumns.name && (
               <TableCell className="font-medium">
                 {renameTargetId === u.id ? (
@@ -587,7 +591,7 @@ export function UsersTable() {
               </TableCell>
               )}
               {visibleColumns.emailBlacklisted && (
-              <TableCell className={u.emailBlacklisted ? "bg-destructive/30" : undefined}>
+              <TableCell>
                 <Checkbox
                   aria-label="Exclu des mails"
                   title="Exclu des mails généraux et des relances Secret Santa"
