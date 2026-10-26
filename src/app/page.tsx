@@ -360,9 +360,6 @@ export default async function LandingPage() {
 
           <Ornament lineWidth={56} gap={20}>
             <HeroFleuron tone="green" />
-            <span style={{ fontFamily: "var(--font-newsreader), serif", fontStyle: "italic", fontSize: 18, color: "var(--ink-2)", fontWeight: 500 }}>
-              où l&apos;on partage
-            </span>
             <HeroFleuron tone="red" />
           </Ornament>
 
@@ -391,7 +388,7 @@ export default async function LandingPage() {
             color: "var(--ink-2)", marginTop: 28, fontWeight: 400, textWrap: "balance",
             maxWidth: 640, marginLeft: "auto", marginRight: "auto",
           }}>
-            Un week-end de partage autour des histoires qui nous inspirent.
+            Un week-end pour nous plonger dans la féérie de Noël.
           </div>
 
           <div style={{ marginTop: 36, display: "flex", justifyContent: "center" }}>
@@ -501,7 +498,7 @@ export default async function LandingPage() {
                 <em>{NAME_PARTS.left}</em>
               )
             }
-            subtitle="Tout ce qu'on raconte autour d'un feu — pour effrayer les enfants, consoler les adultes, ou expliquer ce qu'on ne comprend pas tout à fait."
+            subtitle="Un moment pour explorer toute l'ambivalence de l'hiver : s'immerger dans ce qu'il a de chaleureux, mais aussi effleurer son obscurité…"
           />
           <div style={{
             display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
