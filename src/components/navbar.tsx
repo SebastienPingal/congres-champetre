@@ -20,6 +20,7 @@ import {
   ChevronDown,
   ScrollText,
   Gift,
+  House,
   type LucideIcon,
 } from "lucide-react"
 import { useUserProfile } from "@/hooks/use-user-profile"
@@ -256,16 +257,27 @@ export function Navbar() {
               </div>
             </Link>
 
-            <IntentionLetterModal>
-              <button
-                type="button"
-                className="mt-1 flex items-center gap-1 bg-transparent cursor-pointer whitespace-nowrap font-sans text-[11px] sm:text-[12px] no-underline transition-colors hover:opacity-80 w-fit"
-                style={{ color: "var(--highlight)" }}
+            <div className="mt-1 flex items-center gap-1.5 font-sans text-[11px] sm:text-[12px]" style={{ color: "var(--highlight)" }}>
+              <IntentionLetterModal>
+                <button
+                  type="button"
+                  className="flex items-center gap-1 bg-transparent cursor-pointer whitespace-nowrap no-underline transition-colors hover:opacity-80 w-fit"
+                  style={{ color: "inherit" }}
+                >
+                  <ScrollText width={12} height={12} className="shrink-0" />
+                  Lettre d&apos;intention
+                </button>
+              </IntentionLetterModal>
+              <span aria-hidden style={{ color: "var(--ink-3)" }}>·</span>
+              <Link
+                href="/landing"
+                className="flex items-center gap-1 whitespace-nowrap no-underline transition-colors hover:opacity-80"
+                style={{ color: "inherit" }}
               >
-                <ScrollText width={12} height={12} className="shrink-0" />
-                Lettre d&apos;intention
-              </button>
-            </IntentionLetterModal>
+                <House width={12} height={12} className="shrink-0" />
+                Présentation
+              </Link>
+            </div>
           </div>
 
           <nav className="hidden sm:flex gap-0.5 flex-1 ml-2">
