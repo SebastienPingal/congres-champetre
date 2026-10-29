@@ -183,8 +183,8 @@ export function PaymentSection({ user }: PaymentSectionProps) {
           <p className="text-sm font-medium">Soutenir le congrès <span className="font-normal text-muted-foreground">(facultatif)</span></p>
         </div>
         <p className="text-xs text-muted-foreground max-w-prose">
-          Le prix des repas ne couvre pas tous les frais du congrès (location, matériel,
-          intendance…) : une partie reste à la charge de l&apos;organisation. Si vous le
+          Le prix des repas ne couvre pas tous les frais du congrès :
+          une partie reste à la charge de l&apos;organisation. Si vous le
           pouvez, vous pouvez ajouter un petit montant pour y participer. Il n&apos;y a
           aucun bénéfice : chaque euro est intégralement réinvesti dans le congrès.
         </p>
