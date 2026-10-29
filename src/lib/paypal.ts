@@ -76,6 +76,8 @@ export async function createOrder(amountEuros: number, metadata: Record<string, 
           description: "Inscription Congrès Champêtre",
         },
       ],
+      // Rien n'est expédié : sans ça, PayPal demande une adresse de livraison.
+      application_context: { shipping_preference: "NO_SHIPPING" },
     }),
   })
 }
