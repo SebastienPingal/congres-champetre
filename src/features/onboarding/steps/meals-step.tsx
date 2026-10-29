@@ -3,11 +3,13 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { DietaryFields, type DietaryValue } from "@/components/dietary-fields"
 import type { MealSlot, MealStatus } from "@/types"
 
 interface MealsStepProps {
   meals: MealSlot[]
-  onAnswer: (selections: Record<string, MealStatus>) => void
+  initialDiet: DietaryValue
+  onAnswer: (selections: Record<string, MealStatus>, diet: DietaryValue) => void
   isSubmitting: boolean
 }
 
@@ -20,7 +22,8 @@ function formatMealTime(startTime: string, endTime: string): string {
   return `${date} · ${start}–${end}`
 }
 
-export function MealsStep({ meals, onAnswer, isSubmitting }: MealsStepProps) {
+export function MealsStep({ meals, initialDiet, onAnswer, isSubmitting }: MealsStepProps) {
+  const [diet, setDiet] = useState<DietaryValue>(initialDiet)
   const [selections, setSelections] = useState<Record<string, MealStatus>>(
     Object.fromEntries(meals.map((m) => [m.id, m.status]))
   )
@@ -33,7 +36,7 @@ export function MealsStep({ meals, onAnswer, isSubmitting }: MealsStepProps) {
   }
 
   const handleSubmit = () => {
-    onAnswer(selections)
+    onAnswer(selections, diet)
   }
 
   const answeredCount = Object.values(selections).filter((s) => s !== null).length
@@ -106,6 +109,16 @@ export function MealsStep({ meals, onAnswer, isSubmitting }: MealsStepProps) {
           })}
         </div>
       )}
+
+      <div className="flex flex-col gap-3 rounded-lg border border-warn-border p-4">
+        <div className="flex flex-col gap-0.5">
+          <span className="font-medium text-sm">Régime alimentaire</span>
+          <p className="text-xs text-muted-foreground">
+            Important pour qu&apos;on prévoie de quoi bien vous nourrir : cochez ce qui vous concerne.
+          </p>
+        </div>
+        <DietaryFields value={diet} onChange={setDiet} disabled={isSubmitting} />
+      </div>
 
       <Button
         type="button"

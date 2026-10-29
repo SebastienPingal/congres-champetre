@@ -28,6 +28,7 @@ import { useAdminUsers, type AdminUserRow, type AdminUsersPayload } from "@/hook
 import { UsersFilters, matchesFilters, useUsersFilters } from "@/components/admin/users-filters"
 import { queryKeys } from "@/lib/query-keys"
 import { isParticipationValidated } from "@/lib/participation-status"
+import { formatDiet } from "@/lib/dietary"
 import type { AttendanceDays } from "@/types"
 
 const attendanceOrder: Record<AttendanceDays, number> = {
@@ -49,6 +50,7 @@ type ColumnKey =
   | "willPayInCash"
   | "loggedIn"
   | "emailBlacklisted"
+  | "diet"
   | "meals"
   | "mealTotal"
   | "actions"
@@ -64,6 +66,7 @@ const COLUMN_LABELS: Record<ColumnKey, string> = {
   willPayInCash: "Cash",
   loggedIn: "Connecté",
   emailBlacklisted: "Blacklist mails",
+  diet: "Régime",
   meals: "Repas",
   mealTotal: "Total",
   actions: "Actions",
@@ -80,6 +83,7 @@ const COLUMN_ORDER: ColumnKey[] = [
   "willPayInCash",
   "loggedIn",
   "emailBlacklisted",
+  "diet",
   "meals",
   "mealTotal",
   "actions",
@@ -96,6 +100,7 @@ const DEFAULT_VISIBLE_COLUMNS: Record<ColumnKey, boolean> = {
   willPayInCash: true,
   loggedIn: true,
   emailBlacklisted: true,
+  diet: true,
   meals: true,
   mealTotal: true,
   actions: true,
@@ -401,6 +406,7 @@ export function UsersTable() {
             {visibleColumns.willPayInCash && <TableHead><SortHeader label="Cash" column="willPayInCash" /></TableHead>}
             {visibleColumns.loggedIn && <TableHead><SortHeader label="Connecté" column="hasLoggedInSinceEdition" /></TableHead>}
             {visibleColumns.emailBlacklisted && <TableHead><SortHeader label="Blacklist" column="emailBlacklisted" /></TableHead>}
+            {visibleColumns.diet && <TableHead>Régime</TableHead>}
             {visibleColumns.meals && mealSlots.map((slot) => (
               <TableHead key={slot.id} className="text-center px-2 max-w-[80px]">
                 <div className="flex flex-col items-center gap-0.5">
@@ -612,6 +618,11 @@ export function UsersTable() {
                     }
                   }}
                 />
+              </TableCell>
+              )}
+              {visibleColumns.diet && (
+              <TableCell className="max-w-[220px] whitespace-normal text-xs">
+                {formatDiet(u.dietaryRestrictions, u.dietaryNotes) ?? <span className="text-muted-foreground">—</span>}
               </TableCell>
               )}
               {visibleColumns.meals && mealSlots.map((slot) => {

@@ -18,7 +18,13 @@ export function useUserProfile() {
 type ProfilePatch = Partial<
   Pick<
     UserProfile,
-    'isAttending' | 'attendanceDays' | 'sleepsOnSite' | 'willPayInCash' | 'wantsToSpeak'
+    | 'isAttending'
+    | 'attendanceDays'
+    | 'sleepsOnSite'
+    | 'willPayInCash'
+    | 'wantsToSpeak'
+    | 'dietaryRestrictions'
+    | 'dietaryNotes'
   >
 >
 

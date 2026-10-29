@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { requireUser } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { getActiveEdition, NoActiveEditionError, getRegistrationDeadline, isRegistrationClosed, RegistrationClosedError } from "@/lib/edition"
+import { sanitizeDietaryNotes, sanitizeDietaryRestrictions } from "@/lib/dietary"
 import { buildParticipationUpdate, clearMealRegistrations, upsertParticipation } from "@/lib/participation"
 
 export async function GET() {
@@ -19,6 +20,8 @@ export async function GET() {
         email: true,
         role: true,
         wantsToSpeak: true,
+        dietaryRestrictions: true,
+        dietaryNotes: true,
         createdAt: true,
         conferences: {
           where: { editionId: activeEdition.id },
@@ -50,6 +53,8 @@ export async function GET() {
       email: user.email,
       role: user.role,
       wantsToSpeak: user.wantsToSpeak ?? null,
+      dietaryRestrictions: user.dietaryRestrictions,
+      dietaryNotes: user.dietaryNotes,
       createdAt: user.createdAt,
       conferences: user.conferences,
       isAttending: participation?.isAttending ?? null,
@@ -114,6 +119,20 @@ export async function PATCH(request: NextRequest) {
       })
     }
 
+    // Régime alimentaire : porté par le User, hors participation — reste
+    // modifiable après la fermeture des inscriptions (utile aux organisateurs).
+    if ("dietaryRestrictions" in body || "dietaryNotes" in body) {
+      await prisma.user.update({
+        where: { id: sessionUser.id },
+        data: {
+          ...("dietaryRestrictions" in body && {
+            dietaryRestrictions: sanitizeDietaryRestrictions(body.dietaryRestrictions),
+          }),
+          ...("dietaryNotes" in body && { dietaryNotes: sanitizeDietaryNotes(body.dietaryNotes) }),
+        },
+      })
+    }
+
     const participationResult = await buildParticipationUpdate(
       sessionUser.id,
       activeEdition.id,
@@ -144,6 +163,8 @@ export async function PATCH(request: NextRequest) {
         email: true,
         role: true,
         wantsToSpeak: true,
+        dietaryRestrictions: true,
+        dietaryNotes: true,
         conferences: {
           where: { editionId: activeEdition.id },
           include: { timeSlot: true },
@@ -169,6 +190,8 @@ export async function PATCH(request: NextRequest) {
         email: user?.email,
         role: user?.role,
         wantsToSpeak: user?.wantsToSpeak ?? null,
+        dietaryRestrictions: user?.dietaryRestrictions ?? [],
+        dietaryNotes: user?.dietaryNotes ?? null,
         conferences: user?.conferences,
         isAttending: participation?.isAttending ?? null,
         attendanceDays: participation?.attendanceDays ?? "NONE",

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { CheckCircle2, CircleDot, Lock } from "lucide-react"
 import { useMeals, useUpdateMealStatus } from "@/hooks/use-meals"
 import type { UserProfile } from "@/types"
+import { DietarySection } from "./dietary-section"
 
 interface MealsSectionProps {
   user: UserProfile
@@ -86,6 +87,8 @@ export function MealsSection({ user }: MealsSectionProps) {
           )
         })}
       </ul>
+
+      <DietarySection user={user} />
     </section>
   )
 }

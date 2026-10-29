@@ -1,3 +1,5 @@
+import type { DietaryRestriction } from '@/lib/dietary'
+
 export type AttendanceDays = 'NONE' | 'DAY1' | 'DAY2' | 'BOTH' | 'UNKNOWN'
 export type MealStatus = 'PRESENT' | 'ABSENT' | null
 export type SlotKind = 'CONFERENCE' | 'MEAL' | 'BREAK' | 'OTHER'
@@ -31,6 +33,8 @@ export interface UserProfile {
   email: string
   role: Role
   wantsToSpeak: boolean | null
+  dietaryRestrictions: DietaryRestriction[]
+  dietaryNotes: string | null
   isAttending: boolean | null
   attendanceDays: AttendanceDays
   sleepsOnSite: boolean | null

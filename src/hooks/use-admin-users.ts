@@ -24,6 +24,8 @@ export interface AdminUserRow {
   lastLoginAt: string | null
   hasLoggedInSinceEdition: boolean
   emailBlacklisted: boolean
+  dietaryRestrictions: string[]
+  dietaryNotes: string | null
   createdAt: string
   updatedAt: string
 }

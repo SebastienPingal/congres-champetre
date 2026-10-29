@@ -58,6 +58,11 @@ model User {
   lastLoginAt   DateTime?
   /// Exclu des mails envoyés par l'admin (broadcasts + relances Secret Santa).
   emailBlacklisted Boolean @default(false)
+  /// Régimes alimentaires cochés (valeurs de `DIETARY_OPTIONS`, src/lib/dietary.ts).
+  /// Porté par le User : suit la personne d'une édition à l'autre.
+  dietaryRestrictions String[] @default([])
+  /// Précision libre (« Autre » : allergie, intolérance…).
+  dietaryNotes  String?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 

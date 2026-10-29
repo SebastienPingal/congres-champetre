@@ -14,6 +14,7 @@ First-visit onboarding wizard shown as a non-dismissable Dialog.
 | `steps/attending-step.tsx` | "Venez-vous au weekend ?" → yes / no / unknown |
 | `steps/days-step.tsx` | "Quels jours ?" (only if attending=yes) → BOTH / DAY1 / DAY2 / unknown |
 | `steps/sleeping-step.tsx` | "Dormez-vous sur place ?" → true / false / null |
+| `steps/meals-step.tsx` | Repas PRESENT/ABSENT + encart « Régime alimentaire » (`DietaryFields`) ; le régime est sauvé via `useUpdateProfile()` au clic sur Continuer |
 | `steps/speaking-step.tsx` | "Souhaitez-vous proposer une conférence ?" → true / false / null |
 
 **Step flow:**

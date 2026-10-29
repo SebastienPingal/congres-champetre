@@ -26,6 +26,8 @@ export async function GET() {
         wantsToSpeak: true,
         lastLoginAt: true,
         emailBlacklisted: true,
+        dietaryRestrictions: true,
+        dietaryNotes: true,
         createdAt: true,
         updatedAt: true,
         participations: {
@@ -81,6 +83,8 @@ export async function GET() {
         hasLoggedInSinceEdition:
           u.lastLoginAt != null && u.lastLoginAt >= activeEdition.createdAt,
         emailBlacklisted: u.emailBlacklisted,
+        dietaryRestrictions: u.dietaryRestrictions,
+        dietaryNotes: u.dietaryNotes,
         createdAt: u.createdAt,
         updatedAt: p?.updatedAt ?? u.updatedAt,
       }

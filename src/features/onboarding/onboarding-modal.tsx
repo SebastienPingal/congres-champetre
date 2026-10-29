@@ -14,6 +14,7 @@ import { SleepingStep } from "./steps/sleeping-step"
 import { SpeakingStep } from "./steps/speaking-step"
 import { MealsStep } from "./steps/meals-step"
 import { ConferenceStep } from "./steps/conference-step"
+import type { DietaryValue } from "@/components/dietary-fields"
 import type { AttendanceDays, MealStatus } from "@/types"
 
 type Step = 'intention' | 'attending' | 'days' | 'sleeping' | 'meals' | 'speaking' | 'conference'
@@ -161,7 +162,8 @@ export function OnboardingModal() {
     setCurrentStep(hasMeals ? 'meals' : 'speaking')
   }
 
-  const handleMeals = async (selections: Record<string, MealStatus>) => {
+  const handleMeals = async (selections: Record<string, MealStatus>, diet: DietaryValue) => {
+    updateProfile({ dietaryRestrictions: diet.restrictions, dietaryNotes: diet.notes.trim() || null })
     await saveMeals(selections)
     setCurrentStep('speaking')
   }
@@ -238,7 +240,12 @@ export function OnboardingModal() {
             <SleepingStep onAnswer={handleSleeping} isSubmitting={isSubmitting} />
           )}
           {currentStep === 'meals' && (
-            <MealsStep meals={meals} onAnswer={handleMeals} isSubmitting={isSubmitting} />
+            <MealsStep
+              meals={meals}
+              initialDiet={{ restrictions: user.dietaryRestrictions, notes: user.dietaryNotes ?? "" }}
+              onAnswer={handleMeals}
+              isSubmitting={isSubmitting}
+            />
           )}
           {currentStep === 'speaking' && (
             <SpeakingStep onAnswer={handleSpeaking} isSubmitting={isSubmitting} />

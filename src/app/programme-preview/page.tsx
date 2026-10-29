@@ -67,6 +67,8 @@ const fakeUser: UserProfile = {
   email: "preview@example.com",
   role: "ADMIN",
   wantsToSpeak: true,
+  dietaryRestrictions: [],
+  dietaryNotes: null,
   isAttending: true,
   attendanceDays: "BOTH",
   sleepsOnSite: true,
