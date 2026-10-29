@@ -19,6 +19,8 @@ export interface AdminUserRow {
   sleepsOnSite: boolean | null
   hasPaid: boolean
   willPayInCash: boolean
+  /** Soutien libre versé via PayPal, en euros entiers. */
+  supportAmount: number | null
   mealStatuses: Record<string, string>
   mealTotal: number
   lastLoginAt: string | null

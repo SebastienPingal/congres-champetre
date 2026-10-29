@@ -25,7 +25,7 @@ Pas de tests automatisés à ce jour. `pnpm lint` est la seule vérification sta
 
 ```
 prisma/schema.prisma        # source de vérité du modèle (voir aussi ARCHITECTURE.md §3)
-prisma/migrations/          # 12 migrations, ordre = timeline du projet
+prisma/migrations/          # migrations, ordre = timeline du projet
 
 src/middleware.ts           # redirects / + protège /dashboard et /admin
 src/app/layout.tsx          # AuthProvider > QueryProvider (ordre important)
@@ -120,6 +120,7 @@ Points à retenir :
 - `SecretSantaAssignment` (`@@unique([editionId, giverId])` et `([editionId, receiverId])`) : une ligne par donneur. Le tirage (admin) porte sur les `isAttending === true` de l'édition active (min. 3) et forme **un seul cycle**. Relancer remplace tout. `revealedAt` = première ouverture du cadeau. Les admins ne voient que des compteurs, jamais les paires.
 - `User.emailBlacklisted` : coché depuis `/admin/users` (colonne « Blacklist »). Exclut le compte de **tous** les mails admin — broadcasts `/api/admin/emails` (quel que soit le filtre, sauf le test admin) et relances `/api/admin/secret-santa/notify`. N'affecte rien d'autre (connexion, participation, tirage Secret Santa inchangés).
 - `User.dietaryRestrictions` (`String[]`, valeurs de `DIETARY_OPTIONS` dans `src/lib/dietary.ts`) + `User.dietaryNotes` (texte libre « Autre ») : régime alimentaire, porté par le **User** (suit la personne d'une édition à l'autre). Saisi à l'étape repas de l'onboarding et dans l'encart « Régime alimentaire » de la section Repas, modifiable via `PATCH /api/user/profile` même inscriptions fermées. Visible dans la colonne « Régime » de `/admin/users`. Valeurs filtrées côté serveur (`sanitizeDietary*`).
+- `EditionParticipation.supportAmount` (et `PaymentIntent.supportAmount`) : **soutien libre** facultatif versé en plus des repas, en euros entiers (`src/lib/support.ts`). Ajouté au total **sans** frais PayPal (frais calculés sur les repas seuls). Le montant du soutien est le seul accepté du client, borné côté serveur. Colonne « Soutien » dans `/admin/users`.
 - `PaymentIntent` est un journal d'audit PayPal (un row par order PayPal créé), distinct des champs `paymentProviderId/paymentStatus` qui pointent vers le dernier order en cours.
 
 ## API en un coup d'œil

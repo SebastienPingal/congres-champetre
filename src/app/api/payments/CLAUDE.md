@@ -9,7 +9,7 @@ PayPal payment API routes (Orders v2 + Webhooks).
 | `POST /api/payments/webhook` | `webhook/route.ts` | Backup confirmation: handles `PAYMENT.CAPTURE.COMPLETED`, `PAYMENT.CAPTURE.DENIED`, `CHECKOUT.ORDER.VOIDED`. Verifies signature via PayPal's `/v1/notifications/verify-webhook-signature`. |
 
 **Security:**
-- Amount is always computed server-side from DB (never trusted from client).
+- Amount is always computed server-side from DB (never trusted from client). Seule exception : le **soutien libre** (`supportAmount`, body facultatif de `/order`), validé par `parseSupportAmount()` (`src/lib/support.ts` : euros entiers, 0 à `MAX_SUPPORT_AMOUNT`) et ajouté **après** `applyPaypalFees()` — les frais PayPal ne portent que sur les repas. Il est stocké sur le `PaymentIntent` puis recopié sur `EditionParticipation.supportAmount` par `capture` et le webhook.
 - Capture route checks that `orderId` belongs to the authenticated user before capturing.
 - Webhook signature verified against `PAYPAL_WEBHOOK_ID` using raw request body (`request.text()` — never `request.json()`).
 - `custom_id` on the order encodes `userId:editionId` so the webhook can locate the participation without trusting the client.

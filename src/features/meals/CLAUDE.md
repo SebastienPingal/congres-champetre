@@ -6,7 +6,7 @@ Components for meal registration and payment validation.
 |---|---|---|
 | `meals-section.tsx` | `MealsSection` | Flat list of meal slots (ul `divide-y rounded-lg border`) avec toggles PRESENT/ABSENT. Read-only une fois les inscriptions fermées. |
 | `dietary-section.tsx` | `DietarySection` | Encart « Régime alimentaire » rendu en bas de `MealsSection` : cases (`DIETARY_OPTIONS`) + « Autre » libre, bouton « Enregistrer » actif si modifié. Utilise `DietaryFields` (`src/components/dietary-fields.tsx`, partagé avec l'onboarding). Jamais verrouillé. |
-| `payment-section.tsx` | `PaymentSection` | Bloc plat de validation : breakdown des repas, total, deadline countdown, bouton PayPal (`<PayPalButtons>`) + « Payer plus tard ». |
+| `payment-section.tsx` | `PaymentSection` | Bloc plat de validation : breakdown des repas, total, encart « Soutenir le congrès » (soutien libre facultatif : `SUPPORT_PRESETS` + champ « Autre », euros entiers, sans frais PayPal ajoutés), deadline countdown, bouton PayPal (`<PayPalButtons>`) + « Payer plus tard ». Le soutien courant est lu via une ref dans `createOrder` (callback figé par PayPal). |
 
 **Layout :** sections plates (pas de `Card`). Statut affiché via badge outline subtil (amber « À compléter » / green « Complet » ou « Validée » / destructive « Inscriptions fermées »).
 

@@ -46,12 +46,19 @@ export async function POST(request: NextRequest) {
           where: { userId_editionId: { userId, editionId } },
           select: { attendanceDays: true },
         })
+        const intent = orderId
+          ? await prisma.paymentIntent.findUnique({
+              where: { providerId: orderId },
+              select: { supportAmount: true },
+            })
+          : null
         await prisma.editionParticipation.update({
           where: { userId_editionId: { userId, editionId } },
           data: {
             hasPaid: true,
             paymentStatus: "succeeded",
             ...(amountCents !== undefined ? { paidAmount: amountCents } : {}),
+            ...(intent ? { supportAmount: intent.supportAmount } : {}),
             // Payer vaut confirmation de présence (idem route capture).
             isAttending: true,
             ...(existing?.attendanceDays === "NONE" ? { attendanceDays: "UNKNOWN" as const } : {}),

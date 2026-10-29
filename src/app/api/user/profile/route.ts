@@ -63,6 +63,7 @@ export async function GET() {
       willPayInCash: participation?.willPayInCash ?? false,
       hasPaid: participation?.hasPaid ?? false,
       paidAmount: participation?.paidAmount ?? null,
+      supportAmount: participation?.supportAmount ?? null,
       onboardingCompletedAt: participation?.onboardingCompletedAt ?? null,
       edition: {
         id: activeEdition.id,
@@ -199,6 +200,7 @@ export async function PATCH(request: NextRequest) {
         willPayInCash: participation?.willPayInCash ?? false,
         hasPaid: participation?.hasPaid ?? false,
         paidAmount: participation?.paidAmount ?? null,
+        supportAmount: participation?.supportAmount ?? null,
         onboardingCompletedAt: participation?.onboardingCompletedAt ?? null,
         edition: {
           id: activeEdition.id,

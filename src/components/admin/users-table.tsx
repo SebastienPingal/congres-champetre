@@ -53,6 +53,7 @@ type ColumnKey =
   | "diet"
   | "meals"
   | "mealTotal"
+  | "supportAmount"
   | "actions"
 
 const COLUMN_LABELS: Record<ColumnKey, string> = {
@@ -69,6 +70,7 @@ const COLUMN_LABELS: Record<ColumnKey, string> = {
   diet: "Régime",
   meals: "Repas",
   mealTotal: "Total",
+  supportAmount: "Soutien",
   actions: "Actions",
 }
 
@@ -86,6 +88,7 @@ const COLUMN_ORDER: ColumnKey[] = [
   "diet",
   "meals",
   "mealTotal",
+  "supportAmount",
   "actions",
 ]
 
@@ -103,6 +106,7 @@ const DEFAULT_VISIBLE_COLUMNS: Record<ColumnKey, boolean> = {
   diet: true,
   meals: true,
   mealTotal: true,
+  supportAmount: true,
   actions: true,
 }
 
@@ -215,7 +219,7 @@ export function UsersTable() {
       if (!res.ok) throw new Error("Delete failed")
       patchCachedUsers(prev => prev.map(u =>
         u.id === deleteTarget.id
-          ? { ...u, isAttending: null, attendanceDays: "NONE" as AttendanceDays, sleepsOnSite: null, hasPaid: false, willPayInCash: false, mealStatuses: {}, mealTotal: 0 }
+          ? { ...u, isAttending: null, attendanceDays: "NONE" as AttendanceDays, sleepsOnSite: null, hasPaid: false, willPayInCash: false, supportAmount: null, mealStatuses: {}, mealTotal: 0 }
           : u
       ))
     } catch {
@@ -239,6 +243,8 @@ export function UsersTable() {
           cmp = new Date(aVal as string).getTime() - new Date(bVal as string).getTime()
         } else if (sortKey === "attendanceDays") {
           cmp = attendanceOrder[aVal as AttendanceDays] - attendanceOrder[bVal as AttendanceDays]
+        } else if (sortKey === "supportAmount") {
+          cmp = ((aVal as number | null) ?? 0) - ((bVal as number | null) ?? 0)
         } else if (typeof aVal === "boolean" && typeof bVal === "boolean") {
           cmp = Number(aVal) - Number(bVal)
         } else {
@@ -416,6 +422,7 @@ export function UsersTable() {
               </TableHead>
             ))}
             {visibleColumns.mealTotal && <TableHead><SortHeader label="Total" column="mealTotal" /></TableHead>}
+            {visibleColumns.supportAmount && <TableHead><SortHeader label="Soutien" column="supportAmount" /></TableHead>}
             {visibleColumns.actions && <TableHead className="text-center">Actions</TableHead>}
           </TableRow>
         </TableHeader>
@@ -663,6 +670,15 @@ export function UsersTable() {
               <TableCell>
                 {u.mealTotal > 0 ? (
                   <span className="text-sm font-medium">{u.mealTotal} €</span>
+                ) : (
+                  <span className="text-muted-foreground/80">—</span>
+                )}
+              </TableCell>
+              )}
+              {visibleColumns.supportAmount && (
+              <TableCell>
+                {u.supportAmount ? (
+                  <span className="text-sm font-medium text-green">+{u.supportAmount} €</span>
                 ) : (
                   <span className="text-muted-foreground/80">—</span>
                 )}

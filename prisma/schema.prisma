@@ -108,6 +108,8 @@ model EditionParticipation {
   paymentProviderId     String?
   paymentStatus         String?
   paidAmount            Int?
+  /// Soutien libre versé en plus des repas, en euros entiers (sans frais PayPal).
+  supportAmount         Int?
   createdAt             DateTime       @default(now())
   updatedAt             DateTime       @updatedAt
 
@@ -125,6 +127,8 @@ model PaymentIntent {
   participationId String
   providerId      String   @unique
   amount          Int
+  /// Part de `amount` correspondant au soutien libre, en euros entiers.
+  supportAmount   Int      @default(0)
   currency        String   @default("eur")
   status          String   @default("pending")
   createdAt       DateTime @default(now())

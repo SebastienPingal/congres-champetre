@@ -32,12 +32,17 @@ export async function POST(request: NextRequest) {
 
     if (succeeded && capture) {
       const amountCents = Math.round(parseFloat(capture.amount.value) * 100)
+      const intent = await prisma.paymentIntent.findUnique({
+        where: { providerId: orderId },
+        select: { supportAmount: true },
+      })
       await prisma.editionParticipation.update({
         where: { id: participation.id },
         data: {
           hasPaid: true,
           paymentStatus: "succeeded",
           paidAmount: amountCents,
+          supportAmount: intent?.supportAmount ?? 0,
           // Payer vaut confirmation de présence : on ne laisse pas un payeur
           // en « je ne sais pas encore ».
           isAttending: true,

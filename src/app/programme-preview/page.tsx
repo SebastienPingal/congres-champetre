@@ -75,6 +75,7 @@ const fakeUser: UserProfile = {
   willPayInCash: false,
   hasPaid: false,
   paidAmount: null,
+  supportAmount: null,
   onboardingCompletedAt: new Date().toISOString(),
   conferences: [],
   edition: {

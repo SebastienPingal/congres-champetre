@@ -41,6 +41,8 @@ export interface UserProfile {
   willPayInCash: boolean
   hasPaid: boolean
   paidAmount: number | null
+  /** Soutien libre versé en plus des repas, en euros entiers. */
+  supportAmount: number | null
   onboardingCompletedAt: string | null
   edition: EditionInfo
   conferences: ConferenceRecord[]

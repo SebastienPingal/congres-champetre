@@ -77,6 +77,7 @@ export async function GET() {
         sleepsOnSite: p?.sleepsOnSite ?? null,
         hasPaid: p?.hasPaid ?? false,
         willPayInCash: p?.willPayInCash ?? false,
+        supportAmount: p?.supportAmount ?? null,
         mealStatuses,
         mealTotal: presentMeals.reduce((sum, mr) => sum + (mr.timeSlot.price ?? 0), 0),
         lastLoginAt: u.lastLoginAt,

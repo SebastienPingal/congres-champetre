@@ -1,15 +1,27 @@
-import { NextResponse } from "next/server"
+import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { createOrder } from "@/lib/paypal"
 import { getActiveEdition, NoActiveEditionError } from "@/lib/edition"
 import { applyPaypalFees } from "@/lib/paypal-fees"
+import { MAX_SUPPORT_AMOUNT, parseSupportAmount } from "@/lib/support"
 
-export async function POST() {
+export async function POST(request: NextRequest) {
   try {
     const session = await auth()
     if (!session?.user) {
       return NextResponse.json({ error: "🔒 Non authentifié" }, { status: 401 })
+    }
+
+    // Le body est facultatif : seul le soutien libre vient du client, le
+    // montant des repas reste recalculé en base.
+    const body = (await request.json().catch(() => ({}))) as { supportAmount?: unknown }
+    const supportAmount = parseSupportAmount(body.supportAmount)
+    if (supportAmount === null) {
+      return NextResponse.json(
+        { error: `Le soutien doit être un nombre entier d'euros entre 0 et ${MAX_SUPPORT_AMOUNT} €` },
+        { status: 400 }
+      )
     }
 
     const activeEdition = await getActiveEdition()
@@ -34,7 +46,8 @@ export async function POST() {
       return NextResponse.json({ error: "Aucun repas payant sélectionné" }, { status: 400 })
     }
 
-    const totalWithFees = applyPaypalFees(totalEuros)
+    // Les frais PayPal ne portent que sur les repas : le soutien est ajouté tel quel.
+    const totalWithFees = applyPaypalFees(totalEuros) + supportAmount
     const amountCents = Math.round(totalWithFees * 100)
 
     const order = await createOrder(totalWithFees, {
@@ -63,6 +76,7 @@ export async function POST() {
         participationId: upsertedParticipation.id,
         providerId: order.id,
         amount: amountCents,
+        supportAmount,
         currency: "eur",
         status: "pending",
       },
