@@ -127,7 +127,7 @@ export function PaymentSection({ user }: PaymentSectionProps) {
   }
 
   return (
-    <section id="section-validation" className="flex flex-col gap-5">
+    <section id="section-validation" className="mx-auto flex w-full max-w-md flex-col gap-5">
       <div className="flex flex-col gap-2">
         <div>
           {locked ? (
