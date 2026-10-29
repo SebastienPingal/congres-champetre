@@ -13,6 +13,7 @@ export const DIETARY_OPTIONS = [
   { value: "LACTOSE_FREE", label: "Sans lactose" },
   { value: "NO_PORK", label: "Sans porc" },
   { value: "NUT_ALLERGY", label: "Allergie aux fruits à coque" },
+  { value: "BIG_EATER", label: "Je suis un gros mangeur" },
 ] as const
 
 export type DietaryRestriction = (typeof DIETARY_OPTIONS)[number]["value"]
