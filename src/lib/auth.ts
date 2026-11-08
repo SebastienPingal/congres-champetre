@@ -13,7 +13,18 @@ import { NextResponse } from "next/server"
 export const isPreviewAdminEnabled =
   process.env.VERCEL_ENV === "preview" || process.env.ENABLE_PREVIEW_ADMIN === "1"
 
-const providers: Provider[] = [Google, GitHub, Discord]
+const providers: Provider[] = [
+  // Google vérifie les adresses email : on peut rattacher sans risque un
+  // compte Google à un User existant qui a la même adresse (ex. compte créé
+  // via Discord avec l'adresse Gmail), au lieu de renvoyer OAuthAccountNotLinked.
+  Google({ allowDangerousEmailAccountLinking: true }),
+  // GitHub et Discord renvoient désormais le paramètre `iss` (RFC 9207) dans
+  // la redirection OAuth. Sans `issuer` explicite, Auth.js le compare à son
+  // placeholder `https://authjs.dev` et rejette la connexion (« Server error »).
+  // Leurs endpoints sont déclarés en dur : l'issuer ne sert qu'à cette validation.
+  GitHub({ issuer: "https://github.com/login/oauth" }),
+  Discord({ issuer: "https://discord.com" }),
+]
 
 if (isPreviewAdminEnabled) {
   providers.push(
@@ -107,7 +118,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
   },
   pages: {
-    signIn: "/auth/signin"
+    signIn: "/auth/signin",
+    // Les erreurs « serveur » (Configuration, AccessDenied…) arrivent aussi
+    // sur la page de connexion, qui affiche un message lisible via `?error=`.
+    error: "/auth/signin",
   }
 })
 

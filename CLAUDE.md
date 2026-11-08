@@ -189,7 +189,8 @@ if (me?.role !== "ADMIN") return NextResponse.json({ error: "⚠️ Accès refus
 4. **Composants `conference-form` / `conference-edit-form` / `conference-delete-button`** existent en double (dans `components/` et `features/conferences/`). Les versions `features/*` utilisent les hooks React Query ; les versions `components/*` utilisent du fetch direct et sont consommées par l'admin. Voir `REFACTOR.md`.
 5. **`/admin/page.tsx`** n'utilise pas React Query — il fait des `fetch` + `useState` directement. Si tu y ajoutes des données, suis le pattern existant ou migre l'ensemble vers les hooks (mais c'est un refactor non trivial).
 6. **PostgreSQL en local** sur le port **5434** (pas 5432) via `docker-compose.yml`.
-7. **Migrations 2026** : les noms incluent des dates futures (2026-02, 2026-04, 2026-05) — c'est intentionnel, calé sur l'événement.
+7. **OAuth et `iss` (RFC 9207)** : Discord (depuis le 16/10/2026) et GitHub renvoient un paramètre `iss` dans la redirection OAuth. Sans `issuer` explicite sur le provider, Auth.js v5 le compare à `https://authjs.dev` et la connexion échoue (« Server error », `CallbackRouteError: unexpected "iss"`). D'où `issuer` sur `Discord(...)` et `GitHub(...)` dans `src/lib/auth.ts` — à faire pour tout nouveau provider `type: "oauth"`. Google a `allowDangerousEmailAccountLinking` (email vérifié) pour se rattacher à un compte existant de même adresse ; Discord/GitHub non → `OAuthAccountNotLinked`, affiché sur `/auth/signin` (qui sert aussi de `pages.error`).
+8. **Migrations 2026** : les noms incluent des dates futures (2026-02, 2026-04, 2026-05) — c'est intentionnel, calé sur l'événement.
 
 ## Documents annexes
 
