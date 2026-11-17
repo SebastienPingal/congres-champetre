@@ -21,6 +21,8 @@ export interface AdminUserRow {
   willPayInCash: boolean
   /** Soutien libre versé via PayPal, en euros entiers. */
   supportAmount: number | null
+  /** Inscription au Secret Santa (`null` = pas répondu). */
+  wantsSecretSanta: boolean | null
   mealStatuses: Record<string, string>
   mealTotal: number
   lastLoginAt: string | null
@@ -35,6 +37,8 @@ export interface AdminUserRow {
 export interface AdminUsersPayload {
   users: AdminUserRow[]
   mealSlots: AdminMealSlot[]
+  /** La colonne « Secret Santa » n'est affichée que si activé. */
+  secretSantaEnabled: boolean
 }
 
 export function useAdminUsers() {

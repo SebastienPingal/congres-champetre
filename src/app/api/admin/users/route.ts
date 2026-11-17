@@ -78,6 +78,7 @@ export async function GET() {
         hasPaid: p?.hasPaid ?? false,
         willPayInCash: p?.willPayInCash ?? false,
         supportAmount: p?.supportAmount ?? null,
+        wantsSecretSanta: p?.wantsSecretSanta ?? null,
         mealStatuses,
         mealTotal: presentMeals.reduce((sum, mr) => sum + (mr.timeSlot.price ?? 0), 0),
         lastLoginAt: u.lastLoginAt,
@@ -91,7 +92,11 @@ export async function GET() {
       }
     })
 
-    return NextResponse.json({ mealSlots, users: result })
+    return NextResponse.json({
+      mealSlots,
+      users: result,
+      secretSantaEnabled: activeEdition.secretSantaEnabled,
+    })
   } catch (error) {
     if (error instanceof NoActiveEditionError) {
       return NextResponse.json({ error: "Aucune édition active" }, { status: 503 })

@@ -76,6 +76,8 @@ export function useToggleSecretSanta() {
     onSuccess: (data) => {
       qc.setQueryData(queryKeys.adminSecretSanta, data)
       qc.invalidateQueries({ queryKey: queryKeys.secretSanta })
+      // Colonne « Secret Santa » de /admin/users.
+      qc.invalidateQueries({ queryKey: queryKeys.adminUsers })
       qc.invalidateQueries({ queryKey: queryKeys.userProfile })
     },
   })

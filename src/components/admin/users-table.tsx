@@ -54,6 +54,7 @@ type ColumnKey =
   | "meals"
   | "mealTotal"
   | "supportAmount"
+  | "secretSanta"
   | "actions"
 
 const COLUMN_LABELS: Record<ColumnKey, string> = {
@@ -71,6 +72,7 @@ const COLUMN_LABELS: Record<ColumnKey, string> = {
   meals: "Repas",
   mealTotal: "Total",
   supportAmount: "Soutien",
+  secretSanta: "Secret Santa",
   actions: "Actions",
 }
 
@@ -89,6 +91,7 @@ const COLUMN_ORDER: ColumnKey[] = [
   "meals",
   "mealTotal",
   "supportAmount",
+  "secretSanta",
   "actions",
 ]
 
@@ -107,6 +110,7 @@ const DEFAULT_VISIBLE_COLUMNS: Record<ColumnKey, boolean> = {
   meals: true,
   mealTotal: true,
   supportAmount: true,
+  secretSanta: true,
   actions: true,
 }
 
@@ -118,6 +122,7 @@ export function UsersTable() {
   const { data, isLoading, error: queryError } = useAdminUsers()
   const users = useMemo(() => data?.users ?? [], [data])
   const mealSlots = useMemo(() => data?.mealSlots ?? [], [data])
+  const secretSantaEnabled = data?.secretSantaEnabled ?? false
   const loading = isLoading
   const [error, setError] = useState<string | null>(queryError ? "Impossible de charger les utilisateurs" : null)
 
@@ -162,6 +167,9 @@ export function UsersTable() {
   const toggleColumn = (key: ColumnKey) => {
     setVisibleColumns(prev => ({ ...prev, [key]: !prev[key] }))
   }
+
+  // Colonne « Secret Santa » : seulement quand l'admin l'a activé pour l'édition.
+  const showSecretSanta = secretSantaEnabled && visibleColumns.secretSanta
 
   useEffect(() => {
     try {
@@ -219,7 +227,7 @@ export function UsersTable() {
       if (!res.ok) throw new Error("Delete failed")
       patchCachedUsers(prev => prev.map(u =>
         u.id === deleteTarget.id
-          ? { ...u, isAttending: null, attendanceDays: "NONE" as AttendanceDays, sleepsOnSite: null, hasPaid: false, willPayInCash: false, supportAmount: null, mealStatuses: {}, mealTotal: 0 }
+          ? { ...u, isAttending: null, attendanceDays: "NONE" as AttendanceDays, sleepsOnSite: null, hasPaid: false, willPayInCash: false, supportAmount: null, wantsSecretSanta: null, mealStatuses: {}, mealTotal: 0 }
           : u
       ))
     } catch {
@@ -383,7 +391,7 @@ export function UsersTable() {
             <DropdownMenuContent align="end" className="w-48">
               <DropdownMenuLabel>Colonnes affichées</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              {COLUMN_ORDER.map((key) => (
+              {COLUMN_ORDER.filter((key) => key !== "secretSanta" || secretSantaEnabled).map((key) => (
                 <DropdownMenuCheckboxItem
                   key={key}
                   checked={visibleColumns[key]}
@@ -423,6 +431,7 @@ export function UsersTable() {
             ))}
             {visibleColumns.mealTotal && <TableHead><SortHeader label="Total" column="mealTotal" /></TableHead>}
             {visibleColumns.supportAmount && <TableHead><SortHeader label="Soutien" column="supportAmount" /></TableHead>}
+            {showSecretSanta && <TableHead><SortHeader label="Secret Santa" column="wantsSecretSanta" /></TableHead>}
             {visibleColumns.actions && <TableHead className="text-center">Actions</TableHead>}
           </TableRow>
         </TableHeader>
@@ -681,6 +690,17 @@ export function UsersTable() {
                   <span className="text-sm font-medium text-green">+{u.supportAmount} €</span>
                 ) : (
                   <span className="text-muted-foreground/80">—</span>
+                )}
+              </TableCell>
+              )}
+              {showSecretSanta && (
+              <TableCell>
+                {u.wantsSecretSanta === true ? (
+                  <Badge className="bg-green-soft text-green">Oui</Badge>
+                ) : u.wantsSecretSanta === false ? (
+                  <Badge variant="outline">Non</Badge>
+                ) : (
+                  <Badge className="bg-muted text-muted-foreground">?</Badge>
                 )}
               </TableCell>
               )}

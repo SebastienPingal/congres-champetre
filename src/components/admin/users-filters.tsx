@@ -21,6 +21,7 @@ import type { AttendanceDays } from "@/types"
 
 export type TriState = "ALL" | "YES" | "NO"
 export type DaysFilter = "ALL" | AttendanceDays
+export type SecretSantaFilter = "ALL" | "YES" | "NO" | "UNANSWERED"
 
 export interface UsersFiltersState {
   searchQuery: string
@@ -31,6 +32,7 @@ export interface UsersFiltersState {
   cash: TriState
   loggedIn: TriState
   blacklisted: TriState
+  secretSanta: SecretSantaFilter
 }
 
 export const DEFAULT_FILTERS: UsersFiltersState = {
@@ -42,12 +44,20 @@ export const DEFAULT_FILTERS: UsersFiltersState = {
   cash: "ALL",
   loggedIn: "ALL",
   blacklisted: "ALL",
+  secretSanta: "ALL",
 }
 
 const TRI_OPTIONS: { value: TriState, label: string }[] = [
   { value: "ALL", label: "Tous" },
   { value: "YES", label: "Oui" },
   { value: "NO", label: "Non" },
+]
+
+const SECRET_SANTA_OPTIONS: { value: SecretSantaFilter, label: string }[] = [
+  { value: "ALL", label: "Tous" },
+  { value: "YES", label: "Oui" },
+  { value: "NO", label: "Non" },
+  { value: "UNANSWERED", label: "Sans réponse" },
 ]
 
 const DAYS_OPTIONS: { value: DaysFilter, label: string }[] = [
@@ -121,6 +131,15 @@ const SELECT_FILTERS: SelectFilterDef[] = [
     options: TRI_OPTIONS,
     matches: (u, v) => (v === "YES" ? u.emailBlacklisted : !u.emailBlacklisted),
   },
+  {
+    key: "secretSanta",
+    label: "Secret Santa",
+    options: SECRET_SANTA_OPTIONS,
+    matches: (u, v) =>
+      v === "YES" ? u.wantsSecretSanta === true
+      : v === "NO" ? u.wantsSecretSanta === false
+      : u.wantsSecretSanta === null,
+  },
 ]
 
 /** Raccourcis : applique une combinaison de filtres en un clic. */
@@ -128,6 +147,7 @@ const PRESETS: { label: string, patch: Partial<UsersFiltersState> }[] = [
   { label: "Participants non validés", patch: { participation: "YES", paid: "NO", cash: "ALL" } },
   { label: "Paiement en cash", patch: { cash: "YES" } },
   { label: "Jamais connectés", patch: { loggedIn: "NO" } },
+  { label: "Secret Santa sans réponse", patch: { participation: "YES", secretSanta: "UNANSWERED" } },
 ]
 
 const STORAGE_KEY = "admin-users-filters-v2"
