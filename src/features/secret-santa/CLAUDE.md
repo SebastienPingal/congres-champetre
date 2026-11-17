@@ -5,7 +5,7 @@ Inscription puis révélation du Secret Santa côté participant (page `/secret-
 | File | Component | Purpose |
 |---|---|---|
 | `secret-santa-section.tsx` | `SecretSantaSection` | Orchestration : pas ouvert / inscription / tiré mais exclu / cadeau à ouvrir / ouvert |
-| `secret-santa-opt-in.tsx` | `SecretSantaOptIn` | « Participes-tu ? » oui / non (`useUpdateProfile({ wantsSecretSanta })`), visible entre l'activation et le tirage ; avertit si inscrit sans être présent |
+| `secret-santa-opt-in.tsx` | `SecretSantaOptIn` | Visible entre l'activation et le tirage (`useUpdateProfile({ wantsSecretSanta })`). Trois états : pas répondu → question oui / non ; inscrit → « Tu participes ! » + lien discret « Me désinscrire » (avertit si pas présent) ; refusé → « Finalement, je participe » |
 | `gift-reveal.tsx` | `GiftReveal` | Animation pure CSS : cadeau qui se dandine → tremble → couvercle qui saute, confettis, carte avec le nom |
 
 **Cycle de vie :** désactivé → activé par l'admin (`Edition.secretSantaEnabled`) → les participants répondent (`EditionParticipation.wantsSecretSanta`) → tirage parmi les volontaires présents → choix verrouillé.
