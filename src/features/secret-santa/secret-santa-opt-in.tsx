@@ -40,39 +40,63 @@ export function SecretSantaOptIn({ status }: SecretSantaOptInProps) {
 
       <div className="ss-festive flex flex-col items-center gap-4 rounded-lg border px-6 py-10 text-center">
         <Snowflakes />
-        <span className="text-5xl" aria-hidden>🎁</span>
-        <p className="font-display text-2xl" style={{ color: "var(--ink)" }}>
-          Participes-tu au Secret Santa ?
-        </p>
-        <p className="text-sm text-muted-foreground max-w-md">
-          Chaque volontaire offre un petit cadeau à une personne tirée au sort parmi les participants
-          présents au weekend. Une fois le tirage lancé, tu découvriras ici à qui faire ta surprise.
-        </p>
-
-        <div className="flex flex-wrap justify-center gap-2">
-          <Button
-            type="button"
-            variant={choice === true ? "default" : "outline"}
-            onClick={() => answer(true)}
-            disabled={isPending}
-          >
-            Oui, je participe !
-          </Button>
-          <Button
-            type="button"
-            variant={choice === false ? "default" : "outline"}
-            onClick={() => answer(false)}
-            disabled={isPending}
-          >
-            Non merci
-          </Button>
-        </div>
-
-        {choice === true && status.isAttending !== true && (
-          <p className="text-sm rounded-md border border-warn-border bg-warn-bg text-warn px-3 py-2 max-w-md">
-            Tu ne seras tiré·e au sort que si tu{" "}
-            <Link href="/presence" className="underline underline-offset-2">confirmes ta présence</Link> au weekend.
-          </p>
+        {choice === true ? (
+          <>
+            <span className="text-5xl" aria-hidden>🎉</span>
+            <p className="font-display text-2xl" style={{ color: "var(--ink)" }}>
+              Tu participes au Secret Santa !
+            </p>
+            <p className="text-sm text-muted-foreground max-w-md">
+              C&apos;est noté. Dès que les organisateurs auront lancé le tirage, un cadeau t&apos;attendra ici
+              pour découvrir à qui tu vas faire une surprise.
+            </p>
+            {status.isAttending !== true && (
+              <p className="text-sm rounded-md border border-warn-border bg-warn-bg text-warn px-3 py-2 max-w-md">
+                Tu ne seras tiré·e au sort que si tu{" "}
+                <Link href="/presence" className="underline underline-offset-2">confirmes ta présence</Link> au weekend.
+              </p>
+            )}
+            <button
+              type="button"
+              className="text-xs text-muted-foreground/80 underline underline-offset-2 hover:text-muted-foreground transition-colors disabled:opacity-50"
+              onClick={() => answer(false)}
+              disabled={isPending}
+            >
+              Me désinscrire
+            </button>
+          </>
+        ) : choice === false ? (
+          <>
+            <span className="text-5xl" aria-hidden>🎁</span>
+            <p className="font-display text-2xl" style={{ color: "var(--ink)" }}>
+              Tu ne participes pas cette fois
+            </p>
+            <p className="text-sm text-muted-foreground max-w-md">
+              Tu peux encore changer d&apos;avis jusqu&apos;au tirage au sort.
+            </p>
+            <Button type="button" variant="outline" onClick={() => answer(true)} disabled={isPending}>
+              Finalement, je participe !
+            </Button>
+          </>
+        ) : (
+          <>
+            <span className="text-5xl" aria-hidden>🎁</span>
+            <p className="font-display text-2xl" style={{ color: "var(--ink)" }}>
+              Participes-tu au Secret Santa ?
+            </p>
+            <p className="text-sm text-muted-foreground max-w-md">
+              Chaque volontaire offre un petit cadeau à une personne tirée au sort parmi les participants
+              présents au weekend. Une fois le tirage lancé, tu découvriras ici à qui faire ta surprise.
+            </p>
+            <div className="flex flex-wrap justify-center gap-2">
+              <Button type="button" onClick={() => answer(true)} disabled={isPending}>
+                Oui, je participe !
+              </Button>
+              <Button type="button" variant="outline" onClick={() => answer(false)} disabled={isPending}>
+                Non merci
+              </Button>
+            </div>
+          </>
         )}
 
         {error && <p className="text-sm text-destructive">{error.message}</p>}
