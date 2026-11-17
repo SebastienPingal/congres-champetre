@@ -95,7 +95,7 @@ export function PresenceSection({ user }: PresenceSectionProps) {
       </div>
 
       <div className="flex flex-col gap-3">
-        <Label className="text-sm font-medium">Serez-vous présent(e) au weekend ?</Label>
+        <Label className="text-sm font-medium">Serez-vous présent au weekend ?</Label>
         <div className="flex flex-wrap gap-2">
           <Button
             type="button"

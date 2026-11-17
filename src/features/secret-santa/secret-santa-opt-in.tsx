@@ -27,7 +27,7 @@ export function SecretSantaOptIn({ status }: SecretSantaOptInProps) {
         </p>
         {choice === true ? (
           <Badge variant="outline" className="border-green/40 text-green">
-            <CheckCircle2 className="h-3 w-3 mr-1" />Inscrit·e
+            <CheckCircle2 className="h-3 w-3 mr-1" />Inscrit
           </Badge>
         ) : choice === false ? (
           <Badge variant="outline" className="text-muted-foreground">Pas cette fois</Badge>
@@ -52,7 +52,7 @@ export function SecretSantaOptIn({ status }: SecretSantaOptInProps) {
             </p>
             {status.isAttending !== true && (
               <p className="text-sm rounded-md border border-warn-border bg-warn-bg text-warn px-3 py-2 max-w-md">
-                Tu ne seras tiré·e au sort que si tu{" "}
+                Tu ne seras tiré au sort que si tu{" "}
                 <Link href="/presence" className="underline underline-offset-2">confirmes ta présence</Link> au weekend.
               </p>
             )}
