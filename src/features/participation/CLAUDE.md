@@ -4,9 +4,9 @@ Components for the user's attendance registration.
 
 | File | Component | Purpose |
 |---|---|---|
-| `presence-section.tsx` | `PresenceSection` | Flat RSVP block: tri-state "présent ?" / jours / hébergement / Google Calendar |
+| `presence-section.tsx` | `PresenceSection` | Flat RSVP block: tri-state "présent ?" / jours / hébergement / Secret Santa (si activé, verrouillé après tirage) / Google Calendar |
 | `edition-info-card.tsx` | `EditionInfoCard` | Strip inline (sans Card) — Lieu / Dates / Participants avec icônes vertes mutées |
-| `alert-banner.tsx` | `AlertBanner` | Amber warning banner listing incomplete actions (presence, meals, conference) |
+| `alert-banner.tsx` | `AlertBanner` | Amber warning banner listing incomplete actions (presence, meals, conference, réponse Secret Santa) |
 
 **Data:** Uses `useUpdateProfile()` from `src/hooks/use-user-profile.ts`. Receives `UserProfile` as prop from the dashboard.
 

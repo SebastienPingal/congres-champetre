@@ -85,6 +85,8 @@ model Edition {
   startHour Int       @default(10)
   endHour   Int       @default(20)
   theme     String    @default("champetre")
+  /// Secret Santa ouvert par l'admin : les participants peuvent s'y inscrire.
+  secretSantaEnabled Boolean @default(false)
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 
@@ -110,6 +112,8 @@ model EditionParticipation {
   paidAmount            Int?
   /// Soutien libre versé en plus des repas, en euros entiers (sans frais PayPal).
   supportAmount         Int?
+  /// Inscription au Secret Santa : null = pas répondu. Seuls les `true` présents sont tirés.
+  wantsSecretSanta      Boolean?
   createdAt             DateTime       @default(now())
   updatedAt             DateTime       @updatedAt
 

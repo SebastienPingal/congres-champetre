@@ -14,10 +14,11 @@ import { SleepingStep } from "./steps/sleeping-step"
 import { SpeakingStep } from "./steps/speaking-step"
 import { MealsStep } from "./steps/meals-step"
 import { ConferenceStep } from "./steps/conference-step"
+import { SecretSantaStep } from "./steps/secret-santa-step"
 import type { DietaryValue } from "@/components/dietary-fields"
 import type { AttendanceDays, MealStatus } from "@/types"
 
-type Step = 'intention' | 'attending' | 'days' | 'sleeping' | 'meals' | 'speaking' | 'conference'
+type Step = 'intention' | 'attending' | 'days' | 'sleeping' | 'meals' | 'secretSanta' | 'speaking' | 'conference'
 
 interface OnboardingState {
   isAttending: boolean | null
@@ -32,6 +33,7 @@ const STEP_LABELS: Record<Step, string> = {
   days: 'Quels jours ?',
   sleeping: 'Hébergement',
   meals: 'Les repas',
+  secretSanta: 'Secret Santa',
   speaking: 'Conférence',
   conference: 'Votre conférence',
 }
@@ -106,11 +108,18 @@ export function OnboardingModal() {
 
   // Only show meals step if user is attending AND there are meals available
   const hasMeals = meals.length > 0
+  // Inscription au Secret Santa : seulement s'il est ouvert et pas encore tiré.
+  const showSecretSanta = user.edition.secretSantaEnabled && !user.edition.secretSantaDrawn
   const visibleSteps: Step[] = [
     'intention',
     'attending',
     ...(answers.isAttending === true
-      ? ['days' as Step, 'sleeping' as Step, ...(hasMeals ? ['meals' as Step] : [])]
+      ? [
+          'days' as Step,
+          'sleeping' as Step,
+          ...(hasMeals ? ['meals' as Step] : []),
+          ...(showSecretSanta ? ['secretSanta' as Step] : []),
+        ]
       : []),
     'speaking',
     ...(answers.wantsToSpeak === true ? ['conference' as Step] : []),
@@ -159,12 +168,17 @@ export function OnboardingModal() {
     const updated: OnboardingState = { ...answers, sleepsOnSite: value }
     setAnswers(updated)
     updateProfile({ sleepsOnSite: value })
-    setCurrentStep(hasMeals ? 'meals' : 'speaking')
+    setCurrentStep(hasMeals ? 'meals' : showSecretSanta ? 'secretSanta' : 'speaking')
   }
 
   const handleMeals = async (selections: Record<string, MealStatus>, diet: DietaryValue) => {
     updateProfile({ dietaryRestrictions: diet.restrictions, dietaryNotes: diet.notes.trim() || null })
     await saveMeals(selections)
+    setCurrentStep(showSecretSanta ? 'secretSanta' : 'speaking')
+  }
+
+  const handleSecretSanta = (value: boolean | null) => {
+    updateProfile({ wantsSecretSanta: value })
     setCurrentStep('speaking')
   }
 
@@ -246,6 +260,9 @@ export function OnboardingModal() {
               onAnswer={handleMeals}
               isSubmitting={isSubmitting}
             />
+          )}
+          {currentStep === 'secretSanta' && (
+            <SecretSantaStep onAnswer={handleSecretSanta} isSubmitting={isSubmitting} />
           )}
           {currentStep === 'speaking' && (
             <SpeakingStep onAnswer={handleSpeaking} isSubmitting={isSubmitting} />

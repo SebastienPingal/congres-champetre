@@ -13,6 +13,10 @@ export interface EditionInfo {
   participantCount: number
   registrationDeadline: string | null
   isRegistrationClosed: boolean
+  /** L'admin a ouvert le Secret Santa : les participants peuvent s'y inscrire. */
+  secretSantaEnabled: boolean
+  /** Le tirage a eu lieu : l'inscription au Secret Santa est verrouillée. */
+  secretSantaDrawn: boolean
 }
 
 export interface ConferenceRecord {
@@ -43,6 +47,8 @@ export interface UserProfile {
   paidAmount: number | null
   /** Soutien libre versé en plus des repas, en euros entiers. */
   supportAmount: number | null
+  /** Inscription au Secret Santa (`null` = pas répondu). */
+  wantsSecretSanta: boolean | null
   onboardingCompletedAt: string | null
   edition: EditionInfo
   conferences: ConferenceRecord[]
@@ -103,6 +109,12 @@ export interface Conference {
 }
 
 export interface SecretSantaStatus {
+  /** Secret Santa ouvert par l'admin pour l'édition active. */
+  enabled: boolean
+  /** Le tirage a eu lieu (inscriptions verrouillées). */
+  drawn: boolean
+  wantsSecretSanta: boolean | null
+  isAttending: boolean | null
   assigned: boolean
   revealedAt?: string | null
   /** Nom du destinataire, renvoyé uniquement une fois le cadeau ouvert. */
@@ -110,10 +122,16 @@ export interface SecretSantaStatus {
 }
 
 export interface AdminSecretSantaStatus {
+  enabled: boolean
   drawnAt: string | null
   total: number
   revealed: number
   attendingCount: number
+  /** Présents volontaires = vivier du tirage. */
+  optedInCount: number
+  declinedCount: number
+  /** Présents qui n'ont pas encore répondu. */
+  awaitingAnswerCount: number
   missingCount: number
   staleCount: number
   minParticipants: number

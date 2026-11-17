@@ -21,6 +21,12 @@ export function AlertBanner({ user, meals }: AlertBannerProps) {
     !locked && user.isAttending && meals.length > 0 && meals.some((m) => m.status === null)
   const needsConferenceAction =
     !locked && user.isAttending && user.wantsToSpeak && user.conferences.length === 0
+  // Secret Santa ouvert et pas encore tiré : un présent doit dire s'il participe.
+  const needsSecretSantaAction =
+    user.isAttending === true &&
+    user.edition.secretSantaEnabled &&
+    !user.edition.secretSantaDrawn &&
+    user.wantsSecretSanta === null
   // Validé = a payé OU ne doit rien. Seuls les non-validés ont une action à faire.
   const needsPayment =
     user.isAttending === true &&
@@ -51,7 +57,7 @@ export function AlertBanner({ user, meals }: AlertBannerProps) {
     return null
   }
 
-  if (!needsPresenceAction && !needsMealAction && !needsConferenceAction && !needsPayment) return null
+  if (!needsPresenceAction && !needsMealAction && !needsConferenceAction && !needsPayment && !needsSecretSantaAction) return null
 
   const linkCls = "inline-flex items-center gap-1.5 text-sm text-warn underline underline-offset-2 hover:text-warn transition-colors"
 
@@ -93,6 +99,14 @@ export function AlertBanner({ user, meals }: AlertBannerProps) {
                 <Link href="/conferences" className={linkCls}>
                   <CircleDot className="h-3.5 w-3.5 text-talk" />
                   Proposez votre conférence
+                </Link>
+              </li>
+            )}
+            {needsSecretSantaAction && (
+              <li>
+                <Link href="/secret-santa" className={linkCls}>
+                  <CircleDot className="h-3.5 w-3.5 text-warn" />
+                  Dites-nous si vous participez au Secret Santa 🎁
                 </Link>
               </li>
             )}

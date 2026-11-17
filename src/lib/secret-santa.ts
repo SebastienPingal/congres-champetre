@@ -1,6 +1,29 @@
 import { randomInt } from "crypto"
+import { prisma } from "@/lib/prisma"
 
 export const SECRET_SANTA_MIN_PARTICIPANTS = 3
+
+// Vivier du tirage : volontaires ET présents au weekend.
+export function secretSantaPoolWhere(editionId: string) {
+  return { editionId, isAttending: true, wantsSecretSanta: true }
+}
+
+export async function isSecretSantaDrawn(editionId: string): Promise<boolean> {
+  return (await prisma.secretSantaAssignment.count({ where: { editionId } })) > 0
+}
+
+/**
+ * L'inscription au Secret Santa n'est modifiable que si l'admin l'a activé et
+ * tant que le tirage n'a pas eu lieu. Renvoie le message d'erreur (409) sinon.
+ */
+export async function getSecretSantaOptInError(edition: {
+  id: string
+  secretSantaEnabled: boolean
+}): Promise<string | null> {
+  if (!edition.secretSantaEnabled) return "🎁 Le Secret Santa n'est pas ouvert"
+  if (await isSecretSantaDrawn(edition.id)) return "🔒 Le tirage du Secret Santa a déjà eu lieu"
+  return null
+}
 
 // Fisher–Yates avec un aléa cryptographique.
 function shuffle<T>(items: T[]): T[] {

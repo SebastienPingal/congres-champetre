@@ -1,11 +1,13 @@
 "use client"
 
 import { useState } from "react"
+import Link from "next/link"
 import { Badge } from "@/components/ui/badge"
 import { AppLoader } from "@/components/loaders/app-loader"
 import { Snowflakes } from "@/components/snowflakes"
 import { useRevealSecretSanta, useSecretSanta } from "@/hooks/use-secret-santa"
 import { GiftReveal, type GiftPhase } from "./gift-reveal"
+import { SecretSantaOptIn } from "./secret-santa-opt-in"
 
 // Durée minimale du tremblement avant l'ouverture, même si l'API répond vite.
 const SHAKE_MS = 1100
@@ -25,17 +27,33 @@ export function SecretSantaSection() {
     )
   }
 
+  // Inscriptions ouvertes : la personne dit si elle participe.
+  if (data && !data.assigned && data.enabled && !data.drawn) {
+    return <SecretSantaOptIn status={data} />
+  }
+
   if (error || !data?.assigned) {
+    const excluded = Boolean(data?.drawn)
     return (
       <section className="ss-festive flex flex-col items-center gap-3 rounded-lg border px-6 py-12 text-center">
         <Snowflakes />
         <span className="text-5xl" aria-hidden>🎁</span>
         <p className="font-display text-2xl" style={{ color: "var(--ink)" }}>
-          Le tirage n&apos;a pas encore eu lieu
+          {excluded ? "Le tirage a eu lieu" : "Le Secret Santa n'est pas encore ouvert"}
         </p>
         <p className="text-sm text-muted-foreground max-w-md">
-          Dès que les organisateurs auront lancé le Secret Santa, un cadeau t&apos;attendra ici.
-          Seuls les participants présents au weekend sont tirés au sort.
+          {excluded ? (
+            <>
+              Tu ne fais pas partie du tirage : seuls les volontaires présents au weekend ont été tirés au sort.
+              Si c&apos;est une erreur, <Link href="/presence" className="underline underline-offset-2">vérifie ta présence</Link> et
+              préviens les organisateurs.
+            </>
+          ) : (
+            <>
+              Dès que les organisateurs l&apos;auront ouvert, tu pourras t&apos;y inscrire ici.
+              Seuls les volontaires présents au weekend sont tirés au sort.
+            </>
+          )}
         </p>
       </section>
     )

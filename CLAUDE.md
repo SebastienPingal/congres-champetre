@@ -43,9 +43,9 @@ src/features/               # UI feature-sliced — chaque dossier a un CLAUDE.m
 ├── participation/          # presence-section, edition-info-card, alert-banner
 ├── meals/                  # meals-section, payment-section (PayPal-only)
 ├── conferences/            # conferences-section, conference-edit-form, conference-delete-button
-├── onboarding/             # onboarding-modal + steps/ (attending/days/sleeping/meals/speaking/conference)
+├── onboarding/             # onboarding-modal + steps/ (attending/days/sleeping/meals/secret-santa/speaking/conference)
 ├── program/                # program-section (lecture seule)
-└── secret-santa/           # secret-santa-section + gift-reveal (animation d'ouverture du cadeau)
+└── secret-santa/           # secret-santa-section + secret-santa-opt-in (inscription) + gift-reveal (animation)
 
 src/hooks/                  # React Query hooks (un CLAUDE.md ici)
 ├── use-user-profile.ts     # useUserProfile, useUpdateProfile
@@ -62,7 +62,7 @@ src/lib/
 ├── mail.ts                 # sendBroadcastEmail + markdown → HTML safe
 ├── participation-status.ts # isParticipationValidated() — validé = a payé OU ne doit rien (pur, client+serveur)
 ├── query-keys.ts           # factory typée pour React Query
-├── secret-santa.ts         # drawSecretSanta() — mélange crypto + cycle unique (personne ne se tire soi-même)
+├── secret-santa.ts         # drawSecretSanta() (mélange crypto + cycle unique) + vivier / verrou d'inscription (serveur)
 ├── helper.ts               # formatDateTimeRange (fr-FR) + getSpeakerLabel (conf. générale incluse)
 └── utils.ts                # cn() (clsx + tailwind-merge)
 
@@ -117,8 +117,9 @@ Points à retenir :
 - `Conference.speakerId` est `String?` : `null` = **conférence générale** créée depuis `/admin` (aucun compte rattaché). `speakerName` porte alors un intervenant libre facultatif (invité extérieur, collectif, ou rien pour un accueil / une table ronde). Ces conférences échappent à la règle « une conférence par personne » et ne modifient pas `wantsToSpeak`. Affichage : passer par `getSpeakerLabel()` (`src/lib/helper.ts`).
 - `TimeSlot.kind` : `CONFERENCE | MEAL | BREAK | OTHER`. Les `MEAL` ont `description`, `price`, `showInRegistration` en plus.
 - `MealRegistration` n'existe que si le user a coché PRESENT/ABSENT. Pas de ligne = pas répondu. **Invariant : `isAttending === false` ⇒ aucune `MealRegistration`** — passer à « je ne viens pas » les efface (`clearMealRegistrations()`, `src/lib/participation.ts`), et `/api/meals` POST comme `/api/admin/users` PATCH renvoient `409` si on tente d'en cocher une. `isAttending = null` (« je ne sais pas ») conserve les repas.
-- `SecretSantaAssignment` (`@@unique([editionId, giverId])` et `([editionId, receiverId])`) : une ligne par donneur. Le tirage (admin) porte sur les `isAttending === true` de l'édition active (min. 3) et forme **un seul cycle**. Relancer remplace tout. `revealedAt` = première ouverture du cadeau. Les admins ne voient que des compteurs, jamais les paires.
-- `User.emailBlacklisted` : coché depuis `/admin/users` (colonne « Blacklist »). Exclut le compte de **tous** les mails admin — broadcasts `/api/admin/emails` (quel que soit le filtre, sauf le test admin) et relances `/api/admin/secret-santa/notify`. N'affecte rien d'autre (connexion, participation, tirage Secret Santa inchangés).
+- **Secret Santa en deux temps** : `Edition.secretSantaEnabled` (activé depuis `/admin`, `PATCH /api/admin/secret-santa`) ouvre l'onglet aux participants, qui répondent via `EditionParticipation.wantsSecretSanta` (`null` = pas répondu) — depuis l'onglet Secret Santa, la section Présence ou une étape d'onboarding. L'inscription passe par `PATCH /api/user/profile` et renvoie `409` si le Secret Santa n'est pas activé ou **dès que le tirage a eu lieu** (`getSecretSantaOptInError()`, `src/lib/secret-santa.ts`) ; elle ne dépend pas de la fermeture des inscriptions. Désactiver est refusé tant qu'un tirage existe.
+- `SecretSantaAssignment` (`@@unique([editionId, giverId])` et `([editionId, receiverId])`) : une ligne par donneur. Le tirage (admin) porte sur les **volontaires présents** (`secretSantaPoolWhere()` : `isAttending === true` ET `wantsSecretSanta === true`, min. 3) et forme **un seul cycle**. Relancer remplace tout. `revealedAt` = première ouverture du cadeau. Les admins ne voient que des compteurs, jamais les paires.
+- `User.emailBlacklisted` : coché depuis `/admin/users` (colonne « Blacklist »). Exclut le compte de **tous** les mails admin — broadcasts `/api/admin/emails` (quel que soit le filtre, sauf le test admin) et relances et invitations `/api/admin/secret-santa/notify`. N'affecte rien d'autre (connexion, participation, tirage Secret Santa inchangés).
 - `User.dietaryRestrictions` (`String[]`, valeurs de `DIETARY_OPTIONS` dans `src/lib/dietary.ts`) + `User.dietaryNotes` (texte libre « Autre ») : régime alimentaire, porté par le **User** (suit la personne d'une édition à l'autre). Saisi à l'étape repas de l'onboarding et dans l'encart « Régime alimentaire » de la section Repas, modifiable via `PATCH /api/user/profile` même inscriptions fermées. Visible dans la colonne « Régime » de `/admin/users`. Valeurs filtrées côté serveur (`sanitizeDietary*`).
 - `EditionParticipation.supportAmount` (et `PaymentIntent.supportAmount`) : **soutien libre** facultatif versé en plus des repas, en euros entiers (`src/lib/support.ts`). Ajouté au total **sans** frais PayPal (frais calculés sur les repas seuls). Le montant du soutien est le seul accepté du client, borné côté serveur. Colonne « Soutien » dans `/admin/users`.
 - `PaymentIntent` est un journal d'audit PayPal (un row par order PayPal créé), distinct des champs `paymentProviderId/paymentStatus` qui pointent vers le dernier order en cours.
@@ -135,9 +136,9 @@ Voir `ARCHITECTURE.md §6` pour le tableau exhaustif. Quelques routes critiques 
 | `/api/payments/capture` | POST | Capture l'order après approbation côté PayPal. Vérifie que l'`orderId` appartient bien à l'utilisateur. |
 | `/api/payments/webhook` | POST | **`request.text()` pour le body brut** — vital pour `verifyWebhook` PayPal (filet de sécurité si le capture front échoue) |
 | `/api/editions/[id]` | PATCH | `isActive: true` désactive les autres dans une transaction |
-| `/api/admin/secret-santa` | GET/POST/DELETE | Statut (compteurs) / (re)lance le tirage / l'annule |
-| `/api/admin/secret-santa/notify` | POST | `{ target: "unrevealed" \| "all" }` — mail **sans** le nom, lien vers `/secret-santa` |
-| `/api/secret-santa` | GET | Nom du destinataire uniquement si déjà révélé |
+| `/api/admin/secret-santa` | GET/PATCH/POST/DELETE | Statut (compteurs) / active-désactive `{ enabled }` / (re)lance le tirage / l'annule |
+| `/api/admin/secret-santa/notify` | POST | `{ target: "invite" \| "unrevealed" \| "all" }` — `invite` : présents sans réponse, avant tirage ; sinon mail **sans** le nom, lien vers `/secret-santa` |
+| `/api/secret-santa` | GET | `enabled` / `drawn` / `wantsSecretSanta` ; nom du destinataire uniquement si déjà révélé |
 | `/api/secret-santa/reveal` | POST | Pose `revealedAt` et renvoie le nom |
 | `/api/admin/users` | DELETE | Supprime la **participation**, pas le User |
 

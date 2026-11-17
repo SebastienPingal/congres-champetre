@@ -27,7 +27,8 @@ export function useRevealSecretSanta() {
       return res.json()
     },
     onSuccess: (data) => {
-      qc.setQueryData<SecretSantaStatus>(queryKeys.secretSanta, data)
+      // La révélation ne renvoie que l'attribution : on garde le reste du statut.
+      qc.setQueryData<SecretSantaStatus>(queryKeys.secretSanta, (prev) => ({ ...prev, ...data }))
     },
   })
 }
@@ -54,6 +55,28 @@ export function useDrawSecretSanta() {
     onSuccess: (data) => {
       qc.setQueryData(queryKeys.adminSecretSanta, data)
       qc.invalidateQueries({ queryKey: queryKeys.secretSanta })
+      // `edition.secretSantaDrawn` du profil verrouille l'inscription.
+      qc.invalidateQueries({ queryKey: queryKeys.userProfile })
+    },
+  })
+}
+
+export function useToggleSecretSanta() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (enabled: boolean): Promise<AdminSecretSantaStatus> => {
+      const res = await fetch("/api/admin/secret-santa", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ enabled }),
+      })
+      if (!res.ok) return readError(res, "Erreur lors de la mise à jour du Secret Santa")
+      return res.json()
+    },
+    onSuccess: (data) => {
+      qc.setQueryData(queryKeys.adminSecretSanta, data)
+      qc.invalidateQueries({ queryKey: queryKeys.secretSanta })
+      qc.invalidateQueries({ queryKey: queryKeys.userProfile })
     },
   })
 }
@@ -69,13 +92,15 @@ export function useCancelSecretSanta() {
     onSuccess: (data) => {
       qc.setQueryData(queryKeys.adminSecretSanta, data)
       qc.invalidateQueries({ queryKey: queryKeys.secretSanta })
+      // `edition.secretSantaDrawn` du profil verrouille l'inscription.
+      qc.invalidateQueries({ queryKey: queryKeys.userProfile })
     },
   })
 }
 
 export function useNotifySecretSanta() {
   return useMutation({
-    mutationFn: async (target: "unrevealed" | "all"): Promise<{ total: number; sent: number; failed: number }> => {
+    mutationFn: async (target: "unrevealed" | "all" | "invite"): Promise<{ total: number; sent: number; failed: number }> => {
       const res = await fetch("/api/admin/secret-santa/notify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },

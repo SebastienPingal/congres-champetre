@@ -15,11 +15,12 @@ First-visit onboarding wizard shown as a non-dismissable Dialog.
 | `steps/days-step.tsx` | "Quels jours ?" (only if attending=yes) → BOTH / DAY1 / DAY2 / unknown |
 | `steps/sleeping-step.tsx` | "Dormez-vous sur place ?" → true / false / null |
 | `steps/meals-step.tsx` | Repas PRESENT/ABSENT + encart « Régime alimentaire » (`DietaryFields`) ; le régime est sauvé via `useUpdateProfile()` au clic sur Continuer |
+| `steps/secret-santa-step.tsx` | "Participer au Secret Santa ?" → true / false / null (seulement si `edition.secretSantaEnabled && !edition.secretSantaDrawn`) |
 | `steps/speaking-step.tsx` | "Souhaitez-vous proposer une conférence ?" → true / false / null |
 
 **Step flow:**
 - intention (lettre d'intention, accueil) → attending → …
-- attending=yes → days → sleeping → meals (si repas disponibles) → speaking → complete
+- attending=yes → days → sleeping → meals (si repas disponibles) → secretSanta (si ouvert et pas tiré) → speaking → complete
 - attending=no/unknown → (skip days/sleeping/meals) → speaking → complete
 
 The meals step is skipped entirely if there are no MEAL-type time slots in the active edition.

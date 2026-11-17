@@ -76,6 +76,7 @@ const fakeUser: UserProfile = {
   hasPaid: false,
   paidAmount: null,
   supportAmount: null,
+  wantsSecretSanta: null,
   onboardingCompletedAt: new Date().toISOString(),
   conferences: [],
   edition: {
@@ -86,6 +87,8 @@ const fakeUser: UserProfile = {
     participantCount: 1,
     registrationDeadline: null,
     isRegistrationClosed: false,
+    secretSantaEnabled: false,
+    secretSantaDrawn: false,
   },
 }
 

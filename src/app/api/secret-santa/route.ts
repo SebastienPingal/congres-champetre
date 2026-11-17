@@ -11,14 +11,29 @@ export async function GET() {
     if (!session?.user) return NextResponse.json({ error: "🔒 Non authentifié" }, { status: 401 })
 
     const edition = await getActiveEdition()
-    const assignment = await prisma.secretSantaAssignment.findUnique({
-      where: { editionId_giverId: { editionId: edition.id, giverId: session.user.id } },
-      select: { revealedAt: true, receiver: { select: { name: true, email: true } } },
-    })
+    const [assignment, drawnCount, participation] = await Promise.all([
+      prisma.secretSantaAssignment.findUnique({
+        where: { editionId_giverId: { editionId: edition.id, giverId: session.user.id } },
+        select: { revealedAt: true, receiver: { select: { name: true, email: true } } },
+      }),
+      prisma.secretSantaAssignment.count({ where: { editionId: edition.id } }),
+      prisma.editionParticipation.findUnique({
+        where: { userId_editionId: { userId: session.user.id, editionId: edition.id } },
+        select: { wantsSecretSanta: true, isAttending: true },
+      }),
+    ])
 
-    if (!assignment) return NextResponse.json({ assigned: false })
+    const base = {
+      enabled: edition.secretSantaEnabled,
+      drawn: drawnCount > 0,
+      wantsSecretSanta: participation?.wantsSecretSanta ?? null,
+      isAttending: participation?.isAttending ?? null,
+    }
+
+    if (!assignment) return NextResponse.json({ ...base, assigned: false })
 
     return NextResponse.json({
+      ...base,
       assigned: true,
       revealedAt: assignment.revealedAt,
       receiverName: assignment.revealedAt ? (assignment.receiver.name ?? assignment.receiver.email) : null,

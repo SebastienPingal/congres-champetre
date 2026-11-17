@@ -25,6 +25,7 @@ type ProfilePatch = Partial<
     | 'wantsToSpeak'
     | 'dietaryRestrictions'
     | 'dietaryNotes'
+    | 'wantsSecretSanta'
   >
 >
 
@@ -37,11 +38,18 @@ export function useUpdateProfile() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       })
-      if (!res.ok) throw new Error("Erreur lors de la mise à jour")
+      if (!res.ok) {
+        const body = await res.json().catch(() => null)
+        throw new Error(body?.error ?? "Erreur lors de la mise à jour")
+      }
       return res.json()
     },
-    onSuccess: (data) => {
+    onSuccess: (data, payload) => {
       qc.setQueryData(queryKeys.userProfile, data.user)
+      // Le statut Secret Santa dépend de l'inscription ET de la présence.
+      if ("wantsSecretSanta" in payload || "isAttending" in payload) {
+        qc.invalidateQueries({ queryKey: queryKeys.secretSanta })
+      }
     },
   })
 }

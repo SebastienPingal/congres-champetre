@@ -59,6 +59,10 @@ export function PresenceSection({ user }: PresenceSectionProps) {
     updateProfile({ sleepsOnSite: value })
   }
 
+  const handleSecretSantaChange = (value: boolean | null) => {
+    updateProfile({ wantsSecretSanta: value })
+  }
+
   const handleGoogleCalendar = () => {
     const sel = user.attendanceDays
     if (sel === 'NONE' || sel === 'UNKNOWN') return
@@ -67,6 +71,9 @@ export function PresenceSection({ user }: PresenceSectionProps) {
   }
 
   const selectedDays = pendingDays ?? user.attendanceDays
+  const showSecretSanta = user.edition.secretSantaEnabled
+  // Indépendant de la fermeture des inscriptions : seul le tirage verrouille le choix.
+  const secretSantaDisabled = isPending || user.edition.secretSantaDrawn
 
   return (
     <section id="section-presence" className="flex flex-col gap-6">
@@ -188,6 +195,47 @@ export function PresenceSection({ user }: PresenceSectionProps) {
               </Button>
             </div>
           </div>
+
+          {showSecretSanta && (
+            <div className="flex flex-col gap-3">
+              <Label className="text-sm font-medium">Participer au Secret Santa ? 🎁</Label>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  type="button"
+                  variant={user.wantsSecretSanta === true ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => handleSecretSantaChange(true)}
+                  disabled={secretSantaDisabled}
+                >
+                  Oui, je participe
+                </Button>
+                <Button
+                  type="button"
+                  variant={user.wantsSecretSanta === false ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => handleSecretSantaChange(false)}
+                  disabled={secretSantaDisabled}
+                >
+                  Non merci
+                </Button>
+                <Button
+                  type="button"
+                  variant={user.wantsSecretSanta === null ? "secondary" : "ghost"}
+                  size="sm"
+                  className="text-muted-foreground"
+                  onClick={() => handleSecretSantaChange(null)}
+                  disabled={secretSantaDisabled}
+                >
+                  Je ne sais pas encore
+                </Button>
+              </div>
+              {user.edition.secretSantaDrawn && (
+                <p className="text-xs text-muted-foreground">
+                  <Lock className="inline h-3 w-3 mr-1" />Le tirage a eu lieu : ce choix n&apos;est plus modifiable.
+                </p>
+              )}
+            </div>
+          )}
 
           {user.edition.startDate && user.edition.endDate && (
             <div>

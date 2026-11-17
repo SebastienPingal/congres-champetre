@@ -6,6 +6,8 @@ export type ParticipationUpdateInput = {
   attendanceDays?: AttendanceDays | string
   sleepsOnSite?: boolean | null
   willPayInCash?: boolean
+  /** Validé en amont par `getSecretSantaOptInError()` (activé + pas encore tiré). */
+  wantsSecretSanta?: boolean | null
 }
 
 export type ParticipationValidationError = { error: string; status: number }
@@ -64,6 +66,11 @@ export async function buildParticipationUpdate(
     needsUpdate = true
   }
 
+  if (typeof body.wantsSecretSanta === "boolean" || body.wantsSecretSanta === null) {
+    participationData.wantsSecretSanta = body.wantsSecretSanta
+    needsUpdate = true
+  }
+
   if (!needsUpdate) return null
 
   const existing = await prisma.editionParticipation.findUnique({
@@ -114,6 +121,7 @@ export async function upsertParticipation(
       attendanceDays: (data.attendanceDays as AttendanceDays) ?? "NONE",
       sleepsOnSite: (data.sleepsOnSite as boolean | null) ?? null,
       willPayInCash: (data.willPayInCash as boolean | undefined) ?? false,
+      wantsSecretSanta: (data.wantsSecretSanta as boolean | null | undefined) ?? null,
     },
     update: data,
   })

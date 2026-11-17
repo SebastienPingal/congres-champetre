@@ -70,13 +70,17 @@ export const NAV_ITEMS: NavItem[] = [
   { key: "paiement",    href: "/paiement",    label: "Paiement",    icon: CreditCard },
 ]
 
-// L'onglet n'apparaît qu'une fois le tirage fait ; une pastille signale un cadeau pas encore ouvert.
+// L'onglet apparaît dès que l'admin ouvre le Secret Santa (ou si on a été tiré).
+// Pastille : présent qui n'a pas encore répondu, puis cadeau pas encore ouvert.
 function useNavItems(): NavItem[] {
   const { data: secretSanta } = useSecretSanta()
-  if (!secretSanta?.assigned) return NAV_ITEMS
+  if (!secretSanta || (!secretSanta.enabled && !secretSanta.assigned)) return NAV_ITEMS
+  const dot = secretSanta.assigned
+    ? !secretSanta.revealedAt
+    : !secretSanta.drawn && secretSanta.isAttending === true && secretSanta.wantsSecretSanta === null
   return [
     ...NAV_ITEMS,
-    { key: "secret-santa", href: "/secret-santa", label: "Secret Santa", icon: Gift, dot: !secretSanta.revealedAt },
+    { key: "secret-santa", href: "/secret-santa", label: "Secret Santa", icon: Gift, dot },
   ]
 }
 

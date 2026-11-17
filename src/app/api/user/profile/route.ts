@@ -4,6 +4,26 @@ import { prisma } from "@/lib/prisma"
 import { getActiveEdition, NoActiveEditionError, getRegistrationDeadline, isRegistrationClosed, RegistrationClosedError } from "@/lib/edition"
 import { sanitizeDietaryNotes, sanitizeDietaryRestrictions } from "@/lib/dietary"
 import { buildParticipationUpdate, clearMealRegistrations, upsertParticipation } from "@/lib/participation"
+import { getSecretSantaOptInError, isSecretSantaDrawn } from "@/lib/secret-santa"
+import type { Edition } from "@prisma/client"
+
+async function buildEditionInfo(edition: Edition) {
+  const [participantCount, secretSantaDrawn] = await Promise.all([
+    prisma.editionParticipation.count({ where: { editionId: edition.id, isAttending: true } }),
+    isSecretSantaDrawn(edition.id),
+  ])
+  return {
+    id: edition.id,
+    name: edition.name,
+    startDate: edition.startDate,
+    endDate: edition.endDate,
+    participantCount,
+    registrationDeadline: getRegistrationDeadline(edition),
+    isRegistrationClosed: isRegistrationClosed(edition),
+    secretSantaEnabled: edition.secretSantaEnabled,
+    secretSantaDrawn,
+  }
+}
 
 export async function GET() {
   try {
@@ -43,10 +63,6 @@ export async function GET() {
 
     const participation = user.participations[0]
 
-    const participantCount = await prisma.editionParticipation.count({
-      where: { editionId: activeEdition.id, isAttending: true },
-    })
-
     return NextResponse.json({
       id: user.id,
       name: user.name,
@@ -64,16 +80,9 @@ export async function GET() {
       hasPaid: participation?.hasPaid ?? false,
       paidAmount: participation?.paidAmount ?? null,
       supportAmount: participation?.supportAmount ?? null,
+      wantsSecretSanta: participation?.wantsSecretSanta ?? null,
       onboardingCompletedAt: participation?.onboardingCompletedAt ?? null,
-      edition: {
-        id: activeEdition.id,
-        name: activeEdition.name,
-        startDate: activeEdition.startDate,
-        endDate: activeEdition.endDate,
-        participantCount,
-        registrationDeadline: getRegistrationDeadline(activeEdition),
-        isRegistrationClosed: isRegistrationClosed(activeEdition),
-      },
+      edition: await buildEditionInfo(activeEdition),
     })
   } catch (error) {
     if (error instanceof NoActiveEditionError) {
@@ -134,6 +143,18 @@ export async function PATCH(request: NextRequest) {
       })
     }
 
+    // Inscription au Secret Santa : hors fermeture des inscriptions, mais
+    // verrouillée tant que l'admin ne l'a pas ouvert et dès que le tirage a eu lieu.
+    if ("wantsSecretSanta" in body) {
+      if (typeof body.wantsSecretSanta !== "boolean" && body.wantsSecretSanta !== null) {
+        return NextResponse.json({ error: "📝 Valeur wantsSecretSanta invalide" }, { status: 400 })
+      }
+      const secretSantaError = await getSecretSantaOptInError(activeEdition)
+      if (secretSantaError) {
+        return NextResponse.json({ error: secretSantaError }, { status: 409 })
+      }
+    }
+
     const participationResult = await buildParticipationUpdate(
       sessionUser.id,
       activeEdition.id,
@@ -179,10 +200,6 @@ export async function PATCH(request: NextRequest) {
 
     const participation = user?.participations[0]
 
-    const participantCount = await prisma.editionParticipation.count({
-      where: { editionId: activeEdition.id, isAttending: true },
-    })
-
     return NextResponse.json({
       message: "✅ Profil mis à jour",
       user: {
@@ -201,16 +218,9 @@ export async function PATCH(request: NextRequest) {
         hasPaid: participation?.hasPaid ?? false,
         paidAmount: participation?.paidAmount ?? null,
         supportAmount: participation?.supportAmount ?? null,
+        wantsSecretSanta: participation?.wantsSecretSanta ?? null,
         onboardingCompletedAt: participation?.onboardingCompletedAt ?? null,
-        edition: {
-          id: activeEdition.id,
-          name: activeEdition.name,
-          startDate: activeEdition.startDate,
-          endDate: activeEdition.endDate,
-          participantCount,
-          registrationDeadline: getRegistrationDeadline(activeEdition),
-          isRegistrationClosed: isRegistrationClosed(activeEdition),
-        },
+        edition: await buildEditionInfo(activeEdition),
       },
     })
   } catch (error) {
