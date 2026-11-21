@@ -67,7 +67,7 @@ function readMailConfig(): MailConfig {
   return { host: resolvedHost, port, secure, user: resolvedUser, pass: resolvedPass, from: resolvedFrom }
 }
 
-function escapeHtml(text: string): string {
+export function escapeHtml(text: string): string {
   return text
     .replaceAll("&", "&amp;")
     .replaceAll("<", "&lt;")
@@ -163,9 +163,8 @@ function htmlToPlainText(html: string): string {
     .trim()
 }
 
-export async function sendBroadcastEmail(input: BroadcastEmailInput): Promise<BroadcastEmailResult> {
-  const config = readMailConfig()
-  const transporter = nodemailer.createTransport({
+function createTransporter(config: MailConfig) {
+  return nodemailer.createTransport({
     host: config.host,
     port: config.port,
     secure: config.secure,
@@ -174,6 +173,39 @@ export async function sendBroadcastEmail(input: BroadcastEmailInput): Promise<Br
       pass: config.pass,
     },
   })
+}
+
+type SingleEmailAttachment = BroadcastAttachment & {
+  /** Content-ID pour afficher l'image dans le corps (`<img src="cid:…">`). */
+  cid?: string
+}
+
+type SingleEmailInput = {
+  to: string
+  subject: string
+  html: string
+  text: string
+  replyTo?: string
+  attachments?: SingleEmailAttachment[]
+}
+
+/** Envoi unitaire (HTML déjà construit et échappé par l'appelant). Throw en cas d'échec. */
+export async function sendEmail(input: SingleEmailInput): Promise<void> {
+  const config = readMailConfig()
+  await createTransporter(config).sendMail({
+    from: config.from,
+    to: input.to,
+    replyTo: input.replyTo,
+    subject: input.subject,
+    text: input.text,
+    html: input.html,
+    attachments: input.attachments,
+  })
+}
+
+export async function sendBroadcastEmail(input: BroadcastEmailInput): Promise<BroadcastEmailResult> {
+  const config = readMailConfig()
+  const transporter = createTransporter(config)
 
   const normalizedRecipients = input.recipients
     .map((email) => email.trim().toLowerCase())

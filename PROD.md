@@ -116,13 +116,15 @@ PAYPAL_WEBHOOK_ID="WH-..."
 - En sandbox, PayPal te fournit des comptes acheteurs de test sur [developer.paypal.com/dashboard/accounts](https://developer.paypal.com/dashboard/accounts).
 - Pour tester le webhook localement, soit utiliser ngrok / cloudflared pour exposer `localhost:3000`, soit utiliser le simulateur d'événements de [developer.paypal.com](https://developer.paypal.com) (Webhook Simulator).
 
-### Email (optionnel — pour les envois admin)
+### Email (envois admin + signalements de bug)
 ```env
 SMTP_HOST="smtp.exemple.com"
 SMTP_PORT="587"
 SMTP_USER="votre@email.com"
-SMTP_PASSWORD="<mot-de-passe>"
+SMTP_PASS="<mot-de-passe>"
 SMTP_FROM="Congrès Champêtre <no-reply@exemple.com>"
+# Destinataire des signalements envoyés depuis la bulle 🐞 (sans elle, la bulle répond 503)
+BUG_REPORT_EMAIL="vous@exemple.com"
 ```
 
 ---

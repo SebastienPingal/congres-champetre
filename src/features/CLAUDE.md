@@ -10,6 +10,7 @@ Feature-sliced folder. Each subfolder owns one domain: components, helpers, and 
 | `onboarding/` | First-visit step-by-step modal (4 questions, "je ne sais pas encore" on each) |
 | `program/` | Weekend schedule display (read-only, grouped by day) |
 | `secret-santa/` | Secret Santa reveal (gift-opening animation) |
+| `bug-report/` | Bulle flottante « Signaler un bug » (montée dans le layout racine, visible partout) |
 
 **Dependency rule:** Feature components import from `src/hooks/` but NOT from other features. Shared UI goes in `src/components/ui/`.
 

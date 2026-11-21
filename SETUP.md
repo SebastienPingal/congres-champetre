@@ -24,6 +24,9 @@ SMTP_USER=""
 SMTP_PASS=""
 SMTP_FROM="Congres Champetre <noreply@congres-champetre.com>"
 SMTP_SECURE="false"
+
+# Destinataire des signalements de bug (bulle en bas à droite)
+BUG_REPORT_EMAIL=""
 ```
 
 ## 2. Base de données PostgreSQL

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Manrope, Cormorant_Garamond, Newsreader, JetBrains_Mono } from "next/font/google";
 import { AuthProvider } from "@/components/providers/auth-provider";
 import { QueryProvider } from "@/components/providers/query-provider";
+import { BugReportBubble } from "@/features/bug-report/bug-report-bubble";
 import { prisma } from "@/lib/prisma";
 import { isThemeId, type ThemeId } from "@/lib/themes";
 import "./globals.css";
@@ -82,6 +83,7 @@ export default async function RootLayout({
         <AuthProvider>
           <QueryProvider>
             {children}
+            <BugReportBubble />
           </QueryProvider>
         </AuthProvider>
       </body>

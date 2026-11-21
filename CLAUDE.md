@@ -45,7 +45,8 @@ src/features/               # UI feature-sliced — chaque dossier a un CLAUDE.m
 ├── conferences/            # conferences-section, conference-edit-form, conference-delete-button
 ├── onboarding/             # onboarding-modal + steps/ (attending/days/sleeping/meals/secret-santa/speaking/conference)
 ├── program/                # program-section (lecture seule)
-└── secret-santa/           # secret-santa-section + secret-santa-opt-in (inscription) + gift-reveal (animation)
+├── secret-santa/           # secret-santa-section + secret-santa-opt-in (inscription) + gift-reveal (animation)
+└── bug-report/             # bulle « Signaler un bug » (layout racine) + tampons d'erreurs / navigation
 
 src/hooks/                  # React Query hooks (un CLAUDE.md ici)
 ├── use-user-profile.ts     # useUserProfile, useUpdateProfile
@@ -59,7 +60,9 @@ src/lib/
 ├── prisma.ts               # singleton (globalThis en dev)
 ├── paypal.ts               # wrapper REST PayPal (token OAuth caché en mémoire) — createOrder / captureOrder / verifyWebhook
 ├── edition.ts              # getActiveEdition() / getActiveEditionId() / isRegistrationClosed() / getRegistrationDeadline() — THROW si aucune active
-├── mail.ts                 # sendBroadcastEmail + markdown → HTML safe
+├── mail.ts                 # sendBroadcastEmail + sendEmail (unitaire) + markdown → HTML safe
+├── bug-report.ts           # types + limites du signalement de bug (pur, client+serveur)
+├── bug-report-email.ts     # lecture défensive du contexte navigateur + construction du mail (serveur)
 ├── participation-status.ts # isParticipationValidated() — validé = a payé OU ne doit rien (pur, client+serveur)
 ├── query-keys.ts           # factory typée pour React Query
 ├── secret-santa.ts         # drawSecretSanta() (mélange crypto + cycle unique) + vivier / verrou d'inscription (serveur)
@@ -92,6 +95,7 @@ Ces fichiers documentent leur dossier en détail — consulte-les avant de modif
 - `src/features/onboarding/CLAUDE.md`
 - `src/features/program/CLAUDE.md`
 - `src/features/secret-santa/CLAUDE.md`
+- `src/features/bug-report/CLAUDE.md`
 - `src/hooks/CLAUDE.md`
 - `src/types/CLAUDE.md`
 - `src/components/admin/CLAUDE.md`
@@ -141,6 +145,7 @@ Voir `ARCHITECTURE.md §6` pour le tableau exhaustif. Quelques routes critiques 
 | `/api/secret-santa` | GET | `enabled` / `drawn` / `wantsSecretSanta` ; nom du destinataire uniquement si déjà révélé |
 | `/api/secret-santa/reveal` | POST | Pose `revealedAt` et renvoie le nom |
 | `/api/admin/users` | DELETE | Supprime la **participation**, pas le User |
+| `/api/bug-report` | POST | Multipart, **ouvert aux anonymes**. Mail à `BUG_REPORT_EMAIL` (503 si absent) avec description, imprécran, contexte navigateur et état d'inscription relu en DB. Anti-spam : champ piège `website`, délai mini, limite en mémoire |
 
 Routes admin : chaque handler refait `prisma.user.findUnique` pour vérifier `role === "ADMIN"`. Pattern répété ~10× (cf. `REFACTOR.md`).
 
