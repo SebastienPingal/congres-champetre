@@ -2,7 +2,7 @@
 
 First-visit onboarding wizard shown as a non-dismissable Dialog.
 
-**Trigger:** `user.onboardingCompletedAt === null` (null means onboarding never completed). Set by `POST /api/onboarding`.
+**Trigger:** shown while `onboardingCompletedAt === null` **or** `isAttending === null` (presence still « je ne sais pas »). `onboardingCompletedAt` is set by `POST /api/onboarding`. After a successful completion the modal closes and, if presence is still `null`, is re-shown **at most once a day**: the snooze (`{ editionId, until }`) lives in `localStorage` under `onboarding-snoozed-until`. Without it, `isAttending === null` kept the modal open forever (users stuck on the last step).
 
 **Files:**
 | File | Purpose |
@@ -27,4 +27,4 @@ The meals step is skipped entirely if there are no MEAL-type time slots in the a
 
 **Save strategy:** Each answer immediately calls `useUpdateProfile()` for partial saves. Final step (speaking) calls `POST /api/onboarding` which sets `onboardingCompletedAt = now()` and invalidates the profile query — modal disappears.
 
-**"Répondre plus tard":** Calls `POST /api/onboarding` immediately with whatever was answered so far, marking onboarding complete. Modal won't reappear.
+**"Répondre plus tard":** Calls `POST /api/onboarding` immediately with whatever was answered so far, marking onboarding complete. Modal won't reappear — unless presence is still `null`, then it comes back after the 24 h snooze.

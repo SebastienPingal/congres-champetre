@@ -27,6 +27,30 @@ interface OnboardingState {
   wantsToSpeak: boolean | null
 }
 
+// Quand la présence reste « je ne sais pas » (isAttending === null), la modale
+// est relancée — mais au plus une fois par jour : la fermeture est mémorisée ici.
+const SNOOZE_STORAGE_KEY = "onboarding-snoozed-until"
+const SNOOZE_DURATION_MS = 24 * 60 * 60 * 1000
+
+function readSnoozedUntil(editionId: string): number | null {
+  try {
+    const raw = localStorage.getItem(SNOOZE_STORAGE_KEY)
+    if (!raw) return null
+    const parsed = JSON.parse(raw) as { editionId?: string; until?: number }
+    return parsed.editionId === editionId && typeof parsed.until === "number" ? parsed.until : null
+  } catch {
+    return null
+  }
+}
+
+function writeSnoozedUntil(editionId: string, until: number) {
+  try {
+    localStorage.setItem(SNOOZE_STORAGE_KEY, JSON.stringify({ editionId, until }))
+  } catch {
+    // localStorage indisponible (navigation privée…) : la modale reste fermée pour la session.
+  }
+}
+
 const STEP_LABELS: Record<Step, string> = {
   intention: 'Lettre d\'intention',
   attending: 'Venez-vous au weekend ?',
@@ -45,6 +69,8 @@ export function OnboardingModal() {
   const qc = useQueryClient()
 
   const [currentStep, setCurrentStep] = useState<Step>('intention')
+  // undefined = pas encore lu depuis le localStorage (on n'affiche rien en attendant).
+  const [snoozedUntil, setSnoozedUntil] = useState<number | null | undefined>(undefined)
   const [answersInitialized, setAnswersInitialized] = useState(false)
   const [answers, setAnswers] = useState<OnboardingState>({
     isAttending: null,
@@ -52,6 +78,11 @@ export function OnboardingModal() {
     sleepsOnSite: null,
     wantsToSpeak: null,
   })
+
+  const editionId = user?.edition.id
+  useEffect(() => {
+    if (editionId) setSnoozedUntil(readSnoozedUntil(editionId))
+  }, [editionId])
 
   useEffect(() => {
     if (user && !answersInitialized) {
@@ -94,6 +125,13 @@ export function OnboardingModal() {
       return res.json()
     },
     onSuccess: () => {
+      // Ferme la modale même si la présence reste « je ne sais pas » : sans ça,
+      // isAttending === null la gardait ouverte et bloquait la personne.
+      if (editionId) {
+        const until = Date.now() + SNOOZE_DURATION_MS
+        writeSnoozedUntil(editionId, until)
+        setSnoozedUntil(until)
+      }
       qc.invalidateQueries({ queryKey: queryKeys.userProfile })
       qc.invalidateQueries({ queryKey: queryKeys.meals })
     },
@@ -102,9 +140,13 @@ export function OnboardingModal() {
   // On affiche l'onboarding tant que la personne n'a pas indiqué si elle vient
   // (isAttending === null), même si elle a déjà « répondu plus tard » lors d'une
   // édition précédente. Une fois l'onboarding complété ET la présence renseignée,
-  // la modale disparaît. (Reste masquée si les inscriptions sont fermées.)
+  // la modale disparaît. Si la présence reste « je ne sais pas », elle est
+  // relancée au plus une fois par jour (snooze en localStorage).
+  // (Reste masquée si les inscriptions sont fermées.)
   if (!user || user.edition.isRegistrationClosed) return null
   if (user.onboardingCompletedAt !== null && user.isAttending !== null) return null
+  if (snoozedUntil === undefined) return null
+  if (user.onboardingCompletedAt !== null && snoozedUntil !== null && snoozedUntil > Date.now()) return null
 
   // Only show meals step if user is attending AND there are meals available
   const hasMeals = meals.length > 0
